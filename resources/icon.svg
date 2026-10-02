@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Thrift Flip app icon: original art (Rory the Raccoon peeking over a sparkling find). -->
+  <rect width="1024" height="1024" fill="#2f8f8a"/>
+  <circle cx="512" cy="560" r="430" fill="#3aa39d"/>
+  <g stroke="#3d2c25" stroke-width="22" stroke-linejoin="round">
+    <polygon points="250,330 330,170 420,320" fill="#a3a3ad"/>
+    <polygon points="774,330 694,170 604,320" fill="#a3a3ad"/>
+    <ellipse cx="512" cy="470" rx="320" ry="240" fill="#b6b6c0"/>
+  </g>
+  <ellipse cx="390" cy="450" rx="120" ry="72" fill="#3f3f47"/>
+  <ellipse cx="634" cy="450" rx="120" ry="72" fill="#3f3f47"/>
+  <ellipse cx="512" cy="560" rx="135" ry="88" fill="#f4f1f7"/>
+  <ellipse cx="512" cy="520" rx="38" ry="24" fill="#3d2c25"/>
+  <circle cx="390" cy="445" r="40" fill="#fff"/>
+  <circle cx="634" cy="445" r="40" fill="#fff"/>
+  <circle cx="398" cy="452" r="24" fill="#3d2c25"/>
+  <circle cx="642" cy="452" r="24" fill="#3d2c25"/>
+  <circle cx="406" cy="442" r="8" fill="#fff"/>
+  <circle cx="650" cy="442" r="8" fill="#fff"/>
+  <path d="M470 580 Q512 620 554 580" fill="none" stroke="#3d2c25" stroke-width="16" stroke-linecap="round"/>
+  <!-- a shiny coin held up -->
+  <g stroke="#3d2c25" stroke-width="20">
+    <circle cx="512" cy="815" r="150" fill="#ffd34d"/>
+  </g>
+  <rect x="496" y="740" width="32" height="150" rx="10" fill="#b07a14"/>
+  <circle cx="455" cy="760" r="26" fill="#fff" opacity="0.7"/>
+  <!-- sparkles -->
+  <g fill="#fff">
+    <path d="M820 640 l18 52 52 18 -52 18 -18 52 -18 -52 -52 -18 52 -18z"/>
+    <path d="M190 720 l12 34 34 12 -34 12 -12 34 -12 -34 -34 -12 34 -12z"/>
+    <path d="M860 250 l10 28 28 10 -28 10 -10 28 -10 -28 -28 -10 28 -10z"/>
+  </g>
+</svg>

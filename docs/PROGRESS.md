@@ -145,3 +145,28 @@ Next: Phase 3, the playable core loop in Phaser.
   thumbnail and accessibility-tag notes.
 - `scripts/screenshots.ts` + a text-free `PromoScene` (E2E builds only) render App Store screenshots
   (1320×2868, 2064×2752) and YouTube key art (16:9, 1:1, 9:16) into `dist-store/`.
+
+## Phase 7 — iOS build ✅ (Xcode build is a human step)
+- Capacitor 8.5 iOS project (Swift Package Manager; no CocoaPods), web assets bundled in the app (no
+  `server.url`). `npm run build:ios` runs the Vite iOS build, `scripts/check-ios-bundle.ts` (no YouTube SDK, no remote URL),
+  then `cap sync ios`. Bundle isolation is checked both ways (the YouTube checker rejects any Capacitor, AdMob or IAP code).
+- `IOSPlatform`: Preferences saves, App `pause`/`resume`, Haptics, Device language tag, hidden status bar,
+  splash hidden at first frame. **AdMob** (`@capacitor-community/admob` 8.1) runs after `gameReady`:
+  UMP consent first, then the ATT prompt, then init with `maxAdContentRating: General` (all-ages friendly).
+  If ATT is denied, ads are non-personalised. A rewarded ad grants only if the reward event fired.
+  **RevenueCat** (`@revenuecat/purchases-capacitor` 13.7) handles products, purchase, cancel and Restore.
+  - Why RevenueCat over `cordova-plugin-purchase`: it is a native Capacitor plugin with SPM support (Cordova
+    plugins and Capacitor 8 SPM projects don't mix well), has server-side receipt validation, and is actively maintained.
+    Trade-off: a RevenueCat account is needed and it appears in the privacy label.
+- Offline: ads and IAP report unavailable and the game is fully playable (all assets local).
+- Safe area: `viewport-fit=cover` plus `env(safe-area-inset-*)` padding around the canvas.
+- Info.plist: AdMob app id (TEST), ATT purpose string, SKAdNetwork (Google's id; the full list is in HUMAN_TODO),
+  `ITSAppUsesNonExemptEncryption=false`, status bar hidden, all orientations, arm64. These are applied by the
+  re-runnable `scripts/ios-configure.py`.
+- `PrivacyInfo.xcprivacy` (UserDefaults reason CA92.1, no tracking or collection by the app itself; the SDKs ship
+  their own manifests), registered in the Xcode project.
+- App icon and launch screen generated from the original `resources/icon.svg` (`scripts/render-icons.ts` +
+  `@capacitor/assets`).
+- Unit test `iosPlatform.test.ts` mocks all plugins and covers saves, language, consent/ATT/G-rated init,
+  non-personalised ads, reward-only-on-event, no ads without consent, and purchase success/cancel/fail/restore.
+- **Not possible here:** building in Xcode for the simulator. This is a Linux container without Xcode (HUMAN_TODO).
