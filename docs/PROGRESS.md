@@ -61,3 +61,23 @@
 - e2e: readiness order, loadData before saveData, no visibility listeners, no external requests.
 
 Next: Phase 2, which brings the pure core logic with full unit tests and the balance simulation.
+
+## Phase 2 — Core logic ✅
+- Pure TS in `src/core` (no Phaser, no DOM; enforced by lint):
+  - seeded PRNG (mulberry32) and data schemas
+  - economy: value formula, asking price, estimates, haggling, customer decisions, price snapping
+  - recipes (2–5 steps, required or optional) and markets (gems hidden at about 5%, an unseen-item bias
+    that helps catalog completion), haggling once per item, Appraiser's Tip and reroll
+  - customers (12 personas), 25 request templates, Auction Night bidding logic
+  - day state machine, XP and levels, 12 skills, 9 workshop upgrades, 5 shop tiers
+  - catalog with set bonuses, weekly trends, daily challenge, products and perks, ad pacing rules,
+    content-complete detection
+- Save schema v1 (compact tuples, no derived data, no language) with a migration framework and a
+  SaveManager that loads before it saves, writes at most once per 2 s, force-writes on demand,
+  keeps a corrupt-save backup and enforces size and UTF-16 checks.
+- Fixtures in `tests/fixtures/saves/` (v1 fresh and midgame). The maxed late-game save size test passes (< 500 KiB).
+- 108 unit tests. Coverage on `src/core`: 97.8% lines, 92.9% branches.
+- `scripts/simulate.ts` drives the balance, with output in `docs/BALANCE.md`: tier 2 around day 3, tier 5 around
+  day 39, content completion around day 53 (about 4 h), about 4.9 min per in-game day.
+
+Next: Phase 3, the playable core loop in Phaser.
