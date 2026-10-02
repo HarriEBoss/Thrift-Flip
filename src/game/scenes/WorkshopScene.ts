@@ -363,14 +363,23 @@ export class WorkshopScene extends GameScene {
       !hasPerk(s, 'golden_toolkit') &&
       s.flags.tutorialDone;
     this.goldBtn.setVisible(canGold);
+    // Pop-in: animate a factor and always read the *current* stage size, so a layout pass
+    // (first build or a resize mid-animation) can never be overwritten by a stale target scale.
     this.stage.setAlpha(0);
-    this.stage.setScale((this.stageSize / STAGE) * 0.9);
+    const pop = { f: 0.9 };
     this.tweens.add({
-      targets: this.stage,
-      alpha: 1,
-      scale: this.stageSize / STAGE,
+      targets: pop,
+      f: 1,
       duration: 260,
       ease: 'Back.out',
+      onUpdate: () => {
+        this.stage.setScale((this.stageSize / STAGE) * pop.f);
+        this.stage.setAlpha(Math.min(1, (pop.f - 0.9) * 10));
+      },
+      onComplete: () => {
+        this.stage.setScale(this.stageSize / STAGE);
+        this.stage.setAlpha(1);
+      },
     });
     session.audio.play('whoosh');
     this.nextStep();

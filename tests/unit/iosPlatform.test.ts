@@ -3,7 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const listeners = new Map<string, Array<(arg?: unknown) => void>>();
 const store = new Map<string, string>();
 const admob = {
-  requestConsentInfo: vi.fn(async () => ({ status: 'OBTAINED', isConsentFormAvailable: false, canRequestAds: true })),
+  requestConsentInfo: vi.fn(async () => ({
+    status: 'OBTAINED',
+    isConsentFormAvailable: false,
+    canRequestAds: true,
+  })),
   showConsentForm: vi.fn(async () => ({ status: 'OBTAINED', canRequestAds: true })),
   trackingAuthorizationStatus: vi.fn(async () => ({ status: 'denied' })),
   requestTrackingAuthorization: vi.fn(async () => undefined),
@@ -14,7 +18,8 @@ const admob = {
   }),
   prepareRewardVideoAd: vi.fn(async () => ({ adUnitId: 'x' })),
   showRewardVideoAd: vi.fn(async () => {
-    if (rewardOnShow) listeners.get('onRewardedVideoAdReward')?.forEach((cb) => cb({ type: 'coins', amount: 1 }));
+    if (rewardOnShow)
+      listeners.get('onRewardedVideoAdReward')?.forEach((cb) => cb({ type: 'coins', amount: 1 }));
     listeners.get('onRewardedVideoAdDismissed')?.forEach((cb) => cb());
     return { type: 'coins', amount: 1 };
   }),
@@ -25,12 +30,16 @@ const admob = {
 let rewardOnShow = true;
 const purchases = {
   configure: vi.fn(async () => undefined),
-  getProducts: vi.fn(async () => ({ products: [{ identifier: 'remove_ads', title: 'Remove Ads', priceString: '€4.99' }] })),
+  getProducts: vi.fn(async () => ({
+    products: [{ identifier: 'remove_ads', title: 'Remove Ads', priceString: '€4.99' }],
+  })),
   purchaseStoreProduct: vi.fn(async () => ({})),
   restorePurchases: vi.fn(async () => ({ customerInfo: { allPurchasedProductIdentifiers: ['remove_ads'] } })),
 };
 
-vi.mock('@capacitor/app', () => ({ App: { addListener: vi.fn(async () => ({ remove: async () => undefined })) } }));
+vi.mock('@capacitor/app', () => ({
+  App: { addListener: vi.fn(async () => ({ remove: async () => undefined })) },
+}));
 vi.mock('@capacitor/preferences', () => ({
   Preferences: {
     get: vi.fn(async ({ key }: { key: string }) => ({ value: store.get(key) ?? null })),
@@ -50,10 +59,20 @@ vi.mock('@capacitor-community/admob', () => ({
   AdMob: admob,
   AdmobConsentStatus: { REQUIRED: 'REQUIRED', OBTAINED: 'OBTAINED' },
   MaxAdContentRating: { General: 'General' },
-  RewardAdPluginEvents: { Rewarded: 'onRewardedVideoAdReward', Dismissed: 'onRewardedVideoAdDismissed', FailedToShow: 'onRewardedVideoAdFailedToShow' },
-  InterstitialAdPluginEvents: { Dismissed: 'interstitialAdDismissed', FailedToShow: 'interstitialAdFailedToShow' },
+  RewardAdPluginEvents: {
+    Rewarded: 'onRewardedVideoAdReward',
+    Dismissed: 'onRewardedVideoAdDismissed',
+    FailedToShow: 'onRewardedVideoAdFailedToShow',
+  },
+  InterstitialAdPluginEvents: {
+    Dismissed: 'interstitialAdDismissed',
+    FailedToShow: 'interstitialAdFailedToShow',
+  },
 }));
-vi.mock('@revenuecat/purchases-capacitor', () => ({ Purchases: purchases, PRODUCT_CATEGORY: { NON_SUBSCRIPTION: 'NON_SUBSCRIPTION' } }));
+vi.mock('@revenuecat/purchases-capacitor', () => ({
+  Purchases: purchases,
+  PRODUCT_CATEGORY: { NON_SUBSCRIPTION: 'NON_SUBSCRIPTION' },
+}));
 
 const { createPlatform } = await import('../../src/platform/ios/IOSPlatform');
 
@@ -88,7 +107,11 @@ describe('IOSPlatform (mocked Capacitor plugins)', () => {
   });
 
   it('never requests ads when consent does not allow it', async () => {
-    admob.requestConsentInfo.mockResolvedValueOnce({ status: 'REQUIRED', isConsentFormAvailable: true, canRequestAds: false });
+    admob.requestConsentInfo.mockResolvedValueOnce({
+      status: 'REQUIRED',
+      isConsentFormAvailable: true,
+      canRequestAds: false,
+    });
     admob.showConsentForm.mockResolvedValueOnce({ status: 'REQUIRED', canRequestAds: false });
     admob.prepareRewardVideoAd.mockClear();
     const p = createPlatform();
@@ -103,7 +126,9 @@ describe('IOSPlatform (mocked Capacitor plugins)', () => {
     p.notifyGameReady();
     expect(await p.getProducts()).toEqual([{ id: 'remove_ads', title: 'Remove Ads', price: '€4.99' }]);
     expect(await p.purchase('remove_ads')).toBe('success');
-    purchases.purchaseStoreProduct.mockRejectedValueOnce(Object.assign(new Error('x'), { userCancelled: true }));
+    purchases.purchaseStoreProduct.mockRejectedValueOnce(
+      Object.assign(new Error('x'), { userCancelled: true }),
+    );
     expect(await p.purchase('remove_ads')).toBe('cancelled');
     purchases.purchaseStoreProduct.mockRejectedValueOnce(new Error('net'));
     expect(await p.purchase('remove_ads')).toBe('failed');

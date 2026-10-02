@@ -7,7 +7,9 @@ export default defineConfig({
   timeout: 90_000,
   expect: { timeout: 15_000 },
   fullyParallel: false,
-  workers: 2,
+  // One browser at a time: CI renders WebGL in software, and parallel runs distort timing checks
+  // (e.g. first sale < 90 s).
+  workers: 1,
   retries: 0,
   reporter: [['list']],
   use: {

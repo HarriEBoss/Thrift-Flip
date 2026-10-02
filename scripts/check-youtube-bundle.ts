@@ -87,7 +87,10 @@ const FORBIDDEN: Array<[RegExp, string]> = [
   [/navigator\.clipboard/, 'clipboard'],
   [/\bfetch\s*\(/, 'fetch('],
   // Platform isolation: no native wrapper / ad network / IAP code in the YouTube bundle.
-  [/@capacitor|CapacitorPlatforms|purchaseStoreProduct|RevenueCat|prepareRewardVideoAd/, 'Capacitor/AdMob/IAP code'],
+  [
+    /@capacitor|CapacitorPlatforms|purchaseStoreProduct|RevenueCat|prepareRewardVideoAd/,
+    'Capacitor/AdMob/IAP code',
+  ],
 ];
 for (const f of files) {
   if (!/\.(js|css|html|json)$/.test(f)) continue;

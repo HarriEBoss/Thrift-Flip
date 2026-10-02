@@ -1,6 +1,6 @@
 {
   "name": "thrift-flip",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "description": "Thrift Flip - buy junk, restore it, sell it. A cozy hybrid-casual game.",

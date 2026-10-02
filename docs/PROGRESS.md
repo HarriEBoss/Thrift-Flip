@@ -170,3 +170,25 @@ Next: Phase 3, the playable core loop in Phaser.
 - Unit test `iosPlatform.test.ts` mocks all plugins and covers saves, language, consent/ATT/G-rated init,
   non-personalised ads, reward-only-on-event, no ads without consent, and purchase success/cancel/fail/restore.
 - **Not possible here:** building in Xcode for the simulator. This is a Linux container without Xcode (HUMAN_TODO).
+
+## Phase 8 — Release prep ✅
+- `docs/SUBMISSION_IOS.md`: toolchain (Xcode 26 / iOS 26 SDK, required since 2026-04-28), identity and signing,
+  App Store Connect record, the 9 IAP products, age-rating answers (not Kids Category; no simulated gambling),
+  the App Privacy label derived from AdMob + RevenueCat, reviewer notes (bundled assets, where IAP and ads are),
+  export compliance, **EU DSA trader status**, screenshots.
+- `docs/PRIVACY_POLICY.md`: per-platform draft (YouTube: no data collected by the developer; iOS: AdMob +
+  RevenueCat), marked as needing legal review.
+- `docs/STORE_LISTING.md`: name options, subtitles, keywords (96 chars), description, promo text,
+  What's New, screenshot captions, YouTube copy (all-ages friendly, never "made for kids").
+- `docs/HUMAN_TODO.md`: the complete list of human steps.
+- Version **1.0.0** (package.json, Xcode `MARKETING_VERSION`), tag `v1.0.0`.
+
+## Definition of done: status
+| Item | Status |
+|---|---|
+| `npm run check` (lint, typecheck, unit + coverage, YouTube build + bundle checks, e2e) | ✅ passes in this container (see the final run log in the commit message / PR) |
+| `thrift-flip-youtube.zip` meets every automatable MUST in §7 | ✅ automated; manual items listed in SUBMISSION_YOUTUBE.md |
+| iOS project builds in Xcode | ⏳ **human step**: no Xcode on Linux. `build:ios` + `cap sync` pass; IAP and ads are absent from the YouTube bundle (checked) |
+| Old-save migration tests | ✅ (v1 fixtures; framework ready for v2+) |
+| Docs complete | ✅ ARCHITECTURE, BALANCE, PROGRESS, HUMAN_TODO, SUBMISSION_IOS, SUBMISSION_YOUTUBE, PRIVACY_POLICY, STORE_LISTING |
+| HUMAN_TODO lists every required human step | ✅ |

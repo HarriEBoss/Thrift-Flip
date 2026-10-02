@@ -4,7 +4,8 @@ import { join } from 'node:path';
 
 const DIR = 'dist-ios';
 const errors: string[] = [];
-const walk = (d: string): string[] => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
+const walk = (d: string): string[] =>
+  readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
 if (!existsSync(join(DIR, 'index.html'))) errors.push('index.html missing');
 for (const f of walk(DIR)) {
   if (!/\.(js|html|css)$/.test(f)) continue;
