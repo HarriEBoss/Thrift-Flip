@@ -134,3 +134,14 @@ Next: Phase 3, the playable core loop in Phaser.
 - **Not verifiable here:** a real "60 fps on a mid-range device" measurement. This container only
   has software WebGL (SwiftShader). Profiling showed game JS under 10% of frame time; the rest is
   software rasterisation. Listed in HUMAN_TODO as an on-device check.
+
+## Phase 6 — YouTube Playables build ✅
+- `npm run build:youtube` produces `dist-youtube/` (7 files, ~1.6 MiB) and `thrift-flip-youtube.zip` (~460 KiB). The bundle checker passes
+  (the only warning is the 1.34 MiB Phaser chunk vs the 512 KiB SHOULD target).
+- YouTube ads are wired through `ytgame.ads` in the adapter. New e2e `youtube.spec.ts` covers: rewarded grants only on
+  `true`; interstitial only on summary → next day (day ≥ 3, 3-min cooldown); `sendScore` equals the stored best;
+  save round-trip across a reload; a corrupt save shows a non-dismissable friendly message and is never overwritten.
+- `docs/SUBMISSION_YOUTUBE.md` lists every requirement with how it is met and how it is verified, plus metadata,
+  thumbnail and accessibility-tag notes.
+- `scripts/screenshots.ts` + a text-free `PromoScene` (E2E builds only) render App Store screenshots
+  (1320×2868, 2064×2752) and YouTube key art (16:9, 1:1, 9:16) into `dist-store/`.

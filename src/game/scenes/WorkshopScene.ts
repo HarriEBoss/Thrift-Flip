@@ -112,7 +112,7 @@ export class WorkshopScene extends GameScene {
     this.stageFrame = this.add.graphics();
     this.stage = this.add.container(0, 0);
     this.chips = this.add.container(0, 0);
-    this.instruction = this.txt(0, 0, '', FS.h3, C.ink, { wrap: 640 });
+    this.instruction = this.txt(0, 0, '', FS.body, C.ink, { wrap: 640 });
     this.bar = new ProgressBar(this, 0, 0, 420, 26, C.leaf);
     this.panel = this.add.container(0, 0);
     this.counter = this.txt(0, 0, '', FS.small, C.inkSoft);
@@ -185,14 +185,14 @@ export class WorkshopScene extends GameScene {
     let sx: number;
     let sy: number;
     if (f.portrait) {
-      S = Math.max(360, Math.min(600, f.h - 590));
+      S = Math.max(340, Math.min(600, f.h - 640));
       sx = (f.w - S) / 2;
-      sy = 240;
+      sy = 290;
       this.chips.setPosition(f.w / 2, 150);
-      this.instruction.setPosition(f.w / 2, 205);
+      this.instruction.setPosition(f.w / 2, 236);
       this.bar.setPosition(f.w / 2, sy + S + 34);
       this.counter.setPosition(f.w / 2, sy + S + 72);
-      const py = sy + S + 170;
+      const py = sy + S + (f.h < 1100 ? 145 : 170);
       this.panel.setPosition(f.w / 2, py);
       const by = f.h - 60;
       this.doneBtn.setPosition(f.w / 2 + 40, by);
