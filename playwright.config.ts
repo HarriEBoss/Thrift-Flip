@@ -13,6 +13,7 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:4173',
     trace: 'off',
+    screenshot: 'only-on-failure',
     launchOptions: chromiumPath ? { executablePath: chromiumPath } : {},
   },
   webServer: {

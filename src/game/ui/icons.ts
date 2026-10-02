@@ -1,0 +1,236 @@
+import Phaser from 'phaser';
+import { C } from '../theme';
+import type { StepKind } from '../../core/types';
+import { drawCoin, drawStar } from './widgets';
+
+type G = Phaser.GameObjects.Graphics;
+const V = (x: number, y: number) => new Phaser.Math.Vector2(x, y);
+
+/** Step icons (vector, centred at 0,0, roughly `s` wide). Distinct shapes, never colour alone. */
+export function drawStepIcon(g: G, kind: StepKind, s: number): void {
+  const k = s / 40;
+  g.lineStyle(2.5 * k, C.ink, 1);
+  switch (kind) {
+    case 'scrub': // sponge with bubbles
+      g.fillStyle(C.mustard, 1);
+      g.fillRoundedRect(-14 * k, -6 * k, 28 * k, 16 * k, 4 * k);
+      g.strokeRoundedRect(-14 * k, -6 * k, 28 * k, 16 * k, 4 * k);
+      g.fillStyle(C.leaf, 1);
+      g.fillRect(-14 * k, -6 * k, 28 * k, 5 * k);
+      g.fillStyle(C.white, 1);
+      g.fillCircle(-8 * k, -13 * k, 4 * k);
+      g.strokeCircle(-8 * k, -13 * k, 4 * k);
+      g.fillCircle(4 * k, -15 * k, 3 * k);
+      g.strokeCircle(4 * k, -15 * k, 3 * k);
+      break;
+    case 'rust': // wire brush
+      g.fillStyle(0xb5773f, 1);
+      g.fillRoundedRect(-16 * k, -8 * k, 32 * k, 8 * k, 3 * k);
+      g.strokeRoundedRect(-16 * k, -8 * k, 32 * k, 8 * k, 3 * k);
+      g.lineStyle(2 * k, 0x8a8f96, 1);
+      for (let i = -12; i <= 12; i += 4) g.lineBetween(i * k, 0, i * k, 10 * k);
+      break;
+    case 'sticker':
+      g.fillStyle(0xfff4b8, 1);
+      g.fillPoints(
+        [V(-14 * k, -12 * k), V(10 * k, -12 * k), V(14 * k, -6 * k), V(14 * k, 12 * k), V(-14 * k, 12 * k)],
+        true,
+      );
+      g.strokePoints(
+        [V(-14 * k, -12 * k), V(10 * k, -12 * k), V(14 * k, -6 * k), V(14 * k, 12 * k), V(-14 * k, 12 * k)],
+        true,
+      );
+      g.fillStyle(C.terracotta, 1);
+      g.fillRect(-8 * k, -3 * k, 14 * k, 3 * k);
+      g.fillRect(-8 * k, 3 * k, 10 * k, 3 * k);
+      break;
+    case 'glue':
+      g.fillStyle(C.white, 1);
+      g.fillRoundedRect(-8 * k, -6 * k, 16 * k, 20 * k, 4 * k);
+      g.strokeRoundedRect(-8 * k, -6 * k, 16 * k, 20 * k, 4 * k);
+      g.fillStyle(C.terracotta, 1);
+      g.fillTriangle(-4 * k, -6 * k, 4 * k, -6 * k, 0, -16 * k);
+      g.strokeTriangle(-4 * k, -6 * k, 4 * k, -6 * k, 0, -16 * k);
+      g.fillStyle(C.sky, 1);
+      g.fillRect(-8 * k, 2 * k, 16 * k, 5 * k);
+      break;
+    case 'sand': // sandpaper block
+      g.fillStyle(0xd9b98a, 1);
+      g.fillRoundedRect(-15 * k, -9 * k, 30 * k, 18 * k, 3 * k);
+      g.strokeRoundedRect(-15 * k, -9 * k, 30 * k, 18 * k, 3 * k);
+      g.fillStyle(0x9a7b55, 1);
+      for (let i = 0; i < 9; i++)
+        g.fillCircle((-11 + (i % 3) * 11) * k, (-4 + Math.floor(i / 3) * 4) * k, 1.4 * k);
+      break;
+    case 'paint': // brush with paint tip
+      g.fillStyle(0xb5773f, 1);
+      g.fillRoundedRect(-3 * k, -2 * k, 6 * k, 18 * k, 2 * k);
+      g.strokeRoundedRect(-3 * k, -2 * k, 6 * k, 18 * k, 2 * k);
+      g.fillStyle(C.purple, 1);
+      g.fillPoints(
+        [V(-6 * k, -2 * k), V(6 * k, -2 * k), V(4 * k, -14 * k), V(0, -18 * k), V(-4 * k, -14 * k)],
+        true,
+      );
+      g.strokePoints(
+        [V(-6 * k, -2 * k), V(6 * k, -2 * k), V(4 * k, -14 * k), V(0, -18 * k), V(-4 * k, -14 * k)],
+        true,
+      );
+      break;
+    case 'polish': // cloth + sparkle
+      g.fillStyle(C.sky, 1);
+      g.fillRoundedRect(-14 * k, -4 * k, 20 * k, 16 * k, 6 * k);
+      g.strokeRoundedRect(-14 * k, -4 * k, 20 * k, 16 * k, 6 * k);
+      drawStar(g, 10 * k, -10 * k, 8 * k, C.gold);
+      break;
+    case 'wire': // plug
+      g.fillStyle(C.inkSoft, 1);
+      g.fillRoundedRect(-10 * k, -6 * k, 20 * k, 14 * k, 4 * k);
+      g.strokeRoundedRect(-10 * k, -6 * k, 20 * k, 14 * k, 4 * k);
+      g.fillStyle(0xd0d4da, 1);
+      g.fillRect(-6 * k, -14 * k, 4 * k, 8 * k);
+      g.fillRect(2 * k, -14 * k, 4 * k, 8 * k);
+      g.lineStyle(3 * k, C.mustard, 1);
+      g.beginPath();
+      g.moveTo(0, 8 * k);
+      g.lineTo(0, 12 * k);
+      g.lineTo(10 * k, 16 * k);
+      g.strokePath();
+      break;
+  }
+}
+
+export function iconCoin(g: G, s: number): void {
+  drawCoin(g, 0, 0, s * 0.42);
+}
+
+export function iconStar(g: G, s: number, fill: number = C.gold): void {
+  drawStar(g, 0, 0, s * 0.45, fill);
+}
+
+export function iconHeart(g: G, s: number): void {
+  const k = s / 40;
+  g.fillStyle(C.pink, 1);
+  g.lineStyle(2.5 * k, C.ink, 1);
+  g.beginPath();
+  g.moveTo(0, 14 * k);
+  g.lineTo(-15 * k, -1 * k);
+  g.arc(-7.5 * k, -6 * k, 8.5 * k, Math.PI * 0.8, Math.PI * 1.95, false);
+  g.arc(7.5 * k, -6 * k, 8.5 * k, Math.PI * 1.05, Math.PI * 0.2 + Math.PI * 2, false);
+  g.closePath();
+  g.fillPath();
+  g.strokePath();
+}
+
+export function iconHome(g: G, s: number): void {
+  const k = s / 40;
+  g.fillStyle(C.white, 1);
+  g.lineStyle(2.5 * k, C.ink, 1);
+  const pts = [
+    V(-14 * k, 0),
+    V(0, -14 * k),
+    V(14 * k, 0),
+    V(10 * k, 0),
+    V(10 * k, 14 * k),
+    V(-10 * k, 14 * k),
+    V(-10 * k, 0),
+  ];
+  g.fillPoints(pts, true);
+  g.strokePoints(pts, true);
+  g.fillStyle(C.terracotta, 1);
+  g.fillRect(-3 * k, 5 * k, 6 * k, 9 * k);
+}
+
+export function iconGift(g: G, s: number): void {
+  const k = s / 40;
+  g.lineStyle(2.5 * k, C.ink, 1);
+  g.fillStyle(C.pink, 1);
+  g.fillRoundedRect(-14 * k, -4 * k, 28 * k, 18 * k, 3 * k);
+  g.strokeRoundedRect(-14 * k, -4 * k, 28 * k, 18 * k, 3 * k);
+  g.fillStyle(C.purple, 1);
+  g.fillRoundedRect(-16 * k, -10 * k, 32 * k, 7 * k, 3 * k);
+  g.strokeRoundedRect(-16 * k, -10 * k, 32 * k, 7 * k, 3 * k);
+  g.fillStyle(C.gold, 1);
+  g.fillRect(-3 * k, -10 * k, 6 * k, 24 * k);
+  g.fillCircle(-6 * k, -14 * k, 5 * k);
+  g.fillCircle(6 * k, -14 * k, 5 * k);
+  g.strokeCircle(-6 * k, -14 * k, 5 * k);
+  g.strokeCircle(6 * k, -14 * k, 5 * k);
+}
+
+/** "Play" triangle inside a TV-ish rounded rect: marks buttons that show an optional ad. */
+export function iconAd(g: G, s: number): void {
+  const k = s / 40;
+  g.lineStyle(2.5 * k, C.ink, 1);
+  g.fillStyle(C.white, 1);
+  g.fillRoundedRect(-15 * k, -11 * k, 30 * k, 22 * k, 6 * k);
+  g.strokeRoundedRect(-15 * k, -11 * k, 30 * k, 22 * k, 6 * k);
+  g.fillStyle(C.leaf, 1);
+  g.fillTriangle(-5 * k, -6 * k, -5 * k, 6 * k, 7 * k, 0);
+  g.strokeTriangle(-5 * k, -6 * k, -5 * k, 6 * k, 7 * k, 0);
+}
+
+export function iconArrow(g: G, s: number, dir: 1 | -1 = 1): void {
+  const k = (s / 40) * dir;
+  g.fillStyle(C.white, 1);
+  g.lineStyle(2.5 * Math.abs(k), C.ink, 1);
+  const pts = [
+    V(-12 * k, -5 * Math.abs(k)),
+    V(2 * k, -5 * Math.abs(k)),
+    V(2 * k, -12 * Math.abs(k)),
+    V(14 * k, 0),
+    V(2 * k, 12 * Math.abs(k)),
+    V(2 * k, 5 * Math.abs(k)),
+    V(-12 * k, 5 * Math.abs(k)),
+  ];
+  g.fillPoints(pts, true);
+  g.strokePoints(pts, true);
+}
+
+export function iconBook(g: G, s: number): void {
+  const k = s / 40;
+  g.lineStyle(2.5 * k, C.ink, 1);
+  g.fillStyle(C.teal, 1);
+  g.fillRoundedRect(-14 * k, -14 * k, 28 * k, 28 * k, 4 * k);
+  g.strokeRoundedRect(-14 * k, -14 * k, 28 * k, 28 * k, 4 * k);
+  g.fillStyle(C.white, 1);
+  g.fillRect(-10 * k, -10 * k, 4 * k, 20 * k);
+  drawStar(g, 3 * k, 0, 7 * k, C.gold);
+}
+
+export function iconTool(g: G, s: number): void {
+  const k = s / 40;
+  g.lineStyle(2.5 * k, C.ink, 1);
+  g.fillStyle(0xb9c0c8, 1);
+  g.fillRoundedRect(-3 * k, -6 * k, 6 * k, 22 * k, 2 * k);
+  g.strokeRoundedRect(-3 * k, -6 * k, 6 * k, 22 * k, 2 * k);
+  g.fillStyle(C.terracotta, 1);
+  g.fillRoundedRect(-12 * k, -16 * k, 24 * k, 10 * k, 3 * k);
+  g.strokeRoundedRect(-12 * k, -16 * k, 24 * k, 10 * k, 3 * k);
+}
+
+export function iconCalendar(g: G, s: number): void {
+  const k = s / 40;
+  g.lineStyle(2.5 * k, C.ink, 1);
+  g.fillStyle(C.white, 1);
+  g.fillRoundedRect(-14 * k, -12 * k, 28 * k, 26 * k, 4 * k);
+  g.strokeRoundedRect(-14 * k, -12 * k, 28 * k, 26 * k, 4 * k);
+  g.fillStyle(C.terracotta, 1);
+  g.fillRect(-14 * k, -12 * k, 28 * k, 8 * k);
+  drawStar(g, 0, 5 * k, 7 * k, C.gold);
+}
+
+export function iconShopBag(g: G, s: number): void {
+  const k = s / 40;
+  g.lineStyle(2.5 * k, C.ink, 1);
+  g.fillStyle(C.mustard, 1);
+  g.fillRoundedRect(-13 * k, -6 * k, 26 * k, 20 * k, 4 * k);
+  g.strokeRoundedRect(-13 * k, -6 * k, 26 * k, 20 * k, 4 * k);
+  g.beginPath();
+  g.arc(0, -6 * k, 7 * k, Math.PI, 0, false);
+  g.strokePath();
+  drawStar(g, 0, 4 * k, 6 * k, C.white);
+}
+
+export function iconSparkle(g: G, s: number): void {
+  drawStar(g, 0, 0, s * 0.42, C.gold);
+}

@@ -33,6 +33,8 @@ export class Session {
     this.loadOutcome = await this.saves.load();
     if (this.loadOutcome.kind === 'loaded') this.state = this.loadOutcome.state;
     else this.state = newGame(freshSeed());
+    // Never overwrite a corrupt save until the player has seen the friendly message.
+    if (this.loadOutcome.kind === 'corrupt') this.saves.blocked = true;
     this.saves.bind(() => this.state);
     this.audio.setPlatformEnabled(platform.isAudioEnabled());
     platform.onAudioEnabledChange((on) => this.audio.setPlatformEnabled(on));
@@ -41,6 +43,8 @@ export class Session {
 
   /** Resets to a brand-new game (used after a corrupt save, from the friendly message). */
   startFresh(): void {
+    this.saves.blocked = false;
+    this.loadOutcome = { kind: 'fresh' };
     this.state = newGame(freshSeed());
     this.applySettings();
     void this.save(true);

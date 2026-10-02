@@ -74,6 +74,19 @@ export function generateOffers(state: GameState, mdef: MarketDef = marketDef(sta
       seller: rng.int(0, 5),
     });
   }
+  return ensureAffordable(state, offers);
+}
+
+/**
+ * Soft-lock guard: a player with an empty inventory who cannot afford anything gets one
+ * generous seller, so the loop can always continue without purchases.
+ */
+export function ensureAffordable(state: GameState, offers: Offer[]): Offer[] {
+  if (state.inv.length > 0 || !offers.length) return offers;
+  if (offers.some((o) => o.ask <= state.coins)) return offers;
+  let cheapest = offers[0];
+  for (const o of offers) if (o.ask < cheapest.ask) cheapest = o;
+  cheapest.ask = Math.max(0, state.coins);
   return offers;
 }
 

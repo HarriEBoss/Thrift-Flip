@@ -216,6 +216,18 @@ describe('SaveManager', () => {
     expect((await tm.load()).kind).toBe('fresh');
     expect(tm.isLoaded()).toBe(true);
   });
+  it('does not write while blocked', async () => {
+    const b = backend();
+    const m = new SaveManager(b, fakeClock());
+    await m.load();
+    m.bind(() => newGame(1));
+    m.blocked = true;
+    await m.request(true);
+    expect(b.writes).toHaveLength(0);
+    m.blocked = false;
+    await m.request(true);
+    expect(b.writes).toHaveLength(1);
+  });
   it('never writes before load completes', async () => {
     const b = backend();
     const m = new SaveManager(b, fakeClock());

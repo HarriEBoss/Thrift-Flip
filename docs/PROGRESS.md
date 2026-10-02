@@ -81,3 +81,34 @@ Next: Phase 2, which brings the pure core logic with full unit tests and the bal
   day 39, content completion around day 53 (about 4 h), about 4.9 min per in-game day.
 
 Next: Phase 3, the playable core loop in Phaser.
+
+## Phase 3 — The core loop, playable ✅
+- Scenes: Main Menu, Market (cards, detail card, one-shot haggle slider, Appraiser's Tip, trends,
+  market switch, reroll), Workshop (step chips, optional bonus steps with Skip, per-step stars,
+  before/after split-slider reveal with an auto-sweep and a value pop-up), Shop (customers with persona looks
+  and a live mood face plus a text label, price slider with snapping, counter-offers, walk-aways, requests),
+  Day Summary (stats, best flip, XP, reputation, Double Earnings, shop/skills/tools upgrades).
+- Tutorial day: Rory the Raccoon coaches the player through mug, scrub, polish, reveal and first sale.
+- Erase-style mini-games stamp a canvas texture and a 64×64 CPU grid with the same interpolated
+  brush. Completion comes from the grid (`src/core/minigame.ts`), never from GPU reads.
+- Juice: coin fountains, floating numbers, sparkles, particles per tool, procedural SFX tied to
+  stroke speed, haptics hooks, squash and stretch on buttons.
+- e2e `loop.spec.ts`: the tutorial plus two more full days with **mouse only** and with **touch only**
+  (CDP touch events). First sale in under 90 s.
+  Note: in this CI container Chromium renders WebGL in software (SwiftShader). The workshop runs at about
+  15–20 fps here, so each loop test takes about 6 min. JS profiling showed under 10% of frame time in game code.
+
+## Phase 4 — All mini-games and content ✅
+- All 8 mini-games: Scrub, Rust (2–3 hardness levels), Sticker Peel (too fast tears it, leaving residue that
+  becomes extra grime), Glue (path tracing), Sand (coverage × evenness), Paint (palette with
+  shape symbols, overspray penalty, trend-colour bonus, colour-blind palette), Polish
+  (circularity × coverage), Re-wire (colour + symbol matching, mistakes reduce the score).
+- 120 catalog items (8 categories × 15) composed from 40 data-driven vector shapes.
+- 5 markets including **Auction Night** (timed bidding vs 2–3 NPCs), 5 shop tiers, 12 personas,
+  25 request templates, weekly trends.
+- Sticker Book (catalog UI with set bonuses), **Daily Fix** (seeded per date, 1–3 stars, coins per new
+  star, gentle streak counter), and the **"You've flipped it all!"** completion screen.
+- e2e `content.spec.ts`: all 120 catalog items are generated, rendered (every damage layer),
+  restored and sold in the browser, and all 8 mini-game kinds occur. Auction, catalog, daily and
+  completion screens are reachable.
+- Soft-lock guard: a broke player with an empty inventory always gets one affordable offer.

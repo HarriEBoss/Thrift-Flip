@@ -41,6 +41,8 @@ export class SaveManager {
   private getState: (() => GameState) | null = null;
   /** In-memory copy of a corrupt save (kept so it is never silently lost). */
   backup: string | null = null;
+  /** While true no writes happen (e.g. until the player acknowledges a corrupt save). */
+  blocked = false;
   writes = 0;
 
   constructor(
@@ -77,7 +79,7 @@ export class SaveManager {
 
   /** Request a save. `force` writes now; otherwise writes are debounced. */
   request(force = false): Promise<void> {
-    if (!this.loaded || !this.getState) return Promise.resolve();
+    if (!this.loaded || !this.getState || this.blocked) return Promise.resolve();
     if (force) {
       this.cancelTimer();
       return this.flush();

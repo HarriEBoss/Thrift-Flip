@@ -11,3 +11,4 @@ ios/App/Pods/
 ios/App/build/
 ios/DerivedData/
 *.log
+scratch/

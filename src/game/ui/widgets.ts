@@ -236,6 +236,7 @@ export class Button extends Phaser.GameObjects.Container implements Focusable {
   }
 
   setEnabled(on: boolean): this {
+    if (this.enabled === on) return this;
     this.enabled = on;
     this.draw();
     return this;
@@ -457,7 +458,9 @@ export class ProgressBar extends Phaser.GameObjects.Container {
     this.redraw();
   }
   setValue(v: number): this {
-    this.value = Phaser.Math.Clamp(v, 0, 1);
+    const nv = Phaser.Math.Clamp(v, 0, 1);
+    if (Math.abs(nv - this.value) < 0.002) return this;
+    this.value = nv;
     this.redraw();
     return this;
   }

@@ -74,13 +74,16 @@ export class Modal extends Phaser.GameObjects.Container {
     this.content = host.add.container(0, 0);
     this.add(this.content);
     if (this.closable) {
-      const btn = new Button(host, 0, this.ph / 2 - 56, {
-        w: 220,
-        h: 76,
-        label: opts.closeLabel ?? t('common.close'),
-        color: C.inkSoft,
-        onClick: () => this.close(),
-      });
+      const btn = host.mark(
+        'close',
+        new Button(host, 0, this.ph / 2 - 56, {
+          w: 220,
+          h: 76,
+          label: opts.closeLabel ?? t('common.close'),
+          color: C.inkSoft,
+          onClick: () => this.close(),
+        }),
+      );
       this.add(btn);
     }
     host.root.add(this);
@@ -121,6 +124,25 @@ export abstract class BaseScene extends Phaser.Scene implements UiHost {
   private focused: Focusable | null = null;
   private modals: Modal[] = [];
   protected bgColors: { base: number; dots: number } = { base: C.cream, dots: C.cream2 };
+  private marks = new Map<string, Phaser.GameObjects.GameObject>();
+
+  /** Registers a test id for e2e tests (no-op in release builds). */
+  mark<T extends Phaser.GameObjects.GameObject>(id: string, o: T): T {
+    if (__E2E__) this.marks.set(id, o);
+    return o;
+  }
+
+  /** Device-pixel position of a marked object, if it exists and is visible. */
+  markPos(id: string): { x: number; y: number } | null {
+    const o = this.marks.get(id) as
+      | (Phaser.GameObjects.GameObject & {
+          getWorldTransformMatrix?: () => Phaser.GameObjects.Components.TransformMatrix;
+        })
+      | undefined;
+    if (!o || !o.active || !o.getWorldTransformMatrix || !isChainVisible(o)) return null;
+    const m = o.getWorldTransformMatrix();
+    return { x: m.tx, y: m.ty };
+  }
 
   /** Build the scene's objects (called once per scene start). */
   protected abstract build(data?: unknown): void;
@@ -128,6 +150,7 @@ export abstract class BaseScene extends Phaser.Scene implements UiHost {
   protected abstract layout(): void;
 
   create(data?: unknown): void {
+    this.marks = new Map();
     this.focusables = [];
     this.modals = [];
     this.focused = null;

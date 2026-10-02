@@ -19,13 +19,7 @@ import {
   setMarket,
   type Offer,
 } from '../src/core/market';
-import {
-  advancePhase,
-  completeSale,
-  finishRestoration,
-  recordStep,
-  workshopQueue,
-} from '../src/core/day';
+import { advancePhase, completeSale, finishRestoration, recordStep, workshopQueue } from '../src/core/day';
 import { recipeFor, instanceValue } from '../src/core/items';
 import { chooseItem, generateVisits, postRequest, respondToPrice, walkAway } from '../src/core/customers';
 import {

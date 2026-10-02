@@ -69,6 +69,23 @@ describe('market generation', () => {
   });
 });
 
+describe('soft-lock guard', () => {
+  it('a broke player with no items always has one affordable offer', () => {
+    const g = game();
+    g.coins = 0;
+    const offers = generateOffers(g);
+    expect(offers.some((o) => o.ask <= 0)).toBe(true);
+    expect(
+      canBuy(
+        g,
+        offers.find((o) => o.ask === 0)!,
+      ),
+    ).toBe('ok');
+    g.coins = 3;
+    expect(generateOffers(g).some((o) => o.ask <= 3)).toBe(true);
+  });
+});
+
 describe('buying and haggling', () => {
   it('buys within slots and coins', () => {
     const g = game();
@@ -85,7 +102,7 @@ describe('buying and haggling', () => {
   it('refuses when broke or full', () => {
     const g = game();
     g.coins = 0;
-    const o = generateOffers(g)[0];
+    const o = generateOffers(g).find((x) => x.ask > 0)!;
     expect(canBuy(g, o)).toBe('no_coins');
     expect(buyOffer(g, o)).toBeNull();
     g.coins = 1e6;
