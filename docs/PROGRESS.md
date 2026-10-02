@@ -1,0 +1,63 @@
+# Thrift Flip — Progress log
+
+## Decisions agreed with the owner
+- **Audience:** kid-friendly *all ages* presentation (bright cartoon art, simple words, big buttons), but
+  officially a **general-audience** game that is not "made for kids". YouTube Playables bans games
+  made for kids (13+ only), and Apple's Kids Category bans third-party ads such as AdMob. This choice keeps
+  both builds and the ad/IAP plan. Store metadata must not market the game as being for children.
+- **Monetization:** "money max it" with paid perks, but only within platform rules. On iOS: coin packs,
+  starter pack, Remove Ads, permanent perk unlocks (Golden Toolkit, Shop Expansion, Appraiser Pass),
+  a Mega Bundle, and plenty of **optional rewarded ads with small rewards**: Free Gift coins,
+  +20% sale tip, Appraiser's Tip, Double Day Earnings, Market Reroll, and Premium Tool for one use.
+  YouTube allows no IAP, so only YouTube-provided ads ship there.
+  Not included, by design and by store rules: paid randomized rewards (loot boxes), countdown
+  pressure to buy, ads during mini-games, and punishing streaks.
+
+## Package versions (checked on npm, 2026-10-02)
+| Package | Version | Note |
+|---|---|---|
+| phaser | 4.2.1 | Latest stable major (v4). The Canvas renderer is deprecated in v4 but still available; we use `Phaser.AUTO` (WebGL with Canvas fallback). |
+| vite | 8.3.2 | Rolldown-based; uses `build.rolldownOptions.output.codeSplitting` instead of `manualChunks`. |
+| typescript | 6.0.3 | TS 7.0.2 (native) is "latest", but typescript-eslint 8.71 supports `<6.1`, so we pin 6.0.x. |
+| vitest / @vitest/coverage-v8 | 5.0.3 | |
+| @playwright/test | 1.56.1 | Pinned to match the Chromium build pre-installed in the CI container (latest is 1.63.0). |
+| eslint / typescript-eslint | 10.11.0 / 8.71.0 | |
+| prettier | 3.9.9 | |
+| @fontsource/fredoka | 5.3.0 | OFL-1.1 font, bundled locally (no CDN). |
+| fflate | latest | Builds the YouTube zip. |
+| @capacitor/* | 8.5.x | Phase 7 |
+| @capacitor-community/admob | 8.1.0 | Phase 7 |
+| @revenuecat/purchases-capacitor | 13.7.0 | Phase 7 |
+
+## Where the brief and current docs differ (or need a note)
+- **Phaser** registers a `visibilitychange` listener in its core (`VisibilityHandler`). It also feature-detects
+  `localStorage` and has a `new Function` fallback in its webpack runtime. YouTube forbids the Page
+  Visibility API and storage APIs. A Vite build plugin (`phaserSanitize` in `vite.config.ts`) removes all
+  three at build time. Pause and resume come only from the platform adapter. An e2e test checks that no
+  visibility listener is registered.
+- **`ytgame.health.logError()` / `logWarning()` take no arguments** in the current SDK reference. The adapter
+  logs details to the console and then calls them without arguments.
+- **YouTube initial bundle:** the official requirement is MUST < 30 MiB and SHOULD < 15 MiB. The brief's
+  target of < 5 MiB is stricter, and we meet it (about 1.5 MiB).
+- **Phaser chunk exceeds the 512 KiB per-file SHOULD target** (about 1.34 MiB minified). It is a single
+  pre-bundled module and cannot be split. It is still far below the 30 MiB MUST limit. The checker reports it
+  as a warning.
+- Google developer docs could not be fetched directly from this build environment, because egress is blocked.
+  Requirements were verified through search snippets of the official pages. Re-check them before submitting
+  (listed in HUMAN_TODO).
+
+## Phase 1 — Foundation ✅
+- Vite + TS (strict) + Phaser 4. One codebase, and the platform adapter is chosen at build time through
+  the `@platform-impl` alias (`--mode youtube|ios|web`).
+- `Platform` interface plus `WebDevPlatform` (localStorage, simulated ads/IAP) and `YouTubePlatform`
+  (the only file that touches `ytgame`). `IOSPlatform` is a placeholder until Phase 7.
+- Responsive frame system (`src/game/ui/layout.ts`): portrait 720×(960–1280) or landscape (960–1280)×720,
+  letterboxed or pillarboxed beyond that. Rendering happens at devicePixelRatio, capped at 3. Resizing
+  repositions objects without recreating them, so no state is lost.
+- Boot flow: an HTML loading screen with a progress bar is painted, then `firstFrameReady`, then the engine
+  chunk is lazy-loaded, then the main menu renders, then `gameReady`.
+- Tooling: ESLint forbidden-API rules (verified with a probe file that triggers 12 errors), Vitest,
+  Playwright with a mock `ytgame`, `scripts/check-youtube-bundle.ts`, and `scripts/zip-youtube.ts`.
+- e2e: readiness order, loadData before saveData, no visibility listeners, no external requests.
+
+Next: Phase 2, which brings the pure core logic with full unit tests and the balance simulation.

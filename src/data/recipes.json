@@ -1,0 +1,218 @@
+{
+ "kitchen": [
+  {
+   "k": "sticker",
+   "req": false,
+   "p": 0.45
+  },
+  {
+   "k": "scrub",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "glue",
+   "req": false,
+   "p": 0.25
+  },
+  {
+   "k": "polish",
+   "req": false,
+   "p": 0.9
+  }
+ ],
+ "ceramics": [
+  {
+   "k": "sticker",
+   "req": false,
+   "p": 0.5
+  },
+  {
+   "k": "scrub",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "glue",
+   "req": true,
+   "p": 0.75
+  },
+  {
+   "k": "paint",
+   "req": false,
+   "p": 0.25
+  },
+  {
+   "k": "polish",
+   "req": false,
+   "p": 0.35
+  }
+ ],
+ "lamps": [
+  {
+   "k": "scrub",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "rust",
+   "req": false,
+   "p": 0.35
+  },
+  {
+   "k": "wire",
+   "req": true,
+   "p": 0.9
+  },
+  {
+   "k": "paint",
+   "req": false,
+   "p": 0.5
+  },
+  {
+   "k": "polish",
+   "req": false,
+   "p": 0.4
+  }
+ ],
+ "clocks": [
+  {
+   "k": "scrub",
+   "req": true,
+   "p": 0.7
+  },
+  {
+   "k": "rust",
+   "req": true,
+   "p": 0.85
+  },
+  {
+   "k": "glue",
+   "req": false,
+   "p": 0.3
+  },
+  {
+   "k": "wire",
+   "req": false,
+   "p": 0.3
+  },
+  {
+   "k": "polish",
+   "req": false,
+   "p": 0.8
+  }
+ ],
+ "radios": [
+  {
+   "k": "sticker",
+   "req": false,
+   "p": 0.4
+  },
+  {
+   "k": "scrub",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "wire",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "paint",
+   "req": false,
+   "p": 0.3
+  },
+  {
+   "k": "polish",
+   "req": false,
+   "p": 0.6
+  }
+ ],
+ "chairs": [
+  {
+   "k": "scrub",
+   "req": false,
+   "p": 0.3
+  },
+  {
+   "k": "sand",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "glue",
+   "req": false,
+   "p": 0.5
+  },
+  {
+   "k": "paint",
+   "req": false,
+   "p": 0.8
+  },
+  {
+   "k": "polish",
+   "req": false,
+   "p": 0.3
+  }
+ ],
+ "bikes": [
+  {
+   "k": "scrub",
+   "req": false,
+   "p": 0.5
+  },
+  {
+   "k": "rust",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "sand",
+   "req": false,
+   "p": 0.3
+  },
+  {
+   "k": "paint",
+   "req": false,
+   "p": 0.7
+  },
+  {
+   "k": "polish",
+   "req": false,
+   "p": 0.6
+  }
+ ],
+ "curios": [
+  {
+   "k": "sticker",
+   "req": false,
+   "p": 0.35
+  },
+  {
+   "k": "scrub",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "rust",
+   "req": false,
+   "p": 0.3
+  },
+  {
+   "k": "glue",
+   "req": false,
+   "p": 0.3
+  },
+  {
+   "k": "wire",
+   "req": false,
+   "p": 0.25
+  },
+  {
+   "k": "polish",
+   "req": false,
+   "p": 0.6
+  }
+ ]
+}

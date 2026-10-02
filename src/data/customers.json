@@ -1,0 +1,14 @@
+[
+  { "id": "collector", "name": "Collector Cleo", "wtp": 1.25, "cats": ["clocks", "curios", "ceramics"], "look": { "skin": "#f1c7a3", "hair": "#6b3e26", "shirt": "#2f8f8a", "hat": 1 }, "weight": 3, "minTier": 0 },
+  { "id": "student", "name": "Student Sam", "wtp": 0.85, "cats": ["kitchen", "lamps", "radios"], "look": { "skin": "#c68e62", "hair": "#2b1d14", "shirt": "#f2b33d", "hat": 0 }, "weight": 4, "minTier": 0 },
+  { "id": "designer", "name": "Designer Dana", "wtp": 1.2, "cats": ["lamps", "chairs", "ceramics"], "look": { "skin": "#8d5a3c", "hair": "#111111", "shirt": "#e0663f", "hat": 2 }, "weight": 3, "minTier": 0 },
+  { "id": "bargain", "name": "Bargain Bob", "wtp": 0.8, "cats": ["kitchen", "chairs", "bikes"], "look": { "skin": "#f5d0b5", "hair": "#c9c9c9", "shirt": "#7bbf5a", "hat": 3 }, "weight": 4, "minTier": 0 },
+  { "id": "tourist", "name": "Tourist Tia", "wtp": 1.05, "cats": ["ceramics", "curios", "kitchen"], "look": { "skin": "#e9b48a", "hair": "#d9822b", "shirt": "#7cc6e8", "hat": 4 }, "weight": 3, "minTier": 0 },
+  { "id": "retro", "name": "Retro Rex", "wtp": 1.15, "cats": ["radios", "clocks", "lamps"], "look": { "skin": "#b97a56", "hair": "#e85d9a", "shirt": "#9b7ede", "hat": 0 }, "weight": 3, "minTier": 1 },
+  { "id": "chef", "name": "Chef Charlie", "wtp": 1.1, "cats": ["kitchen", "ceramics"], "look": { "skin": "#f1c7a3", "hair": "#5a3a22", "shirt": "#ffffff", "hat": 5 }, "weight": 2, "minTier": 0 },
+  { "id": "clockmaker", "name": "Tick-Tock Tess", "wtp": 1.3, "cats": ["clocks"], "look": { "skin": "#d7a17a", "hair": "#8a8a8a", "shirt": "#b5773f", "hat": 1 }, "weight": 2, "minTier": 1 },
+  { "id": "cyclist", "name": "Cyclist Kai", "wtp": 1.2, "cats": ["bikes"], "look": { "skin": "#8d5a3c", "hair": "#1d1d1d", "shirt": "#e5533d", "hat": 6 }, "weight": 2, "minTier": 3 },
+  { "id": "dj", "name": "DJ Dot", "wtp": 1.2, "cats": ["radios", "lamps"], "look": { "skin": "#f5d0b5", "hair": "#2fa59c", "shirt": "#3d2c25", "hat": 7 }, "weight": 2, "minTier": 2 },
+  { "id": "gardener", "name": "Gardener Gus", "wtp": 1.0, "cats": ["ceramics", "chairs", "kitchen"], "look": { "skin": "#c68e62", "hair": "#7a5230", "shirt": "#6dbb5a", "hat": 4 }, "weight": 2, "minTier": 0 },
+  { "id": "magician", "name": "Marvelous Mo", "wtp": 1.4, "cats": ["curios", "clocks"], "look": { "skin": "#e9b48a", "hair": "#2b1d14", "shirt": "#9b6fd6", "hat": 8 }, "weight": 1, "minTier": 4 }
+]

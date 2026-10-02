@@ -1,0 +1,1202 @@
+[
+ {
+  "id": "kit_polka_dot_mug",
+  "name": "Polka Dot Mug",
+  "cat": "kitchen",
+  "shape": 0,
+  "body": "red",
+  "accent": "cream",
+  "base": 14,
+  "era": "70s"
+ },
+ {
+  "id": "kit_sunny_morning_mug",
+  "name": "Sunny Morning Mug",
+  "cat": "kitchen",
+  "shape": 0,
+  "body": "yellow",
+  "accent": "teal",
+  "base": 12,
+  "era": "80s"
+ },
+ {
+  "id": "kit_midnight_mug",
+  "name": "Midnight Mug",
+  "cat": "kitchen",
+  "shape": 0,
+  "body": "blue",
+  "accent": "silver",
+  "base": 16,
+  "era": "90s"
+ },
+ {
+  "id": "kit_rosebud_teapot",
+  "name": "Rosebud Teapot",
+  "cat": "kitchen",
+  "shape": 1,
+  "body": "pink",
+  "accent": "gold",
+  "base": 28,
+  "era": "50s"
+ },
+ {
+  "id": "kit_garden_teapot",
+  "name": "Garden Teapot",
+  "cat": "kitchen",
+  "shape": 1,
+  "body": "green",
+  "accent": "cream",
+  "base": 24,
+  "era": "60s"
+ },
+ {
+  "id": "kit_royal_blue_teapot",
+  "name": "Royal Blue Teapot",
+  "cat": "kitchen",
+  "shape": 1,
+  "body": "blue",
+  "accent": "gold",
+  "base": 34,
+  "era": "50s"
+ },
+ {
+  "id": "kit_whistle_kettle",
+  "name": "Whistle Kettle",
+  "cat": "kitchen",
+  "shape": 2,
+  "body": "red",
+  "accent": "silver",
+  "base": 22,
+  "era": "60s"
+ },
+ {
+  "id": "kit_mint_kettle",
+  "name": "Mint Kettle",
+  "cat": "kitchen",
+  "shape": 2,
+  "body": "mint",
+  "accent": "silver",
+  "base": 26,
+  "era": "50s"
+ },
+ {
+  "id": "kit_copper_kettle",
+  "name": "Copper Kettle",
+  "cat": "kitchen",
+  "shape": 2,
+  "body": "orange",
+  "accent": "black",
+  "base": 30,
+  "era": "70s"
+ },
+ {
+  "id": "kit_lemonade_pitcher",
+  "name": "Lemonade Pitcher",
+  "cat": "kitchen",
+  "shape": 3,
+  "body": "yellow",
+  "accent": "green",
+  "base": 18,
+  "era": "70s"
+ },
+ {
+  "id": "kit_picnic_jug",
+  "name": "Picnic Jug",
+  "cat": "kitchen",
+  "shape": 3,
+  "body": "cream",
+  "accent": "red",
+  "base": 16,
+  "era": "60s"
+ },
+ {
+  "id": "kit_ocean_jug",
+  "name": "Ocean Jug",
+  "cat": "kitchen",
+  "shape": 3,
+  "body": "teal",
+  "accent": "white",
+  "base": 22,
+  "era": "80s"
+ },
+ {
+  "id": "kit_chrome_toaster",
+  "name": "Chrome Toaster",
+  "cat": "kitchen",
+  "shape": 4,
+  "body": "silver",
+  "accent": "black",
+  "base": 32,
+  "era": "50s"
+ },
+ {
+  "id": "kit_cherry_toaster",
+  "name": "Cherry Toaster",
+  "cat": "kitchen",
+  "shape": 4,
+  "body": "red",
+  "accent": "silver",
+  "base": 36,
+  "era": "60s"
+ },
+ {
+  "id": "kit_avocado_toaster",
+  "name": "Avocado Toaster",
+  "cat": "kitchen",
+  "shape": 4,
+  "body": "green",
+  "accent": "cream",
+  "base": 40,
+  "era": "70s"
+ },
+ {
+  "id": "cer_tall_blue_vase",
+  "name": "Tall Blue Vase",
+  "cat": "ceramics",
+  "shape": 0,
+  "body": "blue",
+  "accent": "white",
+  "base": 30,
+  "era": "60s"
+ },
+ {
+  "id": "cer_sunset_vase",
+  "name": "Sunset Vase",
+  "cat": "ceramics",
+  "shape": 0,
+  "body": "orange",
+  "accent": "yellow",
+  "base": 26,
+  "era": "70s"
+ },
+ {
+  "id": "cer_lilac_vase",
+  "name": "Lilac Vase",
+  "cat": "ceramics",
+  "shape": 0,
+  "body": "purple",
+  "accent": "gold",
+  "base": 36,
+  "era": "50s"
+ },
+ {
+  "id": "cer_bubble_vase",
+  "name": "Bubble Vase",
+  "cat": "ceramics",
+  "shape": 1,
+  "body": "teal",
+  "accent": "cream",
+  "base": 24,
+  "era": "70s"
+ },
+ {
+  "id": "cer_strawberry_vase",
+  "name": "Strawberry Vase",
+  "cat": "ceramics",
+  "shape": 1,
+  "body": "red",
+  "accent": "green",
+  "base": 28,
+  "era": "80s"
+ },
+ {
+  "id": "cer_honey_pot",
+  "name": "Honey Pot",
+  "cat": "ceramics",
+  "shape": 1,
+  "body": "yellow",
+  "accent": "brown",
+  "base": 20,
+  "era": "60s"
+ },
+ {
+  "id": "cer_fruit_bowl",
+  "name": "Fruit Bowl",
+  "cat": "ceramics",
+  "shape": 2,
+  "body": "green",
+  "accent": "yellow",
+  "base": 18,
+  "era": "70s"
+ },
+ {
+  "id": "cer_noodle_bowl",
+  "name": "Noodle Bowl",
+  "cat": "ceramics",
+  "shape": 2,
+  "body": "white",
+  "accent": "red",
+  "base": 14,
+  "era": "90s"
+ },
+ {
+  "id": "cer_glaze_bowl",
+  "name": "Glaze Bowl",
+  "cat": "ceramics",
+  "shape": 2,
+  "body": "brown",
+  "accent": "teal",
+  "base": 22,
+  "era": "60s"
+ },
+ {
+  "id": "cer_daisy_plate",
+  "name": "Daisy Plate",
+  "cat": "ceramics",
+  "shape": 3,
+  "body": "yellow",
+  "accent": "teal",
+  "base": 16,
+  "era": "60s"
+ },
+ {
+  "id": "cer_willow_plate",
+  "name": "Willow Plate",
+  "cat": "ceramics",
+  "shape": 3,
+  "body": "blue",
+  "accent": "blue",
+  "base": 24,
+  "era": "50s"
+ },
+ {
+  "id": "cer_party_plate",
+  "name": "Party Plate",
+  "cat": "ceramics",
+  "shape": 3,
+  "body": "pink",
+  "accent": "purple",
+  "base": 14,
+  "era": "80s"
+ },
+ {
+  "id": "cer_lucky_cat",
+  "name": "Lucky Cat",
+  "cat": "ceramics",
+  "shape": 4,
+  "body": "white",
+  "accent": "red",
+  "base": 34,
+  "era": "80s"
+ },
+ {
+  "id": "cer_ginger_cat",
+  "name": "Ginger Cat",
+  "cat": "ceramics",
+  "shape": 4,
+  "body": "orange",
+  "accent": "teal",
+  "base": 30,
+  "era": "70s"
+ },
+ {
+  "id": "cer_midnight_cat",
+  "name": "Midnight Cat",
+  "cat": "ceramics",
+  "shape": 4,
+  "body": "black",
+  "accent": "gold",
+  "base": 44,
+  "era": "50s"
+ },
+ {
+  "id": "lam_study_lamp",
+  "name": "Study Lamp",
+  "cat": "lamps",
+  "shape": 0,
+  "body": "green",
+  "accent": "silver",
+  "base": 36,
+  "era": "60s"
+ },
+ {
+  "id": "lam_robot_arm_lamp",
+  "name": "Robot Arm Lamp",
+  "cat": "lamps",
+  "shape": 0,
+  "body": "silver",
+  "accent": "red",
+  "base": 44,
+  "era": "80s"
+ },
+ {
+  "id": "lam_banker_lamp",
+  "name": "Banker Lamp",
+  "cat": "lamps",
+  "shape": 0,
+  "body": "teal",
+  "accent": "gold",
+  "base": 50,
+  "era": "50s"
+ },
+ {
+  "id": "lam_fringe_lamp",
+  "name": "Fringe Lamp",
+  "cat": "lamps",
+  "shape": 1,
+  "body": "pink",
+  "accent": "cream",
+  "base": 40,
+  "era": "50s"
+ },
+ {
+  "id": "lam_cottage_lamp",
+  "name": "Cottage Lamp",
+  "cat": "lamps",
+  "shape": 1,
+  "body": "cream",
+  "accent": "green",
+  "base": 34,
+  "era": "60s"
+ },
+ {
+  "id": "lam_tiki_lamp",
+  "name": "Tiki Lamp",
+  "cat": "lamps",
+  "shape": 1,
+  "body": "brown",
+  "accent": "orange",
+  "base": 46,
+  "era": "70s"
+ },
+ {
+  "id": "lam_groovy_lava_lamp",
+  "name": "Groovy Lava Lamp",
+  "cat": "lamps",
+  "shape": 2,
+  "body": "purple",
+  "accent": "orange",
+  "base": 52,
+  "era": "70s"
+ },
+ {
+  "id": "lam_bubble_lava_lamp",
+  "name": "Bubble Lava Lamp",
+  "cat": "lamps",
+  "shape": 2,
+  "body": "blue",
+  "accent": "green",
+  "base": 48,
+  "era": "90s"
+ },
+ {
+  "id": "lam_disco_lava_lamp",
+  "name": "Disco Lava Lamp",
+  "cat": "lamps",
+  "shape": 2,
+  "body": "pink",
+  "accent": "yellow",
+  "base": 56,
+  "era": "80s"
+ },
+ {
+  "id": "lam_camping_lantern",
+  "name": "Camping Lantern",
+  "cat": "lamps",
+  "shape": 3,
+  "body": "green",
+  "accent": "red",
+  "base": 38,
+  "era": "60s"
+ },
+ {
+  "id": "lam_harbor_lantern",
+  "name": "Harbor Lantern",
+  "cat": "lamps",
+  "shape": 3,
+  "body": "red",
+  "accent": "silver",
+  "base": 54,
+  "era": "50s"
+ },
+ {
+  "id": "lam_fairy_lantern",
+  "name": "Fairy Lantern",
+  "cat": "lamps",
+  "shape": 3,
+  "body": "teal",
+  "accent": "gold",
+  "base": 42,
+  "era": "90s"
+ },
+ {
+  "id": "lam_toadstool_lamp",
+  "name": "Toadstool Lamp",
+  "cat": "lamps",
+  "shape": 4,
+  "body": "red",
+  "accent": "cream",
+  "base": 58,
+  "era": "70s"
+ },
+ {
+  "id": "lam_moon_mushroom",
+  "name": "Moon Mushroom",
+  "cat": "lamps",
+  "shape": 4,
+  "body": "purple",
+  "accent": "yellow",
+  "base": 62,
+  "era": "80s"
+ },
+ {
+  "id": "lam_meadow_mushroom",
+  "name": "Meadow Mushroom",
+  "cat": "lamps",
+  "shape": 4,
+  "body": "orange",
+  "accent": "green",
+  "base": 50,
+  "era": "90s"
+ },
+ {
+  "id": "clo_ring_ring_alarm",
+  "name": "Ring-Ring Alarm",
+  "cat": "clocks",
+  "shape": 0,
+  "body": "red",
+  "accent": "silver",
+  "base": 34,
+  "era": "60s"
+ },
+ {
+  "id": "clo_wake_up_alarm",
+  "name": "Wake-Up Alarm",
+  "cat": "clocks",
+  "shape": 0,
+  "body": "yellow",
+  "accent": "silver",
+  "base": 30,
+  "era": "70s"
+ },
+ {
+  "id": "clo_sleepy_alarm",
+  "name": "Sleepy Alarm",
+  "cat": "clocks",
+  "shape": 0,
+  "body": "blue",
+  "accent": "gold",
+  "base": 40,
+  "era": "50s"
+ },
+ {
+  "id": "clo_kitchen_wall_clock",
+  "name": "Kitchen Wall Clock",
+  "cat": "clocks",
+  "shape": 1,
+  "body": "mint",
+  "accent": "red",
+  "base": 38,
+  "era": "50s"
+ },
+ {
+  "id": "clo_school_clock",
+  "name": "School Clock",
+  "cat": "clocks",
+  "shape": 1,
+  "body": "white",
+  "accent": "black",
+  "base": 32,
+  "era": "70s"
+ },
+ {
+  "id": "clo_sunburst_clock",
+  "name": "Sunburst Clock",
+  "cat": "clocks",
+  "shape": 1,
+  "body": "gold",
+  "accent": "orange",
+  "base": 64,
+  "era": "60s"
+ },
+ {
+  "id": "clo_mantel_clock",
+  "name": "Mantel Clock",
+  "cat": "clocks",
+  "shape": 2,
+  "body": "brown",
+  "accent": "gold",
+  "base": 72,
+  "era": "50s"
+ },
+ {
+  "id": "clo_chapel_clock",
+  "name": "Chapel Clock",
+  "cat": "clocks",
+  "shape": 2,
+  "body": "black",
+  "accent": "gold",
+  "base": 80,
+  "era": "60s"
+ },
+ {
+  "id": "clo_cottage_mantel",
+  "name": "Cottage Mantel",
+  "cat": "clocks",
+  "shape": 2,
+  "body": "cream",
+  "accent": "teal",
+  "base": 56,
+  "era": "70s"
+ },
+ {
+  "id": "clo_gold_pocket_watch",
+  "name": "Gold Pocket Watch",
+  "cat": "clocks",
+  "shape": 3,
+  "body": "gold",
+  "accent": "black",
+  "base": 90,
+  "era": "50s"
+ },
+ {
+  "id": "clo_silver_pocket_watch",
+  "name": "Silver Pocket Watch",
+  "cat": "clocks",
+  "shape": 3,
+  "body": "silver",
+  "accent": "blue",
+  "base": 76,
+  "era": "60s"
+ },
+ {
+  "id": "clo_captain_s_watch",
+  "name": "Captain's Watch",
+  "cat": "clocks",
+  "shape": 3,
+  "body": "gold",
+  "accent": "red",
+  "base": 100,
+  "era": "50s"
+ },
+ {
+  "id": "clo_flip_digit_clock",
+  "name": "Flip Digit Clock",
+  "cat": "clocks",
+  "shape": 4,
+  "body": "orange",
+  "accent": "red",
+  "base": 44,
+  "era": "70s"
+ },
+ {
+  "id": "clo_neon_clock",
+  "name": "Neon Clock",
+  "cat": "clocks",
+  "shape": 4,
+  "body": "black",
+  "accent": "green",
+  "base": 48,
+  "era": "80s"
+ },
+ {
+  "id": "clo_beep_clock",
+  "name": "Beep Clock",
+  "cat": "clocks",
+  "shape": 4,
+  "body": "silver",
+  "accent": "red",
+  "base": 40,
+  "era": "90s"
+ },
+ {
+  "id": "rad_tube_radio",
+  "name": "Tube Radio",
+  "cat": "radios",
+  "shape": 0,
+  "body": "brown",
+  "accent": "cream",
+  "base": 70,
+  "era": "50s"
+ },
+ {
+  "id": "rad_seaside_radio",
+  "name": "Seaside Radio",
+  "cat": "radios",
+  "shape": 0,
+  "body": "teal",
+  "accent": "cream",
+  "base": 64,
+  "era": "60s"
+ },
+ {
+  "id": "rad_cherry_radio",
+  "name": "Cherry Radio",
+  "cat": "radios",
+  "shape": 0,
+  "body": "red",
+  "accent": "gold",
+  "base": 80,
+  "era": "50s"
+ },
+ {
+  "id": "rad_pocket_radio",
+  "name": "Pocket Radio",
+  "cat": "radios",
+  "shape": 1,
+  "body": "blue",
+  "accent": "silver",
+  "base": 40,
+  "era": "60s"
+ },
+ {
+  "id": "rad_beach_radio",
+  "name": "Beach Radio",
+  "cat": "radios",
+  "shape": 1,
+  "body": "yellow",
+  "accent": "white",
+  "base": 36,
+  "era": "70s"
+ },
+ {
+  "id": "rad_racer_radio",
+  "name": "Racer Radio",
+  "cat": "radios",
+  "shape": 1,
+  "body": "red",
+  "accent": "black",
+  "base": 46,
+  "era": "80s"
+ },
+ {
+  "id": "rad_block_boombox",
+  "name": "Block Boombox",
+  "cat": "radios",
+  "shape": 2,
+  "body": "silver",
+  "accent": "black",
+  "base": 84,
+  "era": "80s"
+ },
+ {
+  "id": "rad_party_boombox",
+  "name": "Party Boombox",
+  "cat": "radios",
+  "shape": 2,
+  "body": "pink",
+  "accent": "black",
+  "base": 90,
+  "era": "80s"
+ },
+ {
+  "id": "rad_jungle_boombox",
+  "name": "Jungle Boombox",
+  "cat": "radios",
+  "shape": 2,
+  "body": "green",
+  "accent": "orange",
+  "base": 76,
+  "era": "90s"
+ },
+ {
+  "id": "rad_suitcase_record_player",
+  "name": "Suitcase Record Player",
+  "cat": "radios",
+  "shape": 3,
+  "body": "teal",
+  "accent": "cream",
+  "base": 96,
+  "era": "60s"
+ },
+ {
+  "id": "rad_disco_record_player",
+  "name": "Disco Record Player",
+  "cat": "radios",
+  "shape": 3,
+  "body": "purple",
+  "accent": "gold",
+  "base": 110,
+  "era": "70s"
+ },
+ {
+  "id": "rad_wooden_record_player",
+  "name": "Wooden Record Player",
+  "cat": "radios",
+  "shape": 3,
+  "body": "brown",
+  "accent": "red",
+  "base": 104,
+  "era": "50s"
+ },
+ {
+  "id": "rad_bubble_tv",
+  "name": "Bubble TV",
+  "cat": "radios",
+  "shape": 4,
+  "body": "orange",
+  "accent": "cream",
+  "base": 100,
+  "era": "70s"
+ },
+ {
+  "id": "rad_space_tv",
+  "name": "Space TV",
+  "cat": "radios",
+  "shape": 4,
+  "body": "white",
+  "accent": "blue",
+  "base": 120,
+  "era": "60s"
+ },
+ {
+  "id": "rad_tiny_tv",
+  "name": "Tiny TV",
+  "cat": "radios",
+  "shape": 4,
+  "body": "mint",
+  "accent": "red",
+  "base": 88,
+  "era": "80s"
+ },
+ {
+  "id": "cha_kitchen_chair",
+  "name": "Kitchen Chair",
+  "cat": "chairs",
+  "shape": 0,
+  "body": "yellow",
+  "accent": "red",
+  "base": 44,
+  "era": "60s"
+ },
+ {
+  "id": "cha_farm_chair",
+  "name": "Farm Chair",
+  "cat": "chairs",
+  "shape": 0,
+  "body": "brown",
+  "accent": "green",
+  "base": 40,
+  "era": "50s"
+ },
+ {
+  "id": "cha_bistro_chair",
+  "name": "Bistro Chair",
+  "cat": "chairs",
+  "shape": 0,
+  "body": "teal",
+  "accent": "white",
+  "base": 52,
+  "era": "70s"
+ },
+ {
+  "id": "cha_comfy_armchair",
+  "name": "Comfy Armchair",
+  "cat": "chairs",
+  "shape": 1,
+  "body": "red",
+  "accent": "cream",
+  "base": 110,
+  "era": "60s"
+ },
+ {
+  "id": "cha_velvet_armchair",
+  "name": "Velvet Armchair",
+  "cat": "chairs",
+  "shape": 1,
+  "body": "purple",
+  "accent": "gold",
+  "base": 140,
+  "era": "50s"
+ },
+ {
+  "id": "cha_mustard_armchair",
+  "name": "Mustard Armchair",
+  "cat": "chairs",
+  "shape": 1,
+  "body": "yellow",
+  "accent": "brown",
+  "base": 120,
+  "era": "70s"
+ },
+ {
+  "id": "cha_bar_stool",
+  "name": "Bar Stool",
+  "cat": "chairs",
+  "shape": 2,
+  "body": "red",
+  "accent": "silver",
+  "base": 36,
+  "era": "50s"
+ },
+ {
+  "id": "cha_milking_stool",
+  "name": "Milking Stool",
+  "cat": "chairs",
+  "shape": 2,
+  "body": "brown",
+  "accent": "brown",
+  "base": 30,
+  "era": "60s"
+ },
+ {
+  "id": "cha_bubblegum_stool",
+  "name": "Bubblegum Stool",
+  "cat": "chairs",
+  "shape": 2,
+  "body": "pink",
+  "accent": "white",
+  "base": 42,
+  "era": "80s"
+ },
+ {
+  "id": "cha_porch_rocker",
+  "name": "Porch Rocker",
+  "cat": "chairs",
+  "shape": 3,
+  "body": "white",
+  "accent": "brown",
+  "base": 96,
+  "era": "50s"
+ },
+ {
+  "id": "cha_grandpa_rocker",
+  "name": "Grandpa Rocker",
+  "cat": "chairs",
+  "shape": 3,
+  "body": "brown",
+  "accent": "gold",
+  "base": 120,
+  "era": "60s"
+ },
+ {
+  "id": "cha_sky_rocker",
+  "name": "Sky Rocker",
+  "cat": "chairs",
+  "shape": 3,
+  "body": "blue",
+  "accent": "cream",
+  "base": 104,
+  "era": "70s"
+ },
+ {
+  "id": "cha_classroom_chair",
+  "name": "Classroom Chair",
+  "cat": "chairs",
+  "shape": 4,
+  "body": "orange",
+  "accent": "silver",
+  "base": 34,
+  "era": "70s"
+ },
+ {
+  "id": "cha_retro_desk_chair",
+  "name": "Retro Desk Chair",
+  "cat": "chairs",
+  "shape": 4,
+  "body": "green",
+  "accent": "silver",
+  "base": 40,
+  "era": "80s"
+ },
+ {
+  "id": "cha_lab_chair",
+  "name": "Lab Chair",
+  "cat": "chairs",
+  "shape": 4,
+  "body": "blue",
+  "accent": "silver",
+  "base": 38,
+  "era": "90s"
+ },
+ {
+  "id": "bik_speedy_racer",
+  "name": "Speedy Racer",
+  "cat": "bikes",
+  "shape": 0,
+  "body": "red",
+  "accent": "black",
+  "base": 140,
+  "era": "80s"
+ },
+ {
+  "id": "bik_lightning_racer",
+  "name": "Lightning Racer",
+  "cat": "bikes",
+  "shape": 0,
+  "body": "yellow",
+  "accent": "blue",
+  "base": 160,
+  "era": "90s"
+ },
+ {
+  "id": "bik_classic_roadster",
+  "name": "Classic Roadster",
+  "cat": "bikes",
+  "shape": 0,
+  "body": "green",
+  "accent": "cream",
+  "base": 150,
+  "era": "60s"
+ },
+ {
+  "id": "bik_beach_cruiser",
+  "name": "Beach Cruiser",
+  "cat": "bikes",
+  "shape": 1,
+  "body": "teal",
+  "accent": "cream",
+  "base": 130,
+  "era": "50s"
+ },
+ {
+  "id": "bik_flower_cruiser",
+  "name": "Flower Cruiser",
+  "cat": "bikes",
+  "shape": 1,
+  "body": "pink",
+  "accent": "yellow",
+  "base": 120,
+  "era": "70s"
+ },
+ {
+  "id": "bik_postman_cruiser",
+  "name": "Postman Cruiser",
+  "cat": "bikes",
+  "shape": 1,
+  "body": "red",
+  "accent": "brown",
+  "base": 170,
+  "era": "60s"
+ },
+ {
+  "id": "bik_red_trike",
+  "name": "Red Trike",
+  "cat": "bikes",
+  "shape": 2,
+  "body": "red",
+  "accent": "white",
+  "base": 70,
+  "era": "60s"
+ },
+ {
+  "id": "bik_bumblebee_trike",
+  "name": "Bumblebee Trike",
+  "cat": "bikes",
+  "shape": 2,
+  "body": "yellow",
+  "accent": "black",
+  "base": 64,
+  "era": "70s"
+ },
+ {
+  "id": "bik_ocean_trike",
+  "name": "Ocean Trike",
+  "cat": "bikes",
+  "shape": 2,
+  "body": "blue",
+  "accent": "yellow",
+  "base": 76,
+  "era": "80s"
+ },
+ {
+  "id": "bik_zoom_scooter",
+  "name": "Zoom Scooter",
+  "cat": "bikes",
+  "shape": 3,
+  "body": "orange",
+  "accent": "black",
+  "base": 58,
+  "era": "90s"
+ },
+ {
+  "id": "bik_mint_scooter",
+  "name": "Mint Scooter",
+  "cat": "bikes",
+  "shape": 3,
+  "body": "mint",
+  "accent": "pink",
+  "base": 54,
+  "era": "80s"
+ },
+ {
+  "id": "bik_silver_scooter",
+  "name": "Silver Scooter",
+  "cat": "bikes",
+  "shape": 3,
+  "body": "silver",
+  "accent": "red",
+  "base": 66,
+  "era": "90s"
+ },
+ {
+  "id": "bik_circus_unicycle",
+  "name": "Circus Unicycle",
+  "cat": "bikes",
+  "shape": 4,
+  "body": "purple",
+  "accent": "yellow",
+  "base": 110,
+  "era": "50s"
+ },
+ {
+  "id": "bik_clown_unicycle",
+  "name": "Clown Unicycle",
+  "cat": "bikes",
+  "shape": 4,
+  "body": "red",
+  "accent": "blue",
+  "base": 96,
+  "era": "60s"
+ },
+ {
+  "id": "bik_gold_unicycle",
+  "name": "Gold Unicycle",
+  "cat": "bikes",
+  "shape": 4,
+  "body": "gold",
+  "accent": "black",
+  "base": 180,
+  "era": "70s"
+ },
+ {
+  "id": "cur_desk_globe",
+  "name": "Desk Globe",
+  "cat": "curios",
+  "shape": 0,
+  "body": "blue",
+  "accent": "green",
+  "base": 90,
+  "era": "60s"
+ },
+ {
+  "id": "cur_antique_globe",
+  "name": "Antique Globe",
+  "cat": "curios",
+  "shape": 0,
+  "body": "cream",
+  "accent": "brown",
+  "base": 160,
+  "era": "50s"
+ },
+ {
+  "id": "cur_night_globe",
+  "name": "Night Globe",
+  "cat": "curios",
+  "shape": 0,
+  "body": "black",
+  "accent": "gold",
+  "base": 140,
+  "era": "70s"
+ },
+ {
+  "id": "cur_clacky_typewriter",
+  "name": "Clacky Typewriter",
+  "cat": "curios",
+  "shape": 1,
+  "body": "teal",
+  "accent": "black",
+  "base": 120,
+  "era": "60s"
+ },
+ {
+  "id": "cur_ruby_typewriter",
+  "name": "Ruby Typewriter",
+  "cat": "curios",
+  "shape": 1,
+  "body": "red",
+  "accent": "black",
+  "base": 140,
+  "era": "50s"
+ },
+ {
+  "id": "cur_travel_typewriter",
+  "name": "Travel Typewriter",
+  "cat": "curios",
+  "shape": 1,
+  "body": "cream",
+  "accent": "brown",
+  "base": 110,
+  "era": "70s"
+ },
+ {
+  "id": "cur_snap_camera",
+  "name": "Snap Camera",
+  "cat": "curios",
+  "shape": 2,
+  "body": "black",
+  "accent": "silver",
+  "base": 100,
+  "era": "70s"
+ },
+ {
+  "id": "cur_rainbow_camera",
+  "name": "Rainbow Camera",
+  "cat": "curios",
+  "shape": 2,
+  "body": "white",
+  "accent": "red",
+  "base": 90,
+  "era": "80s"
+ },
+ {
+  "id": "cur_press_camera",
+  "name": "Press Camera",
+  "cat": "curios",
+  "shape": 2,
+  "body": "silver",
+  "accent": "brown",
+  "base": 170,
+  "era": "50s"
+ },
+ {
+  "id": "cur_spelling_bee_trophy",
+  "name": "Spelling Bee Trophy",
+  "cat": "curios",
+  "shape": 3,
+  "body": "gold",
+  "accent": "gold",
+  "base": 60,
+  "era": "80s"
+ },
+ {
+  "id": "cur_bowling_trophy",
+  "name": "Bowling Trophy",
+  "cat": "curios",
+  "shape": 3,
+  "body": "silver",
+  "accent": "silver",
+  "base": 70,
+  "era": "60s"
+ },
+ {
+  "id": "cur_pie_contest_trophy",
+  "name": "Pie Contest Trophy",
+  "cat": "curios",
+  "shape": 3,
+  "body": "gold",
+  "accent": "red",
+  "base": 80,
+  "era": "50s"
+ },
+ {
+  "id": "cur_winter_snow_globe",
+  "name": "Winter Snow Globe",
+  "cat": "curios",
+  "shape": 4,
+  "body": "red",
+  "accent": "white",
+  "base": 56,
+  "era": "80s"
+ },
+ {
+  "id": "cur_ocean_snow_globe",
+  "name": "Ocean Snow Globe",
+  "cat": "curios",
+  "shape": 4,
+  "body": "blue",
+  "accent": "white",
+  "base": 64,
+  "era": "90s"
+ },
+ {
+  "id": "cur_castle_snow_globe",
+  "name": "Castle Snow Globe",
+  "cat": "curios",
+  "shape": 4,
+  "body": "purple",
+  "accent": "gold",
+  "base": 90,
+  "era": "70s"
+ }
+]

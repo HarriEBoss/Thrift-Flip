@@ -1,0 +1,80 @@
+{
+  "startCoins": 60,
+  "rarityMult": [1, 1.6, 3, 6],
+  "appraisalWidth": [0.5, 0.35, 0.22, 0.12],
+  "tiers": [
+    { "id": "stall", "name": "Flea Stall", "cost": 0, "rep": 0, "shelves": 4, "customers": 3 },
+    { "id": "garage", "name": "Garage Shop", "cost": 160, "rep": 5, "shelves": 6, "customers": 4 },
+    { "id": "corner", "name": "Corner Store", "cost": 900, "rep": 25, "shelves": 8, "customers": 5 },
+    { "id": "boutique", "name": "Vintage Boutique", "cost": 4000, "rep": 70, "shelves": 10, "customers": 6 },
+    { "id": "emporium", "name": "Grand Emporium", "cost": 12000, "rep": 150, "shelves": 12, "customers": 7 }
+  ],
+  "skills": [
+    { "id": "appraisal1", "branch": "appraisal", "rank": 1, "level": 2 },
+    { "id": "appraisal2", "branch": "appraisal", "rank": 2, "level": 6, "requires": "appraisal1" },
+    { "id": "appraisal3", "branch": "appraisal", "rank": 3, "level": 12, "requires": "appraisal2" },
+    { "id": "haggling1", "branch": "haggling", "rank": 1, "level": 3 },
+    { "id": "haggling2", "branch": "haggling", "rank": 2, "level": 8, "requires": "haggling1" },
+    { "id": "charm1", "branch": "charm", "rank": 1, "level": 2 },
+    { "id": "charm2", "branch": "charm", "rank": 2, "level": 7, "requires": "charm1" },
+    { "id": "charm3", "branch": "charm", "rank": 3, "level": 14, "requires": "charm2" },
+    { "id": "craft1", "branch": "craft", "rank": 1, "level": 4 },
+    { "id": "craft2", "branch": "craft", "rank": 2, "level": 10, "requires": "craft1" },
+    { "id": "logistics1", "branch": "logistics", "rank": 1, "level": 5 },
+    { "id": "logistics2", "branch": "logistics", "rank": 2, "level": 11, "requires": "logistics1" }
+  ],
+  "upgrades": [
+    { "id": "big_sponge", "cost": 90, "tier": 0, "fx": { "scrubBrush": 1.3 } },
+    { "id": "steady_hands", "cost": 140, "tier": 0, "fx": { "stickerTear": 1.5 } },
+    { "id": "buffer", "cost": 260, "tier": 1, "fx": { "polishRate": 1.4 } },
+    { "id": "glue_gun", "cost": 300, "tier": 1, "fx": { "glueTolerance": 1.5 } },
+    { "id": "wire_brush_pro", "cost": 450, "tier": 1, "fx": { "rustBrush": 1.25, "rustPower": 1.6 } },
+    { "id": "wire_tester", "cost": 500, "tier": 2, "fx": { "wireHints": 1 } },
+    { "id": "power_sander", "cost": 700, "tier": 2, "fx": { "sandBrush": 1.45 } },
+    { "id": "spray_gun", "cost": 900, "tier": 2, "fx": { "paintBrush": 1.35, "paintOverspray": 0.6 } },
+    { "id": "magnifier", "cost": 1600, "tier": 3, "fx": { "magnifier": 1 } }
+  ],
+  "palette": [
+    { "id": "red", "hex": "#e5533d" },
+    { "id": "orange", "hex": "#f08a3c" },
+    { "id": "yellow", "hex": "#f4c542" },
+    { "id": "green", "hex": "#6dbb5a" },
+    { "id": "mint", "hex": "#a8e0c5" },
+    { "id": "teal", "hex": "#2fa59c" },
+    { "id": "blue", "hex": "#4a8fd9" },
+    { "id": "purple", "hex": "#9b6fd6" },
+    { "id": "pink", "hex": "#f28fa6" },
+    { "id": "cream", "hex": "#f4e3c1" },
+    { "id": "brown", "hex": "#9a6a44" },
+    { "id": "black", "hex": "#4a4a52" },
+    { "id": "white", "hex": "#f7f5ef" },
+    { "id": "silver", "hex": "#c3c8cf" },
+    { "id": "gold", "hex": "#e8b93a" }
+  ],
+  "paintColors": ["red", "orange", "yellow", "green", "teal", "blue", "purple", "pink"],
+  "products": [
+    { "id": "starter_pack", "kind": "non_consumable", "price": "€2.99", "coins": 1000, "perks": ["golden_sponge"], "once": true, "badge": "best" },
+    { "id": "remove_ads", "kind": "non_consumable", "price": "€4.99", "perks": ["no_ads"] },
+    { "id": "golden_toolkit", "kind": "non_consumable", "price": "€6.99", "perks": ["golden_sponge", "golden_toolkit"] },
+    { "id": "shop_expansion", "kind": "non_consumable", "price": "€3.99", "perks": ["shop_expansion"] },
+    { "id": "appraiser_pass", "kind": "non_consumable", "price": "€2.99", "perks": ["appraiser_pass"] },
+    { "id": "mega_bundle", "kind": "non_consumable", "price": "€14.99", "coins": 5000, "perks": ["no_ads", "golden_sponge", "golden_toolkit", "shop_expansion", "appraiser_pass"], "badge": "value" },
+    { "id": "coins_small", "kind": "consumable", "price": "€0.99", "coins": 500 },
+    { "id": "coins_medium", "kind": "consumable", "price": "€4.99", "coins": 3000, "badge": "popular" },
+    { "id": "coins_large", "kind": "consumable", "price": "€9.99", "coins": 8000 }
+  ],
+  "xp": { "base": 60, "exp": 1.45, "perStep": 6, "perSaleDiv": 4 },
+  "rep": { "sale": 1, "perfect": 2, "request": 3, "overprice": 1 },
+  "skippedOptionalScore": 0.35,
+  "requiredWeight": 2,
+  "trendRange": [1.1, 1.3],
+  "ads": {
+    "interstitialMinDay": 3,
+    "interstitialCooldownSec": 180,
+    "freeGiftPerDay": 3,
+    "saleTipPerDay": 3,
+    "saleTipBonus": 0.2
+  },
+  "daily": { "rewardPerStar": 25 },
+  "catalogBonus": 0.05
+}

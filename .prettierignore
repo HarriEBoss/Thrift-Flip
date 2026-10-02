@@ -1,0 +1,10 @@
+node_modules
+dist
+dist-*
+coverage
+ios
+test-results
+playwright-report
+package-lock.json
+docs/BALANCE.md
+src/data/*.json

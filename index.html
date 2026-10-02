@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!--PLATFORM_SDK-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#2f8f8a" />
+    <title>Thrift Flip</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #fdf3e1;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        -webkit-tap-highlight-color: transparent;
+        overscroll-behavior: none;
+      }
+      #game {
+        position: fixed;
+        inset: 0;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        touch-action: none;
+      }
+      #game canvas {
+        display: block;
+        touch-action: none;
+        outline: none;
+      }
+      #boot {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3vmin;
+        background: radial-gradient(circle at 50% 40%, #fff8ea 0%, #fbe7c4 70%, #f3d3a1 100%);
+        font-family: 'Fredoka', 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif;
+        color: #3d2c25;
+        z-index: 10;
+        transition: opacity 0.35s ease;
+      }
+      #boot .logo {
+        font-size: min(13vmin, 96px);
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: #e0663f;
+        text-shadow: 0 0.06em 0 #8a3b22;
+        transform: rotate(-3deg);
+      }
+      #boot .logo span {
+        color: #2f8f8a;
+        text-shadow: 0 0.06em 0 #1d5a57;
+      }
+      #boot .bar {
+        width: min(60vw, 420px);
+        height: min(4.4vmin, 28px);
+        border-radius: 999px;
+        background: #fff;
+        box-shadow: inset 0 0 0 3px #3d2c25;
+        overflow: hidden;
+      }
+      #boot .fill {
+        height: 100%;
+        width: 0%;
+        border-radius: 999px;
+        background: repeating-linear-gradient(45deg, #f2b33d 0 12px, #f6c862 12px 24px);
+        transition: width 0.25s ease;
+      }
+      #boot .label {
+        font-size: min(4vmin, 24px);
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game"></div>
+    <div id="boot" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="logo">Thrift <span>Flip</span></div>
+      <div class="bar"><div class="fill" id="boot-fill"></div></div>
+      <div class="label" id="boot-label">Loading 0%</div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
