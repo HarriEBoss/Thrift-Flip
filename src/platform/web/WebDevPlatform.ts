@@ -77,7 +77,7 @@ export class WebDevPlatform implements Platform {
     return [];
   }
   async showPrivacyOptions(): Promise<void> {}
-  openExternal(_url: string): void {}
+  openPrivacyPolicy(): void {}
   haptic(_kind: 'light' | 'medium' | 'success'): void {}
   logError(err: unknown): void {
     console.error('[ThriftFlip]', err);

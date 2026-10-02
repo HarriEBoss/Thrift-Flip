@@ -112,3 +112,25 @@ Next: Phase 3, the playable core loop in Phaser.
   restored and sold in the browser, and all 8 mini-game kinds occur. Auction, catalog, daily and
   completion screens are reachable.
 - Soft-lock guard: a broke player with an empty inventory always gets one affordable offer.
+
+## Phase 5 — Polish ✅ (with environment caveats)
+- Art: each shop tier has its own look (awning stripes, wall and background colours, name sign). Dirt was
+  toned down so items stay recognisable. Market card badges fixed.
+- `src/assets/manifest.json` + `game/art/manifest.ts`: hand-made art can replace any generated
+  item art without code changes. It is loaded lazily after `gameReady`.
+- Audio: all SFX and the 3 music loops are procedural. Music starts only after `gameReady`. Master gain changes
+  apply immediately, even while the context is suspended.
+- Settings: Music and SFX sliders, haptics (where supported), reduced motion, bigger text,
+  colour-blind paints, Restore Purchases and ad privacy (iOS only), credits. The overall mute is only offered where
+  `capabilities.masterMute` is true (never on YouTube).
+- Localization: `src/i18n` loader with BCP-47 fallback. English ships. Tests check that every literal
+  `t('…')` key and every data-driven key family exists. DE/FR/ES/PT-BR can be added as new tables.
+- Performance: the initial download is about 1.56 MiB (fonts trimmed to woff2). A texture LRU caps cached item textures.
+  Per-frame redraws were removed (progress bars and buttons only redraw on change). The e2e heap check is < 200 MB.
+- New e2e suite `certification.spec.ts`: pause/resume (loop, audio, frame counter, save on pause),
+  YouTube audio off means silent and sliders can't override it, no mute button and no store on YouTube, Esc closes every
+  modal and is never `preventDefault`-ed, resizing through all 9 aspect ratios mid-scrub keeps state, touch-only
+  menus, and the heap budget.
+- **Not verifiable here:** a real "60 fps on a mid-range device" measurement. This container only
+  has software WebGL (SwiftShader). Profiling showed game JS under 10% of frame time; the rest is
+  software rasterisation. Listed in HUMAN_TODO as an on-device check.

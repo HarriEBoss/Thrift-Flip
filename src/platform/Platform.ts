@@ -59,8 +59,8 @@ export interface Platform {
   getProducts(): Promise<Product[]>;
   /** iOS only: show the UMP privacy options form. No-op elsewhere. */
   showPrivacyOptions(): Promise<void>;
-  /** iOS only: open an external URL (privacy policy). No-op elsewhere. */
-  openExternal(url: string): void;
+  /** iOS only: open the privacy policy (URL lives in the iOS adapter). No-op elsewhere. */
+  openPrivacyPolicy(): void;
 
   // device
   haptic(kind: 'light' | 'medium' | 'success'): void;

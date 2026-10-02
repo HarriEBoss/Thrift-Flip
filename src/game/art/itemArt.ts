@@ -18,6 +18,13 @@ export const FIXED: Record<Exclude<ColorToken, 'B' | 'A' | 'S' | 'H'>, string> =
 
 const OUTLINE = '#3d2c25';
 
+/** Hand-made art overrides loaded from assets/manifest.json (item id -> image). */
+const overrides = new Map<string, CanvasImageSource>();
+
+export function registerArtOverride(id: string, img: CanvasImageSource): void {
+  overrides.set(id, img);
+}
+
 export interface Colors {
   body: string;
   accent: string;
@@ -166,8 +173,27 @@ export function drawItem(
   box: ArtBox,
   opts: { mode?: 'color' | 'mask'; paint?: string; shadow?: boolean } = {},
 ): void {
-  const parts = partsFor(arch);
   const mode = opts.mode ?? 'color';
+  const override = overrides.get(arch.id);
+  if (override) {
+    ctx.save();
+    ctx.drawImage(override, box.x, box.y, box.size, box.size);
+    if (mode === 'mask') {
+      ctx.globalCompositeOperation = 'source-in';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(box.x, box.y, box.size, box.size);
+    } else if (opts.paint) {
+      // Repaint: multiply the paint colour over the art, keep its alpha.
+      ctx.globalCompositeOperation = 'multiply';
+      ctx.fillStyle = displayHex(opts.paint);
+      ctx.fillRect(box.x, box.y, box.size, box.size);
+      ctx.globalCompositeOperation = 'destination-in';
+      ctx.drawImage(override, box.x, box.y, box.size, box.size);
+    }
+    ctx.restore();
+    return;
+  }
+  const parts = partsFor(arch);
   const k = box.size / 100;
   const cols = colorsFor(arch, opts.paint);
   const ox = box.x;

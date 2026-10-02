@@ -10,12 +10,16 @@ export interface Harness {
 }
 
 /** Serves the mock SDK, records non-local requests, and spies on visibilitychange listeners. */
-export async function setupPage(page: Page, opts: { initialSave?: string } = {}): Promise<Harness> {
+export async function setupPage(
+  page: Page,
+  opts: { initialSave?: string; audio?: boolean } = {},
+): Promise<Harness> {
   const h: Harness = { external: [] };
   await page.addInitScript(
-    ({ save }) => {
+    ({ save, audio }) => {
       const w = window as unknown as Record<string, unknown>;
       if (save) w.__ytMockInitialSave = save;
+      if (audio === false) w.__ytMockAudio = false;
       const vis: string[] = [];
       w.__visListeners = vis;
       const orig = EventTarget.prototype.addEventListener;
@@ -25,7 +29,7 @@ export async function setupPage(page: Page, opts: { initialSave?: string } = {})
         return (orig as any).call(this, type, ...rest);
       };
     },
-    { save: opts.initialSave ?? '' },
+    { save: opts.initialSave ?? '', audio: opts.audio ?? true },
   );
   await page.route(SDK_URL, (route) =>
     route.fulfill({ status: 200, contentType: 'application/javascript', body: mockSdk }),

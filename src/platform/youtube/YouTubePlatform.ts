@@ -135,7 +135,7 @@ export class YouTubePlatform implements Platform {
 
   async showPrivacyOptions(): Promise<void> {}
 
-  openExternal(_url: string): void {}
+  openPrivacyPolicy(): void {}
 
   haptic(_kind: 'light' | 'medium' | 'success'): void {}
 

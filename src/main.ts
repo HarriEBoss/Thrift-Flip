@@ -1,5 +1,4 @@
-import '@fontsource/fredoka/latin-600.css';
-import '@fontsource/fredoka/latin-700.css';
+import './assets/fonts/fonts.css';
 import { getPlatform } from './platform';
 import { afterPaint, setBootProgress } from './boot/bootScreen';
 

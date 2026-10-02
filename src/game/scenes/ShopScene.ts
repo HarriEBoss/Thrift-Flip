@@ -7,7 +7,7 @@ import { C, FS } from '../theme';
 import { session } from '../session';
 import { drawCustomer, type Mood } from '../art/characters';
 import { instanceThumb } from '../art/textures';
-import { ITEMS, persona as personaDef } from '../../core/data';
+import { BALANCE, ITEMS, persona as personaDef } from '../../core/data';
 import {
   chooseItem,
   generateVisits,
@@ -26,6 +26,15 @@ import { saleTipAmount, saleTipAvailable } from '../../core/ads';
 import type { ItemInstance } from '../../core/state';
 import { REWARD_IDS } from '../../platform/Platform';
 import { t } from '../../i18n';
+
+/** Per-tier shop look (wall, awning stripes, background). */
+const TIER_LOOKS = [
+  { bg: 0xfbeee6, dots: 0xf4dccd, wall: 0xf6e3c8, a: C.teal, b: C.cream },
+  { bg: 0xeef0f2, dots: 0xdde2e6, wall: 0xe4e7ea, a: C.mustard, b: 0x8f97a0 },
+  { bg: 0xeaf5e6, dots: 0xd5ead0, wall: 0xf3f7e8, a: C.leaf, b: C.white },
+  { bg: 0xf5ecfa, dots: 0xe7d8f2, wall: 0xf7eefb, a: C.purple, b: C.pink },
+  { bg: 0xfff3d6, dots: 0xffe4a6, wall: 0xfff6e2, a: C.gold, b: C.terracotta },
+];
 
 export function requestText(id: string): string {
   const r = requestTemplate(id);
@@ -85,7 +94,8 @@ export class ShopScene extends GameScene {
       this.scene.start(s.day.ph === 'summary' ? 'Summary' : 'Market');
       return;
     }
-    this.bgColors = { base: 0xfbeee6, dots: 0xf4dccd };
+    const look = TIER_LOOKS[s.tier] ?? TIER_LOOKS[0];
+    this.bgColors = { base: look.bg, dots: look.dots };
     session.audio.music('shop');
     this.buildHud();
     this.visits = generateVisits(s);
@@ -243,8 +253,25 @@ export class ShopScene extends GameScene {
     const w = this.L.shelf.w;
     const h = this.shelfHeight();
     const bg = this.add.graphics();
-    drawCard(bg, -w / 2, 0, w, h, 0xf6e3c8, { radius: 24, stroke: C.ink, strokeW: 4, shadow: 5 });
+    const look = TIER_LOOKS[s.tier] ?? TIER_LOOKS[0];
+    drawCard(bg, -w / 2, 0, w, h, look.wall, { radius: 24, stroke: C.ink, strokeW: 4, shadow: 5 });
     this.shelf.add(bg);
+    // Striped awning with the shop's name: each tier has its own look.
+    const aw = this.add.graphics();
+    const stripes = 10;
+    const sw = (w - 40) / stripes;
+    for (let i = 0; i < stripes; i++) {
+      aw.fillStyle(i % 2 ? look.a : look.b, 1);
+      aw.fillRect(-w / 2 + 20 + i * sw, -14, sw, 26);
+      aw.fillCircle(-w / 2 + 20 + i * sw + sw / 2, 12, sw / 2);
+    }
+    aw.lineStyle(3, C.ink, 1);
+    aw.strokeRect(-w / 2 + 20, -14, w - 40, 26);
+    const sign = makeText(this, 0, -2, t(`tier.${BALANCE.tiers[s.tier].id}`), FS.small, C.white, {
+      stroke: C.ink,
+      strokeW: 5,
+    });
+    this.shelf.add([aw, sign]);
     const rows = 2;
     const cols = Math.ceil(cap / rows);
     const cellW = (w - 30) / cols;

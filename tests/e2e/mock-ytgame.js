@@ -3,7 +3,7 @@
 (function () {
   const log = [];
   const listeners = { pause: [], resume: [], audio: [] };
-  let audioEnabled = true;
+  let audioEnabled = window.__ytMockAudio === false ? false : true;
   let store = window.__ytMockInitialSave ?? '';
   let loadResolved = false;
   const now = () => performance.now();

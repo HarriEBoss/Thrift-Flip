@@ -16,6 +16,7 @@ import { ITEMS } from '../../core/data';
 import { isContentComplete } from '../../core/complete';
 import { REWARD_IDS } from '../../platform/Platform';
 import { setColorBlindMode } from '../art/itemArt';
+import { loadArtOverrides } from '../art/manifest';
 
 const PHASE_SCENE = { market: 'Market', workshop: 'Workshop', shop: 'Shop', summary: 'Summary' } as const;
 
@@ -141,6 +142,8 @@ export class MainMenuScene extends GameScene {
     this.mark('daily', this.menuBtns[0]);
     this.mark('catalog', this.menuBtns[1]);
     this.mark('gift', this.giftBtn);
+    this.mark('settings', this.menuBtns[this.menuBtns.length - 1]);
+    if (session.platform.capabilities.iap) this.mark('store', this.menuBtns[2]);
     this.version = this.txt(0, 0, `v${__APP_VERSION__}`, FS.tiny, C.inkSoft, { bold: false });
     this.root.add([
       this.logo,
@@ -244,6 +247,8 @@ export class MainMenuScene extends GameScene {
       session.platform.notifyGameReady();
       session.audio.allowMusic();
       session.audio.music('menu');
+      // Lazy content after gameReady: optional hand-made art.
+      void loadArtOverrides();
     });
   }
 }

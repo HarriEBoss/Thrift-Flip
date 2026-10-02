@@ -151,12 +151,12 @@ export class AudioEngine {
 
   private applyGains(): void {
     if (!this.ctx || !this.master || !this.sfxBus || !this.musicBus) return;
-    const t = this.ctx.currentTime;
     const m = this.platformEnabled && !this.userMuted ? 1 : 0;
-    this.master.gain.cancelScheduledValues(t);
-    this.master.gain.setValueAtTime(m, t);
-    this.sfxBus.gain.setValueAtTime(this.sfxVol * 0.9, t);
-    this.musicBus.gain.setValueAtTime(this.musicVol * 0.35, t);
+    // Direct assignment applies immediately, even while the context is suspended.
+    this.master.gain.cancelScheduledValues(0);
+    this.master.gain.value = m;
+    this.sfxBus.gain.value = this.sfxVol * 0.9;
+    this.musicBus.gain.value = this.musicVol * 0.35;
   }
 
   private canPlay(): boolean {

@@ -31,6 +31,7 @@ function toggle(
   label: string,
   get: () => boolean,
   set: (v: boolean) => void,
+  id?: string,
 ): Button {
   const b = new Button(scene, 0, y, {
     w: 460,
@@ -47,6 +48,7 @@ function toggle(
     },
   });
   m.content.add(b);
+  if (id) scene.mark(id, b);
   return b;
 }
 
@@ -92,6 +94,7 @@ export function openSettings(scene: BaseScene): void {
         t('settings.mute'),
         () => s.settings.muted,
         (v) => (s.settings.muted = v),
+        'mute',
       ),
     );
   if (caps.haptics)
@@ -113,6 +116,7 @@ export function openSettings(scene: BaseScene): void {
       t('settings.motion'),
       () => s.settings.reducedMotion,
       (v) => (s.settings.reducedMotion = v),
+      'motion',
     ),
   );
   rows.push((y, m) =>
@@ -176,7 +180,7 @@ export function openSettings(scene: BaseScene): void {
           label: t('settings.privacy'),
           color: C.inkSoft,
           fontSize: FS.body,
-          onClick: () => session.platform.openExternal('https://example.com/thrift-flip/privacy'),
+          onClick: () => session.platform.openPrivacyPolicy(),
         }),
       ),
     );

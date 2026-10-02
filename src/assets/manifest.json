@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "notes": "Art swap-in points. Map an item id (see src/data/items.json) to a file in src/assets/items/ (square PNG/WebP with transparency, >= 768 px). Entries left out use the generated vector art. No code changes needed.",
+  "items": {},
+  "music": {
+    "menu": null,
+    "work": null,
+    "shop": null
+  }
+}
