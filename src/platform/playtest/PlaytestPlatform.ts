@@ -1,0 +1,118 @@
+import type { Platform, PlatformCapabilities, Product, PurchaseResult } from '../Platform';
+
+const SAVE_KEY = 'thrift-flip-playtest-save';
+
+/**
+ * Playtest build: behaves like the YouTube version (no shop, no overall mute, YouTube-style ads)
+ * but runs anywhere. Ads are "pretend ads": a short overlay, then the reward is granted, so every
+ * reward button can be tried. Progress lives in this browser's localStorage. Open the page with
+ * `#reset` to start over.
+ */
+export class PlaytestPlatform implements Platform {
+  readonly id = 'web' as const;
+  readonly capabilities: PlatformCapabilities = {
+    iap: false,
+    rewardedAds: true,
+    interstitialAds: true,
+    haptics: false,
+    masterMute: false,
+    externalLinks: false,
+    privacyOptions: false,
+  };
+
+  async init(): Promise<void> {}
+  notifyFirstFrame(): void {}
+  notifyGameReady(): void {}
+  onPause(_cb: () => void): void {}
+  onResume(_cb: () => void): void {}
+
+  async loadSave(): Promise<string | null> {
+    try {
+      if (location.hash === '#reset') {
+        localStorage.removeItem(SAVE_KEY);
+        history.replaceState(null, '', location.pathname + location.search);
+        return null;
+      }
+      return localStorage.getItem(SAVE_KEY);
+    } catch {
+      return null;
+    }
+  }
+
+  async writeSave(data: string): Promise<void> {
+    try {
+      localStorage.setItem(SAVE_KEY, data);
+    } catch {
+      // Storage blocked (private window): the game still plays, progress just isn't kept.
+    }
+  }
+
+  isAudioEnabled(): boolean {
+    return true;
+  }
+  onAudioEnabledChange(_cb: (enabled: boolean) => void): void {}
+  async getLanguage(): Promise<string> {
+    return 'en';
+  }
+  async submitScore(_value: number): Promise<void> {}
+
+  async showRewardedAd(_rewardId: string): Promise<boolean> {
+    await this.pretendAd(
+      'Pretend reward ad',
+      'On YouTube a real ad plays here. Your reward is on its way!',
+      2000,
+    );
+    return true;
+  }
+
+  async showInterstitialAd(): Promise<void> {
+    await this.pretendAd('Pretend ad break', 'On YouTube a short ad can appear here between days.', 1500);
+  }
+
+  async purchase(_productId: string): Promise<PurchaseResult> {
+    return 'failed';
+  }
+  async restorePurchases(): Promise<string[]> {
+    return [];
+  }
+  async getProducts(): Promise<Product[]> {
+    return [];
+  }
+  async showPrivacyOptions(): Promise<void> {}
+  openPrivacyPolicy(): void {}
+  haptic(_kind: 'light' | 'medium' | 'success'): void {}
+  logError(err: unknown): void {
+    console.error('[ThriftFlip]', err);
+  }
+  logWarning(msg: string): void {
+    console.warn('[ThriftFlip]', msg);
+  }
+
+  private pretendAd(title: string, body: string, ms: number): Promise<void> {
+    return new Promise((resolve) => {
+      const el = document.createElement('div');
+      el.setAttribute('role', 'dialog');
+      el.style.cssText =
+        'position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;' +
+        'background:rgba(30,24,40,0.86);font-family:Fredoka,"Trebuchet MS",system-ui,sans-serif;padding:16px';
+      el.innerHTML =
+        '<div style="max-width:420px;background:#fffaf0;color:#3d2c25;border:4px solid #3d2c25;border-radius:24px;' +
+        'padding:24px 22px;text-align:center;box-shadow:0 8px 0 rgba(0,0,0,.25)">' +
+        `<div style="font-size:26px;font-weight:700;margin-bottom:8px">${title}</div>` +
+        `<div style="font-size:17px;line-height:1.4">${body}</div>` +
+        '<div style="margin-top:16px;height:10px;border-radius:5px;background:#e9dccb;overflow:hidden">' +
+        `<div style="height:100%;width:0;background:#2f8f8a;transition:width ${ms}ms linear"></div></div></div>`;
+      document.body.appendChild(el);
+      const bar = el.querySelector('div > div:last-child > div') as HTMLDivElement | null;
+      requestAnimationFrame(() => requestAnimationFrame(() => bar && (bar.style.width = '100%')));
+      setTimeout(() => {
+        el.remove();
+        resolve();
+      }, ms);
+    });
+  }
+}
+
+export function createPlatform(): Platform {
+  return new PlaytestPlatform();
+}

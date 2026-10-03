@@ -2,7 +2,7 @@ import { defineConfig, type Plugin } from 'vite';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 
-type PlatformId = 'youtube' | 'ios' | 'web';
+type PlatformId = 'youtube' | 'ios' | 'web' | 'playtest';
 
 const YT_SDK = 'https://www.youtube.com/game_api/v1';
 
@@ -10,6 +10,7 @@ const platformFiles: Record<PlatformId, string> = {
   youtube: 'src/platform/youtube/YouTubePlatform.ts',
   ios: 'src/platform/ios/IOSPlatform.ts',
   web: 'src/platform/web/WebDevPlatform.ts',
+  playtest: 'src/platform/playtest/PlaytestPlatform.ts',
 };
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as {
@@ -62,7 +63,9 @@ function platformHtml(platform: PlatformId): Plugin {
 }
 
 export default defineConfig(({ mode }) => {
-  const platform: PlatformId = mode === 'youtube' || mode === 'ios' ? mode : 'web';
+  const platform: PlatformId = mode === 'youtube' || mode === 'ios' || mode === 'playtest' ? mode : 'web';
+  // Playtest: one self-contained bundle (fonts inlined, no code splitting) for an artifact page.
+  const single = platform === 'playtest';
   const e2e = process.env.E2E === '1';
   return {
     base: './',
@@ -78,11 +81,19 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [phaserSanitize(), platformHtml(platform)],
     build: {
-      outDir: platform === 'youtube' ? 'dist-youtube' : platform === 'ios' ? 'dist-ios' : 'dist-web',
+      outDir:
+        platform === 'youtube'
+          ? 'dist-youtube'
+          : platform === 'ios'
+            ? 'dist-ios'
+            : single
+              ? 'dist-playtest'
+              : 'dist-web',
       emptyOutDir: true,
       target: 'es2020',
       sourcemap: false,
-      assetsInlineLimit: 0,
+      assetsInlineLimit: single ? 100_000_000 : 0,
+      cssCodeSplit: !single,
       modulePreload: { polyfill: false },
       manifest: true,
       chunkSizeWarningLimit: 2000,
@@ -91,9 +102,11 @@ export default defineConfig(({ mode }) => {
           entryFileNames: 'assets/[name]-[hash].js',
           chunkFileNames: 'assets/[name]-[hash].js',
           assetFileNames: 'assets/[name]-[hash][extname]',
-          codeSplitting: {
-            groups: [{ name: 'phaser', test: /node_modules[\\/]phaser/ }],
-          },
+          codeSplitting: single
+            ? false
+            : {
+                groups: [{ name: 'phaser', test: /node_modules[\\/]phaser/ }],
+              },
         },
       },
     },

@@ -9,6 +9,7 @@
     "build:web": "vite build --mode web",
     "build:youtube": "vite build --mode youtube && tsx scripts/check-youtube-bundle.ts && tsx scripts/zip-youtube.ts",
     "build:ios": "vite build --mode ios && tsx scripts/check-ios-bundle.ts && npx cap sync ios",
+    "build:playtest": "vite build --mode playtest && tsx scripts/make-playtest-page.ts",
     "build:e2e": "E2E=1 vite build --mode youtube --outDir dist-e2e",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
