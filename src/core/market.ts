@@ -5,6 +5,7 @@ import { catalogState, markFound } from './catalog';
 import { TUTORIAL_SEED, makeInstance } from './items';
 import { appraisalLevel, marketSlots, revealsGems, shelfCapacity, skillRank } from './perks';
 import { trendFor } from './trends';
+import { decorFx } from './decor';
 import type { GameState, ItemInstance } from './state';
 import type { MarketDef, Rarity } from './types';
 
@@ -58,7 +59,7 @@ export function generateOffers(state: GameState, mdef: MarketDef = marketDef(sta
   const offers: Offer[] = [];
   for (let i = 0; i < count; i++) {
     const a = pickArchetype(state, rng, cats);
-    const r = rng.weighted(mdef.rarity) as Rarity;
+    const r = rng.weighted(rarityWeights(state, mdef)) as Rarity;
     const d = rng.weighted(mdef.damage);
     const apparent: Rarity = r === 3 && !revealsGems(state) ? 0 : r;
     const ask = askingPrice(ITEMS[a].base, apparent, d, mdef.ask, rng.range(0.85, 1.15));
@@ -88,6 +89,17 @@ export function ensureAffordable(state: GameState, offers: Offer[]): Offer[] {
   for (const o of offers) if (o.ask < cheapest.ask) cheapest = o;
   cheapest.ask = Math.max(0, state.coins);
   return offers;
+}
+
+/**
+ * Rarity weights for a market. Bigger shops attract better finds: every shop tier and some
+ * decorations shift the odds toward uncommon, rare and hidden-gem items.
+ */
+export function rarityWeights(state: GameState, mdef: MarketDef): [number, number, number, number] {
+  const t = state.tier;
+  const fx = decorFx(state);
+  const [c, u, r, g] = mdef.rarity;
+  return [c, u * (1 + 0.15 * t), r * (1 + 0.25 * t + fx.rare), g * (1 + 0.2 * t + fx.gem)];
 }
 
 /** Offer as currently visible: an Appraiser's Tip reveals the true rarity. */

@@ -31,6 +31,7 @@ import {
   upgradeTier,
 } from '../src/core/progression';
 import { catalogFoundCount } from '../src/core/catalog';
+import { DECOR, buyDecor } from '../src/core/decor';
 import { isContentComplete } from '../src/core/complete';
 import { snapPrice } from '../src/core/economy';
 import { marketSlots, shelfCapacity } from '../src/core/perks';
@@ -75,6 +76,9 @@ function playDay(g: GameState, rng: Rng, skill: number): number {
   const reserve = nextTier(g)?.cost ?? 0;
   for (const u of BALANCE.upgrades) {
     if (g.coins - u.cost >= reserve * 0.6 && g.tier >= u.tier) buyUpgrade(g, u.id);
+  }
+  for (const d of DECOR) {
+    if (g.coins - d.cost >= reserve * 0.7) buyDecor(g, d.id);
   }
   // Market choice: newest unlocked (auction sometimes)
   const ms = marketsForTier(g.tier);

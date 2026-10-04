@@ -72,12 +72,32 @@ Erase-style games follow the brief's rule: **no per-frame GPU reads.**
    as Phaser canvas textures.
 2. One small CPU read per step: the layer is downsampled to 64×64 to build a `CoverageGrid` mask
    (rust also gets hardness 1–3).
-3. Each pointer move produces brush stamps **interpolated between pointer events**. They erase the
-   canvas (`destination-out`) and update the grid with the same geometry.
-4. Completion and score are computed from the grid in `src/core/minigame.ts`.
+3. Pointer moves are queued and processed **once per frame**: brush stamps are interpolated between
+   pointer events, update the grid, and erase the canvas (`destination-out`) by stamping one
+   pre-rendered soft brush image. The texture is uploaded once per frame and particles come from one
+   cached emitter (throttled), which keeps phones smooth.
+4. Damage layers are capped at 512 px (`MAX_LAYER` in `game/art/damage.ts`) whatever the stage size, so
+   each upload stays small on high-DPR phones.
+5. Completion and score are computed from the grid in `src/core/minigame.ts`. Polish finishes at 85%
+   coverage (`POLISH_DONE`), and circles add a bonus rather than being required.
+
+Cracks follow a path chosen **inside the item silhouette** (`crackPathInMask`) and are also clipped to the
+silhouette when drawn (`crackCanvas`), so they never spill past the item's edge.
 
 Sticker peel uses speed-based tearing, glue uses path following, wires use a matching puzzle, and polish
 weights coverage by gesture circularity. All of these are pure and unit-tested.
+
+## Growing the shop
+
+Every way to grow sits behind one **Upgrades** button (Main Menu, Market header, Day Summary), in
+`game/ui/upgradesHub.ts`: bigger shop (tiers), decorations, tools and skills. A goal banner shows the
+next shop tier with coin and reputation progress (`nextGoal` in `core/progression.ts`).
+
+- **Bigger shops find better items:** `rarityWeights` in `core/market.ts` shifts the rarity odds up with
+  the shop tier.
+- **Decorations** (`core/decor.ts`, `balance.json` → `decor`): 10 items, unlocked by tier and bought with
+  coins. Each one has a small passive effect (price bonus, extra customer, daily reputation, rarer finds,
+  hidden gems, better rare-item prices) and is drawn on the shop counter (`game/art/decor.ts`).
 
 ## Asset pipeline
 
@@ -106,6 +126,8 @@ weights coverage by gesture circularity. All of these are pure and unit-tested.
 - `saveManager.ts`: never writes before `loadData` resolves, writes at most once every 2 s (debounced), and
   forces a write on day end, purchases and pause. It checks UTF-16 well-formedness and the 3 MiB / 500 KiB limits.
   A corrupt save is kept in memory and writing is blocked until the player sees a friendly message.
+
+Current version: **v2** (adds `dc`, the owned decorations; v1 saves migrate to an empty list).
 
 Saves happen at material progress: after each restoration and each sale (debounced), on purchases
 (forced), on day transitions (forced) and on platform pause (forced).

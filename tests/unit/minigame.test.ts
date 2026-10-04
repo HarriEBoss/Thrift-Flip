@@ -6,6 +6,7 @@ import {
   PathTracer,
   connectWire,
   crackPath,
+  crackPathInMask,
   eraseScore,
   makeWirePuzzle,
   paintScore,
@@ -89,7 +90,8 @@ describe('polish circularity', () => {
     expect(s.value()).toBeLessThan(0.2);
     c.decay();
     expect(polishScore(1, 1)).toBe(1);
-    expect(polishScore(1, 0)).toBeCloseTo(0.7);
+    expect(polishScore(1, 0)).toBeCloseTo(0.75);
+    expect(polishScore(0.85, 1)).toBe(1);
   });
 });
 
@@ -108,6 +110,23 @@ describe('glue path tracing', () => {
     for (const p of path.slice(0, 4)) bad.add(p.x, p.y, 0.05);
     expect(bad.score()).toBeLessThan(0.5);
     expect(new PathTracer(path, 0.04).accuracy()).toBe(1);
+  });
+});
+
+describe('crack inside the item', () => {
+  it('keeps every crack point inside a narrow vertical item', () => {
+    // A tall thin vase-like shape: only 0.42..0.58 wide.
+    const inside = (u: number, v: number) => u > 0.42 && u < 0.58 && v > 0.1 && v < 0.9;
+    for (let seed = 1; seed < 60; seed++) {
+      const path = crackPathInMask(seed, inside);
+      expect(path).toHaveLength(9);
+      for (const p of path) expect(inside(p.x, p.y)).toBe(true);
+    }
+  });
+  it('works for wide items and falls back for tiny ones', () => {
+    const wide = (u: number, v: number) => v > 0.45 && v < 0.6 && u > 0.1 && u < 0.9;
+    for (const p of crackPathInMask(3, wide)) expect(wide(p.x, p.y)).toBe(true);
+    expect(crackPathInMask(3, () => false)).toEqual(crackPath(3));
   });
 });
 

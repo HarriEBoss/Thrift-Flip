@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { GameScene } from './GameScene';
 import { Button, makeText } from '../ui/widgets';
-import { iconBook, iconCalendar, iconGift, iconShopBag } from '../ui/icons';
+import { iconBook, iconCalendar, iconGift, iconShopBag, iconTool } from '../ui/icons';
+import { openUpgradesHub, upgradesAvailable } from '../ui/upgradesHub';
 import { drawRaccoon } from '../art/characters';
 import { archetypeThumb } from '../art/textures';
 import { C, FS } from '../theme';
@@ -114,6 +115,12 @@ export class MainMenuScene extends GameScene {
         (g, sz) => iconBook(g, sz),
         () => this.scene.start('Catalog'),
       ),
+      mk(
+        t('menu.upgrades'),
+        C.leaf,
+        (g, sz) => iconTool(g, sz),
+        () => openUpgradesHub(this, () => this.refreshUpgradesBadge()),
+      ),
     ];
     if (session.platform.capabilities.iap)
       this.menuBtns.push(
@@ -126,6 +133,8 @@ export class MainMenuScene extends GameScene {
       );
     this.menuBtns.push(mk(t('menu.settings'), C.inkSoft, undefined, () => openSettings(this)));
     this.menuBtns[0].setEnabled(s.flags.tutorialDone);
+    this.menuBtns[2].setEnabled(s.flags.tutorialDone);
+    this.refreshUpgradesBadge();
     const cat = catalogFoundCount(s);
     this.menuBtns[1].setBadge(cat > 0 ? `${cat}/${ITEMS.length}` : null);
     this.giftBtn = new Button(this, 0, 0, {
@@ -143,7 +152,8 @@ export class MainMenuScene extends GameScene {
     this.mark('catalog', this.menuBtns[1]);
     this.mark('gift', this.giftBtn);
     this.mark('settings', this.menuBtns[this.menuBtns.length - 1]);
-    if (session.platform.capabilities.iap) this.mark('store', this.menuBtns[2]);
+    this.mark('upgrades', this.menuBtns[2]);
+    if (session.platform.capabilities.iap) this.mark('store', this.menuBtns[3]);
     this.version = this.txt(0, 0, `v${__APP_VERSION__}`, FS.tiny, C.inkSoft, { bold: false });
     this.root.add([
       this.logo,
@@ -195,6 +205,12 @@ export class MainMenuScene extends GameScene {
       giftIcon.setPosition(160, f.h - 60);
       this.version.setPosition(f.w - 60, f.h - 20);
     }
+  }
+
+  private refreshUpgradesBadge(): void {
+    const n = session.state.flags.tutorialDone ? upgradesAvailable() : 0;
+    this.menuBtns[2]?.setBadge(n > 0 ? String(n) : null);
+    this.refreshHud();
   }
 
   private play(): void {

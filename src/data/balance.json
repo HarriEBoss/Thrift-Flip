@@ -390,5 +390,88 @@
   "daily": {
     "rewardPerStar": 25
   },
-  "catalogBonus": 0.05
+  "catalogBonus": 0.05,
+  "decor": [
+    {
+      "id": "plant",
+      "cost": 60,
+      "tier": 0,
+      "fx": {
+        "repPerDay": 1
+      }
+    },
+    {
+      "id": "rug",
+      "cost": 150,
+      "tier": 0,
+      "fx": {
+        "price": 0.03
+      }
+    },
+    {
+      "id": "bell",
+      "cost": 240,
+      "tier": 1,
+      "fx": {
+        "customers": 1
+      }
+    },
+    {
+      "id": "cat",
+      "cost": 420,
+      "tier": 1,
+      "fx": {
+        "price": 0.05
+      }
+    },
+    {
+      "id": "neon",
+      "cost": 750,
+      "tier": 2,
+      "fx": {
+        "customers": 1
+      }
+    },
+    {
+      "id": "fishtank",
+      "cost": 950,
+      "tier": 2,
+      "fx": {
+        "rare": 0.3
+      }
+    },
+    {
+      "id": "jukebox",
+      "cost": 1500,
+      "tier": 3,
+      "fx": {
+        "price": 0.05
+      }
+    },
+    {
+      "id": "chandelier",
+      "cost": 2600,
+      "tier": 3,
+      "fx": {
+        "gem": 0.6
+      }
+    },
+    {
+      "id": "display",
+      "cost": 3600,
+      "tier": 4,
+      "fx": {
+        "rareSale": 0.1
+      }
+    },
+    {
+      "id": "fountain",
+      "cost": 6000,
+      "tier": 4,
+      "fx": {
+        "repPerDay": 2,
+        "price": 0.05
+      }
+    }
+  ]
 }

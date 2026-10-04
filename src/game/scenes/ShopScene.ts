@@ -6,6 +6,8 @@ import { Coach } from '../ui/coach';
 import { C, FS } from '../theme';
 import { session } from '../session';
 import { drawCustomer, type Mood } from '../art/characters';
+import { drawDecor } from '../art/decor';
+import { DECOR } from '../../core/decor';
 import { instanceThumb } from '../art/textures';
 import { BALANCE, ITEMS, persona as personaDef } from '../../core/data';
 import {
@@ -54,6 +56,7 @@ export class ShopScene extends GameScene {
   private custG!: Phaser.GameObjects.Graphics;
   private bubble!: Phaser.GameObjects.Container;
   private counter!: Phaser.GameObjects.Graphics;
+  private decor!: Phaser.GameObjects.Container;
   private counterItem: Phaser.GameObjects.Image | null = null;
   private pricePanel!: Phaser.GameObjects.Container;
   private priceText!: Phaser.GameObjects.Text;
@@ -101,6 +104,7 @@ export class ShopScene extends GameScene {
     this.visits = generateVisits(s);
     this.shelf = this.add.container(0, 0);
     this.counter = this.add.graphics();
+    this.decor = this.add.container(0, 0);
     this.customer = this.add.container(0, 0);
     this.custG = this.add.graphics();
     this.customer.add(this.custG);
@@ -151,6 +155,7 @@ export class ShopScene extends GameScene {
     this.root.add([
       this.shelf,
       this.counter,
+      this.decor,
       this.customer,
       this.bubble,
       this.pricePanel,
@@ -235,10 +240,29 @@ export class ShopScene extends GameScene {
     });
     this.counter.fillStyle(0xd59a5e, 1);
     this.counter.fillRoundedRect(L.counter.x - L.counter.w / 2 + 8, L.counter.y + 6, L.counter.w - 16, 18, 8);
+    this.drawDecorations();
     if (this.counterItem) this.counterItem.setPosition(L.item.x, L.item.y);
     this.bubble.setPosition(L.bubble.x, L.bubble.y);
     this.renderShelf();
     this.updateMeta();
+  }
+
+  /** Owned decorations stand on the right end of the counter (fanciest first). */
+  private drawDecorations(): void {
+    const L = this.L;
+    this.decor.removeAll(true);
+    const owned = DECOR.filter(
+      (d) => session.state.decor.includes(d.id) && d.id !== 'rug' && d.id !== 'chandelier',
+    ).sort((a, b) => b.cost - a.cost);
+    const size = 70;
+    const room = Math.max(1, Math.min(4, Math.floor((L.counter.w / 2 - 130) / 78)));
+    owned.slice(0, room).forEach((d, i) => {
+      const x = L.counter.x + L.counter.w / 2 - 50 - i * 78;
+      const g = this.add.graphics();
+      drawDecor(g, d.id, size);
+      g.setPosition(x, L.counter.y - size / 2 + 6);
+      this.decor.add(g);
+    });
   }
 
   private shelfHeight(): number {

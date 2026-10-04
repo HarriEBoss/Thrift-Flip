@@ -183,12 +183,22 @@ Next: Phase 3, the playable core loop in Phaser.
 - `docs/HUMAN_TODO.md`: the complete list of human steps.
 - Version **1.0.0** (package.json, Xcode `MARKETING_VERSION`), tag `v1.0.0`.
 
+## Playtest round 1 (owner feedback) ✅
+- **Polish froze on phones.** Erase games now batch pointer input per frame, stamp a pre-rendered brush,
+  upload the texture once per frame, reuse one particle emitter, and cap damage layers at 512 px. Polish
+  is also quicker: a bigger cloth, done at 85%, and circles are a bonus instead of a requirement.
+- **Cracks went past the item.** The crack path is now picked inside the item's outline and clipped to it.
+- **"More features like upgrading your shop and better items".** A new Upgrades hub (bigger shop,
+  decorations, tools, skills) with a next-shop goal tracker. Ten decorations with small bonuses appear on
+  the shop counter, and bigger shops find rarer items. Save format v2 with migration and fixtures.
+  Balance re-run (BALANCE.md): about 4.8 real minutes per in-game day, with completion around 4 hours.
+
 ## Definition of done: status
 | Item | Status |
 |---|---|
 | `npm run check` (lint, typecheck, unit + coverage, YouTube build + bundle checks, e2e) | ✅ passes in this container (see the final run log in the commit message / PR) |
 | `thrift-flip-youtube.zip` meets every automatable MUST in §7 | ✅ automated; manual items listed in SUBMISSION_YOUTUBE.md |
 | iOS project builds in Xcode | ⏳ **human step**: no Xcode on Linux. `build:ios` + `cap sync` pass; IAP and ads are absent from the YouTube bundle (checked) |
-| Old-save migration tests | ✅ (v1 fixtures; framework ready for v2+) |
+| Old-save migration tests | ✅ (v1 and v2 fixtures; v1 → v2 migration tested) |
 | Docs complete | ✅ ARCHITECTURE, BALANCE, PROGRESS, HUMAN_TODO, SUBMISSION_IOS, SUBMISSION_YOUTUBE, PRIVACY_POLICY, STORE_LISTING |
 | HUMAN_TODO lists every required human step | ✅ |

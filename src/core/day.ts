@@ -4,6 +4,7 @@ import { starsFor } from './economy';
 import { categoryComplete, markFound, markPerfect } from './catalog';
 import { instanceValue, isRestored, qualityOf, recipeFor, requiredDone } from './items';
 import { addXp } from './progression';
+import { decorFx } from './decor';
 import { matchesRequest, requestTemplate, type SaleResult } from './customers';
 import { newDay, type DayPhase, type GameState, type ItemInstance } from './state';
 import type { CategoryId } from './types';
@@ -25,6 +26,14 @@ export function advancePhase(state: GameState, to: DayPhase): void {
   if (to === 'market') {
     startNextDay(state);
     return;
+  }
+  if (to === 'summary') {
+    // Decorations like plants and the fountain make the shop more popular every day.
+    const rep = decorFx(state).repPerDay;
+    if (rep > 0) {
+      state.rep += rep;
+      state.day.stats.rep += rep;
+    }
   }
   state.day.ph = to;
 }

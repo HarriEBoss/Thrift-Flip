@@ -228,8 +228,11 @@ export class CircularityMeter {
   }
 }
 
+/** Polish completes at 85% shine: it is the longest erase game, so it finishes a little earlier. */
+export const POLISH_DONE = 0.85;
+
 export function polishScore(coverage: number, circularity: number): number {
-  return Math.max(0, Math.min(1, Math.min(1, coverage / DONE_AT) * (0.7 + 0.3 * circularity)));
+  return Math.max(0, Math.min(1, Math.min(1, coverage / POLISH_DONE) * (0.75 + 0.25 * circularity)));
 }
 
 /** Glue: how well the player traced the crack path. */
@@ -297,6 +300,55 @@ export function crackPath(seed: number, points = 9): Array<{ x: number; y: numbe
     const t = 0.24 + (0.52 * i) / (points - 1);
     const wob = rng.range(-0.06, 0.06);
     out.push(horizontal ? { x: t, y: base + wob } : { x: base + wob, y: t });
+  }
+  return out;
+}
+
+/**
+ * A crack that stays inside the item: finds the longest straight run through the item outline
+ * (horizontal or vertical, near the middle), trims the ends and wobbles points only where they stay
+ * inside. `inside(u, v)` reports whether a unit-coordinate point is well inside the item.
+ */
+export function crackPathInMask(
+  seed: number,
+  inside: (u: number, v: number) => boolean,
+  points = 9,
+): Array<{ x: number; y: number }> {
+  const rng = new Rng(seed);
+  const samples = 64;
+  const longestRun = (horizontal: boolean) => {
+    let best = { len: 0, a: 0, b: 0, line: 0.5 };
+    for (let i = 0; i <= 16; i++) {
+      const line = 0.28 + (0.44 * i) / 16;
+      let start = -1;
+      for (let k = 0; k <= samples; k++) {
+        const t = (k + 0.5) / samples;
+        const ok = k < samples && (horizontal ? inside(t, line) : inside(line, t));
+        if (ok && start < 0) start = k;
+        if (!ok && start >= 0) {
+          const len = (k - start) / samples;
+          if (len > best.len) best = { len, a: start / samples, b: k / samples, line };
+          start = -1;
+        }
+      }
+    }
+    return best;
+  };
+  const h = longestRun(true);
+  const v = longestRun(false);
+  const wantH = rng.chance(0.5);
+  const horizontal = wantH ? h.len >= Math.max(0.22, v.len * 0.6) : !(v.len >= Math.max(0.22, h.len * 0.6));
+  const run = horizontal ? h : v;
+  if (run.len < 0.1) return crackPath(seed, points);
+  const a = run.a + run.len * 0.12;
+  const b = run.b - run.len * 0.12;
+  const out: Array<{ x: number; y: number }> = [];
+  for (let i = 0; i < points; i++) {
+    const t = a + ((b - a) * i) / (points - 1);
+    const wob = rng.range(-0.035, 0.035);
+    let p = horizontal ? { x: t, y: run.line + wob } : { x: run.line + wob, y: t };
+    if (!inside(p.x, p.y)) p = horizontal ? { x: t, y: run.line } : { x: run.line, y: t };
+    out.push(p);
   }
   return out;
 }

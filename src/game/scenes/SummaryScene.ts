@@ -1,17 +1,17 @@
 import Phaser from 'phaser';
 import { GameScene } from './GameScene';
 import { Button, drawCard, makeText } from '../ui/widgets';
-import { iconAd, iconArrow } from '../ui/icons';
+import { iconAd, iconArrow, iconTool } from '../ui/icons';
 import { Coach } from '../ui/coach';
 import { drawRaccoon } from '../art/characters';
 import { C, FS } from '../theme';
 import { session } from '../session';
 import { advancePhase, applyDoubleDay, dayProfit, doubleDayAmount } from '../../core/day';
-import { canUpgradeTier, nextTier, skillPoints } from '../../core/progression';
 import { canShowInterstitial, markInterstitialShown } from '../../core/ads';
 import { shouldShowCompletion } from '../../core/complete';
 import { canPurchase } from '../../core/products';
-import { openSkills, openStore, openTierUpgrade, openUpgrades } from '../ui/menus';
+import { openStore } from '../ui/menus';
+import { goalBanner, openUpgradesHub, upgradesAvailable } from '../ui/upgradesHub';
 import { REWARD_IDS } from '../../platform/Platform';
 import { t } from '../../i18n';
 
@@ -21,9 +21,8 @@ export class SummaryScene extends GameScene {
   private buttons: Button[] = [];
   private nextBtn!: Button;
   private doubleBtn!: Button;
-  private tierBtn!: Button;
-  private skillsBtn!: Button;
-  private toolsBtn!: Button;
+  private upgradesBtn!: Button;
+  private goal: Phaser.GameObjects.Container | null = null;
   private offerBtn: Button | null = null;
   private leaving = false;
 
@@ -39,6 +38,7 @@ export class SummaryScene extends GameScene {
     // Phaser reuses scene instances: reset per-visit state.
     this.leaving = false;
     this.offerBtn = null;
+    this.goal = null;
     this.buttons = [];
     const s = session.state;
     if (s.day.ph !== 'summary') {
@@ -71,37 +71,20 @@ export class SummaryScene extends GameScene {
       icon: (g, sz) => iconAd(g, sz),
       onClick: () => void this.doubleDay(),
     });
-    this.tierBtn = new Button(this, 0, 0, {
-      w: 220,
-      h: 70,
-      label: t('summary.tier'),
+    this.upgradesBtn = new Button(this, 0, 0, {
+      w: 320,
+      h: 84,
+      label: t('menu.upgrades'),
       color: C.leaf,
-      fontSize: FS.small,
-      onClick: () => openTierUpgrade(this, () => this.refresh()),
+      fontSize: FS.h3,
+      icon: (g, sz) => iconTool(g, sz),
+      onClick: () => openUpgradesHub(this, () => this.refresh()),
     });
-    this.skillsBtn = new Button(this, 0, 0, {
-      w: 200,
-      h: 70,
-      label: t('summary.skills'),
-      color: C.teal,
-      fontSize: FS.small,
-      onClick: () => openSkills(this, () => this.refresh()),
-    });
-    this.toolsBtn = new Button(this, 0, 0, {
-      w: 200,
-      h: 70,
-      label: t('summary.tools'),
-      color: C.purple,
-      fontSize: FS.small,
-      onClick: () => openUpgrades(this, () => this.refresh()),
-    });
-    this.buttons = [this.nextBtn, this.doubleBtn, this.tierBtn, this.skillsBtn, this.toolsBtn];
+    this.buttons = [this.nextBtn, this.doubleBtn, this.upgradesBtn];
     this.root.add(this.buttons);
     this.mark('next', this.nextBtn);
     this.mark('double', this.doubleBtn);
-    this.mark('tier', this.tierBtn);
-    this.mark('skills', this.skillsBtn);
-    this.mark('tools', this.toolsBtn);
+    this.mark('upgrades', this.upgradesBtn);
     const showOffer =
       session.platform.capabilities.iap &&
       s.day.n >= 3 &&
@@ -138,12 +121,13 @@ export class SummaryScene extends GameScene {
         !s.day.doubled &&
         doubleDayAmount(s) > 0,
     );
-    this.tierBtn.setVisible(!!nextTier(s) && s.flags.tutorialDone);
-    this.tierBtn.setBadge(canUpgradeTier(s) ? '!' : null);
-    const pts = skillPoints(s);
-    this.skillsBtn.setVisible(s.flags.tutorialDone);
-    this.skillsBtn.setBadge(pts > 0 ? String(pts) : null);
-    this.toolsBtn.setVisible(s.flags.tutorialDone);
+    const n = upgradesAvailable();
+    this.upgradesBtn.setVisible(s.flags.tutorialDone);
+    this.upgradesBtn.setBadge(n > 0 ? String(n) : null);
+    this.goal?.destroy();
+    this.goal = goalBanner(this, 560);
+    this.goal.setVisible(s.flags.tutorialDone);
+    this.root.add(this.goal);
     this.refreshHud();
     this.layout();
   }
@@ -209,10 +193,9 @@ export class SummaryScene extends GameScene {
       this.rory.setScale(0.8);
       const by = 120 + 520 * cs + 120;
       this.doubleBtn.setPosition(f.w / 2, by);
-      this.tierBtn.setPosition(f.w / 2 - 230, by + 96);
-      this.skillsBtn.setPosition(f.w / 2, by + 96);
-      this.toolsBtn.setPosition(f.w / 2 + 220, by + 96);
-      this.offerBtn?.setPosition(f.w / 2, by + 186);
+      this.goal?.setPosition(f.w / 2, by + 104);
+      this.upgradesBtn.setPosition(f.w / 2, by + 210);
+      this.offerBtn?.setPosition(f.w / 2, by + 300);
       this.nextBtn.setPosition(f.w / 2 + 50, f.h - 60);
     } else {
       const cs = Math.min(1, (f.h - 130) / 520);
@@ -222,10 +205,10 @@ export class SummaryScene extends GameScene {
       this.rory.setScale(0.9);
       const rx = (80 + 600 * cs + f.w) / 2;
       this.doubleBtn.setPosition(rx, 330);
-      this.tierBtn.setPosition(rx - 220, 430);
-      this.skillsBtn.setPosition(rx, 430);
-      this.toolsBtn.setPosition(rx + 210, 430);
-      this.offerBtn?.setPosition(rx, 520);
+      this.goal?.setPosition(rx, 420);
+      this.goal?.setScale(Math.min(1, (f.w - 80 - 600 * cs) / 580));
+      this.upgradesBtn.setPosition(this.offerBtn ? rx - 170 : rx, 530);
+      this.offerBtn?.setPosition(rx + 170, 530);
       this.nextBtn.setPosition(rx, f.h - 70);
     }
   }

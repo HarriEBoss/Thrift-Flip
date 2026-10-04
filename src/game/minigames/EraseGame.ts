@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
 import { MiniGame, STAGE, type MiniCtx } from './MiniGame';
 import { gridFromLayer } from '../art/damage';
-import { ctx2d } from '../art/itemArt';
+import { ctx2d, makeCanvas } from '../art/itemArt';
 import {
   CircularityMeter,
   CoverageGrid,
   DONE_AT,
+  POLISH_DONE,
   eraseScore,
   polishScore,
   rustScore,
@@ -24,23 +25,34 @@ interface EraseSpec {
   sound: 'scrub' | 'brush' | 'sand' | 'squeak';
 }
 
+interface Segment {
+  u0: number;
+  v0: number;
+  u1: number;
+  v1: number;
+  dt: number;
+}
+
 /**
- * Erase-style restoration (scrub, rust, sand, polish). The damage layer canvas is erased with
- * soft brush stamps interpolated along each stroke; the same stamps update a 64x64 CPU grid
- * from which completion and score are computed.
+ * Erase-style restoration (scrub, rust, sand, polish). Pointer moves are queued and processed
+ * once per frame: the same interpolated brush stamps update a 64x64 CPU grid (completion and
+ * score) and erase the layer canvas with a pre-rendered brush image. One texture upload and at
+ * most one particle burst per frame keep it smooth on phones.
  */
 export class EraseGame extends MiniGame {
   private grid!: CoverageGrid;
   private canvas!: HTMLCanvasElement;
   private texture!: Phaser.Textures.CanvasTexture;
-  private dirty = false;
+  private brush!: HTMLCanvasElement;
+  private pending: Segment[] = [];
   private last: { u: number; v: number } | null = null;
   private spec!: EraseSpec;
   private circle = new CircularityMeter();
   private circSum = 0;
   private circN = 0;
-  private shine: Phaser.GameObjects.Graphics | null = null;
   private lastMilestone = 0;
+  private emitter: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
+  private lastFx = 0;
 
   constructor(
     ctx: MiniCtx,
@@ -82,20 +94,44 @@ export class EraseGame extends MiniGame {
         tints: [0xe2cfa9, 0xcbb38a, 0xf1e3c5],
         sound: 'sand',
       },
+      // Polish: bigger, stronger cloth so it is quick even with small, wobbly circles.
       polish: {
-        radius: 0.095,
-        power: 0.3 * tools.polishRate,
+        radius: 0.11,
+        power: 0.45 * tools.polishRate,
         particle: 'p_spark',
         tints: [C.gold, 0xffffff, 0xfff2b0],
         sound: 'squeak',
       },
     };
     this.spec = specs[this.kind];
+    this.brush = this.makeBrush();
+    this.emitter = this.add(
+      this.ctx.scene.add.particles(0, 0, this.spec.particle, {
+        speed: { min: 50, max: 150 },
+        angle: { min: 0, max: 360 },
+        scale: { start: 0.55, end: 0 },
+        alpha: { start: 1, end: 0 },
+        lifespan: { min: 300, max: 600 },
+        gravityY: this.spec.particle === 'p_flake' || this.spec.particle === 'p_dot' ? 300 : -60,
+        tint: this.spec.tints,
+        emitting: false,
+      }),
+    );
     this.makeCursor();
-    if (this.kind === 'polish') {
-      this.shine = this.add(this.ctx.scene.add.graphics());
-      this.shine.setAlpha(0);
-    }
+  }
+
+  /** The soft round brush, rendered once and stamped with drawImage. */
+  private makeBrush(): HTMLCanvasElement {
+    const r = Math.max(2, Math.round(this.spec.radius * this.canvas.width));
+    const c = makeCanvas(r * 2);
+    const x = ctx2d(c);
+    const g = x.createRadialGradient(r, r, 0, r, r, r);
+    g.addColorStop(0, 'rgba(0,0,0,1)');
+    g.addColorStop(0.6, 'rgba(0,0,0,0.6)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g;
+    x.fillRect(0, 0, r * 2, r * 2);
+    return c;
   }
 
   instruction(): string {
@@ -103,8 +139,8 @@ export class EraseGame extends MiniGame {
   }
 
   progress(): number {
-    const p = this.kind === 'rust' ? this.grid.removedFraction() : this.grid.clearedFraction();
-    return Math.min(1, p / DONE_AT);
+    if (this.kind === 'rust') return Math.min(1, this.grid.removedFraction() / DONE_AT);
+    return Math.min(1, this.grid.clearedFraction() / (this.kind === 'polish' ? POLISH_DONE : DONE_AT));
   }
 
   score(): number {
@@ -127,14 +163,14 @@ export class EraseGame extends MiniGame {
   override pointerDown(u: number, v: number): void {
     this.last = { u, v };
     this.moveCursor(u, v);
-    this.apply(u, v, u, v, 0.016);
+    this.pending.push({ u0: u, v0: v, u1: u, v1: v, dt: 0.016 });
     session.haptic('light');
   }
 
   override pointerMove(u: number, v: number, down: boolean, dt: number): void {
     this.moveCursor(u, v, true);
     if (!down || !this.last) return;
-    this.apply(this.last.u, this.last.v, u, v, dt);
+    this.pending.push({ u0: this.last.u, v0: this.last.v, u1: u, v1: v, dt });
     this.last = { u, v };
   }
 
@@ -143,61 +179,62 @@ export class EraseGame extends MiniGame {
     this.cursor?.setVisible(false);
   }
 
-  private apply(u0: number, v0: number, u1: number, v1: number, dt: number): void {
+  override update(): void {
+    if (!this.pending.length) return;
+    const segs = this.pending;
+    this.pending = [];
     const { radius } = this.spec;
-    let power = this.spec.power;
-    if (this.kind === 'polish') {
-      const c = this.circle.add(u1, v1);
-      this.circle.decay(0.97);
-      this.circSum += c;
-      this.circN++;
-      power *= 0.35 + 0.65 * c;
-    }
-    const removed = this.grid.stroke(u0, v0, u1, v1, radius, power);
-    // Visual erase along the same path.
-    const ctx = ctx2d(this.canvas);
     const size = this.canvas.width;
-    const dist = Math.hypot(u1 - u0, v1 - v0);
-    const spacing = radius * 0.35;
-    const steps = Math.max(1, Math.ceil(dist / spacing));
+    const ctx = ctx2d(this.canvas);
+    const r = radius * size;
+    const hard = this.kind === 'rust' ? 0.55 : this.kind === 'polish' ? 0.7 : 0.85;
+    let removed = 0;
+    let travel = 0;
+    let time = 0;
     ctx.save();
     ctx.globalCompositeOperation = 'destination-out';
-    const r = radius * size;
-    const hard = this.kind === 'rust' ? 0.55 : this.kind === 'polish' ? 0.6 : 0.85;
-    for (let s = 1; s <= steps; s++) {
-      const t = s / steps;
-      const x = (u0 + (u1 - u0) * t) * size;
-      const y = (v0 + (v1 - v0) * t) * size;
-      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-      const a = Math.min(1, power * hard * 1.6);
-      g.addColorStop(0, `rgba(0,0,0,${a})`);
-      g.addColorStop(0.6, `rgba(0,0,0,${a * 0.6})`);
-      g.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fill();
+    for (const sg of segs) {
+      let power = this.spec.power;
+      if (this.kind === 'polish') {
+        const c = this.circle.add(sg.u1, sg.v1);
+        this.circle.decay(0.97);
+        this.circSum += c;
+        this.circN++;
+        // Circles help, but straight rubbing still works.
+        power *= 0.6 + 0.4 * c;
+      }
+      removed += this.grid.stroke(sg.u0, sg.v0, sg.u1, sg.v1, radius, power);
+      const dist = Math.hypot(sg.u1 - sg.u0, sg.v1 - sg.v0);
+      travel += dist;
+      time += sg.dt;
+      const steps = Math.max(1, Math.ceil(dist / (radius * 0.35)));
+      ctx.globalAlpha = Math.min(1, power * hard * 1.6);
+      for (let s = 1; s <= steps; s++) {
+        const t = s / steps;
+        ctx.drawImage(
+          this.brush,
+          (sg.u0 + (sg.u1 - sg.u0) * t) * size - r,
+          (sg.v0 + (sg.v1 - sg.v0) * t) * size - r,
+          r * 2,
+          r * 2,
+        );
+      }
     }
     ctx.restore();
-    this.dirty = true;
-    const speed = dist / Math.max(0.001, dt);
+    this.texture.refresh();
+    const end = segs[segs.length - 1];
+    const now = performance.now();
     if (removed > 0.01) {
-      this.sfx(this.spec.sound, Math.min(1, speed / 2.5));
-      if (Math.random() < 0.5) this.burst(u1, v1, this.spec.particle, 3, this.spec.tints, 140);
+      this.sfx(this.spec.sound, Math.min(1, travel / Math.max(0.001, time) / 2.5));
+      if (now - this.lastFx > 90 && !session.settings().reducedMotion) {
+        this.lastFx = now;
+        this.emitter?.explode(3, end.u1 * STAGE, end.v1 * STAGE);
+      }
     }
-    const p = this.progress();
-    const milestone = Math.floor(p * 4);
+    const milestone = Math.floor(this.progress() * 4);
     if (milestone > this.lastMilestone && milestone < 4) {
       this.lastMilestone = milestone;
       session.haptic('light');
-    }
-  }
-
-  override update(): void {
-    if (this.dirty) {
-      this.texture.refresh();
-      this.dirty = false;
-      if (this.shine) this.shine.setAlpha(this.progress() * 0.8);
     }
   }
 

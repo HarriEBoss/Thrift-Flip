@@ -121,6 +121,7 @@ export function serialize(state: GameState): string {
     up: state.upgrades,
     pk: state.perks,
     ow: state.owned,
+    dc: state.decor,
     ct: state.catalog,
     rq: state.requests.map((r) => [r.t, r.p, r.day]),
     st: { ...state.stats },
@@ -213,6 +214,7 @@ function fromObject(o: SaveObject): GameState {
   g.upgrades = strArr(o.up);
   g.perks = strArr(o.pk);
   g.owned = strArr(o.ow);
+  g.decor = strArr(o.dc);
   const ct = str(o.ct, '');
   g.catalog = /^[012]*$/.test(ct)
     ? ct.padEnd(ITEMS.length, '0').slice(0, ITEMS.length)

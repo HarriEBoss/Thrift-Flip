@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { GameScene } from './GameScene';
 import { Button, Slider, drawCard, makeText } from '../ui/widgets';
-import { drawStepIcon, iconAd, iconArrow, iconCoin, iconGift } from '../ui/icons';
+import { drawStepIcon, iconAd, iconArrow, iconCoin, iconGift, iconTool } from '../ui/icons';
 import { Coach } from '../ui/coach';
 import { C, FS, RARITY_COLORS } from '../theme';
 import { session } from '../session';
@@ -26,6 +26,7 @@ import { recipeFor } from '../../core/items';
 import { advancePhase, shelfItems, workshopQueue, grantBonus } from '../../core/day';
 import { trendsFor } from '../../core/trends';
 import { openMarketSwitch } from '../ui/menus';
+import { openUpgradesHub, upgradesAvailable } from '../ui/upgradesHub';
 import { freeGiftAmount, freeGiftAvailable } from '../../core/ads';
 import type { ItemInstance } from '../../core/state';
 import { REWARD_IDS } from '../../platform/Platform';
@@ -62,6 +63,8 @@ export class MarketScene extends GameScene {
   private trendsBtn!: Button;
   private rerollBtn!: Button;
   private giftBtn!: Button;
+  private upgradesBtn!: Button;
+  private upgradesIcon!: Button;
   private coach: Coach | null = null;
   private tutorialStep = 0;
 
@@ -140,7 +143,33 @@ export class MarketScene extends GameScene {
       icon: (g, sz) => iconGift(g, sz),
       onClick: () => void this.freeGift(),
     });
-    this.root.add([this.goBtn, this.switchBtn, this.trendsBtn, this.rerollBtn, this.giftBtn]);
+    this.upgradesBtn = new Button(this, 0, 0, {
+      w: 190,
+      h: 64,
+      label: t('menu.upgrades'),
+      color: C.leaf,
+      fontSize: FS.small,
+      icon: (g, sz) => iconTool(g, sz),
+      onClick: () => openUpgradesHub(this, () => this.layout()),
+    });
+    // Narrow screens: a compact icon button so it does not cover the market name.
+    this.upgradesIcon = new Button(this, 0, 0, {
+      w: 84,
+      h: 76,
+      label: '',
+      color: C.leaf,
+      icon: (g, sz) => iconTool(g, sz),
+      onClick: () => openUpgradesHub(this, () => this.layout()),
+    });
+    this.root.add([
+      this.goBtn,
+      this.switchBtn,
+      this.trendsBtn,
+      this.rerollBtn,
+      this.giftBtn,
+      this.upgradesBtn,
+      this.upgradesIcon,
+    ]);
     this.mark('go', this.goBtn);
     this.mark('switch', this.switchBtn);
     this.mark('trends', this.trendsBtn);
@@ -171,6 +200,14 @@ export class MarketScene extends GameScene {
           h: f.h - top - 112 - bottomH,
         };
     this.slotsText.setPosition(f.w / 2, top + 76);
+    const n = upgradesAvailable();
+    const up = f.portrait ? this.upgradesIcon : this.upgradesBtn;
+    this.upgradesBtn.setVisible(false);
+    this.upgradesIcon.setVisible(false);
+    up.setVisible(session.state.flags.tutorialDone);
+    up.setPosition(f.w - 24 - (f.portrait ? 42 : 95), top + (f.portrait ? 30 : 44));
+    up.setBadge(n > 0 ? String(n) : null);
+    this.mark('upgrades', up);
     this.renderCards(box);
     const by = f.h - 60;
     if (f.portrait) {

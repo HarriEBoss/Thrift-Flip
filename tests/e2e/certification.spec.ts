@@ -9,6 +9,7 @@ type TfAny = {
   paused(): boolean;
   audio(): Audio;
   hasModal(): boolean;
+  state(): unknown;
   setup(p: object): void;
   addItems(a: number[], restored?: boolean): void;
   goto(k: string, d?: object): void;
@@ -123,16 +124,28 @@ test('no overall mute button on YouTube; Esc closes every modal without preventD
   await esc();
   await press(page, 'mouse', 'switch');
   await esc();
+  await press(page, 'mouse', 'upgrades');
+  await esc();
   // Summary modals
   await tf(page, (t) => {
     t.setup({ phase: 'summary' });
     t.goto('Summary');
   });
   await waitForScene(page, 'Summary');
-  for (const id of ['tier', 'skills', 'tools']) {
+  for (const id of ['hub_shop', 'hub_decor', 'hub_tools', 'hub_skills']) {
+    await press(page, 'mouse', 'upgrades');
     await press(page, 'mouse', id);
     await esc();
   }
+  // Buying a decoration spends coins and keeps it in the save.
+  const before = await tf(page, (t) => (t.state() as { coins: number }).coins);
+  await press(page, 'mouse', 'upgrades');
+  await press(page, 'mouse', 'hub_decor');
+  await press(page, 'mouse', 'decor_plant');
+  await esc();
+  const after = await tf(page, (t) => t.state() as { coins: number; decor: string[] });
+  expect(after.decor).toContain('plant');
+  expect(after.coins).toBeLessThan(before);
   // Shop requests modal
   await tf(page, (t) => {
     t.setup({ phase: 'shop' });

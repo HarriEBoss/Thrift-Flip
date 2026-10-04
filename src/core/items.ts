@@ -6,6 +6,7 @@ import type { CategoryId, ItemArchetype, Rarity, StepKind } from './types';
 import { STEP_ORDER } from './types';
 import { trendFor } from './trends';
 import { catalogBonusFor } from './catalog';
+import { decorFx } from './decor';
 
 export interface RecipeStep {
   k: StepKind;
@@ -83,7 +84,8 @@ export function instanceValue(state: GameState, inst: ItemInstance): number {
   const arch = ITEMS[inst.a];
   const q = inst.q >= 0 ? inst.q : 0;
   const trend = trendFor(state, arch.cat);
-  const bonus = catalogBonusFor(state, arch.cat);
+  const rareSale = inst.r >= 2 ? 1 + decorFx(state).rareSale : 1;
+  const bonus = catalogBonusFor(state, arch.cat) * rareSale;
   return itemValue(arch.base, inst.r, q, trend, bonus);
 }
 

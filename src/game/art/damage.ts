@@ -3,7 +3,7 @@
  * Each layer is a Canvas 2D drawing clipped to the item silhouette.
  */
 import { Rng, hashSeed } from '../../core/prng';
-import { GRID, CoverageGrid, crackPath } from '../../core/minigame';
+import { GRID, CoverageGrid, crackPathInMask } from '../../core/minigame';
 import { recipeFor } from '../../core/items';
 import type { ItemInstance } from '../../core/state';
 import type { StepKind } from '../../core/types';
@@ -207,6 +207,34 @@ export function drawCrack(
   ctx.restore();
 }
 
+/** A crack drawn on its own canvas and clipped to the item outline, so it never spills off the item. */
+export function crackCanvas(
+  size: number,
+  path: Array<{ x: number; y: number }>,
+  sil: HTMLCanvasElement,
+): HTMLCanvasElement {
+  const c = makeCanvas(size);
+  drawCrack(ctx2d(c), size, path);
+  clipToSilhouette(c, sil);
+  return c;
+}
+
+/** "Well inside the item" test from a silhouette (one small CPU read; edges are eroded by one cell). */
+export function insideTest(sil: HTMLCanvasElement): (u: number, v: number) => boolean {
+  const n = 48;
+  const small = makeCanvas(n);
+  const x = small.getContext('2d', { willReadFrequently: true })!;
+  x.drawImage(sil, 0, 0, n, n);
+  const d = x.getImageData(0, 0, n, n).data;
+  const at = (cx: number, cy: number) =>
+    cx >= 0 && cy >= 0 && cx < n && cy < n && d[(cy * n + cx) * 4 + 3] > 160;
+  return (u, v) => {
+    const cx = Math.floor(u * n);
+    const cy = Math.floor(v * n);
+    return at(cx, cy) && at(cx - 1, cy) && at(cx + 1, cy) && at(cx, cy - 1) && at(cx, cy + 1);
+  };
+}
+
 export function stickerFor(seed: number): StickerInfo {
   const rng = new Rng(hashSeed(seed, 'sticker'));
   const x = rng.range(0.38, 0.62);
@@ -279,6 +307,8 @@ export function drawResidue(ctx: CanvasRenderingContext2D, size: number, s: Stic
  */
 export interface DamageSet {
   size: number;
+  /** Resolution of the editable damage layers (capped so phones can erase them smoothly). */
+  layerSize: number;
   base: HTMLCanvasElement;
   sil: HTMLCanvasElement;
   layers: Partial<Record<StepKind, HTMLCanvasElement>>;
@@ -288,14 +318,23 @@ export interface DamageSet {
   steps: StepKind[];
 }
 
-export function buildDamage(inst: ItemInstance, size: number, opts: { paint?: string } = {}): DamageSet {
+/** Editable layers never exceed this many pixels per side (keeps erasing smooth on phones). */
+export const MAX_LAYER = 512;
+
+export function buildDamage(
+  inst: ItemInstance,
+  size: number,
+  opts: { paint?: string; layerSize?: number } = {},
+): DamageSet {
   const arch = ITEMS[inst.a];
-  const sil = silhouette(arch, size);
+  const ls = Math.min(size, opts.layerSize ?? MAX_LAYER);
+  const sil = silhouette(arch, ls);
   const base = makeCanvas(size);
   drawItem(ctx2d(base), arch, boxFor(size), { paint: opts.paint ?? inst.col });
   const steps = recipeFor(inst).map((r) => r.k);
   const set: DamageSet = {
     size,
+    layerSize: ls,
     base,
     sil,
     layers: {},
@@ -307,25 +346,25 @@ export function buildDamage(inst: ItemInstance, size: number, opts: { paint?: st
   for (const k of steps) {
     switch (k) {
       case 'scrub':
-        set.layers.scrub = drawDirt(size, inst.s, inst.d, sil);
+        set.layers.scrub = drawDirt(ls, inst.s, inst.d, sil);
         break;
       case 'rust': {
-        const r = drawRust(size, inst.s, inst.d, sil);
+        const r = drawRust(ls, inst.s, inst.d, sil);
         set.layers.rust = r.canvas;
         set.rustHardness = r.hardness;
         break;
       }
       case 'sand':
-        set.layers.sand = drawWorn(size, inst.s, sil);
+        set.layers.sand = drawWorn(ls, inst.s, sil);
         break;
       case 'paint':
-        set.layers.paint = drawFaded(size, inst.s, sil);
+        set.layers.paint = drawFaded(ls, inst.s, sil);
         break;
       case 'polish':
-        set.layers.polish = drawDull(size, sil);
+        set.layers.polish = drawDull(ls, sil);
         break;
       case 'glue':
-        set.crack = crackPath(hashSeed(inst.s, 'crack'));
+        set.crack = crackPathInMask(hashSeed(inst.s, 'crack'), insideTest(sil));
         break;
       case 'sticker':
         set.sticker = stickerFor(inst.s);
@@ -346,7 +385,7 @@ export function compositeDamaged(set: DamageSet, target?: HTMLCanvasElement): HT
   const x = ctx2d(out);
   x.clearRect(0, 0, out.width, out.height);
   x.drawImage(set.base, 0, 0, out.width, out.height);
-  if (set.crack) drawCrack(x, out.width, set.crack);
+  if (set.crack) x.drawImage(crackCanvas(out.width, set.crack, set.sil), 0, 0, out.width, out.height);
   for (const k of LAYER_ORDER) {
     const l = set.layers[k];
     if (l) x.drawImage(l, 0, 0, out.width, out.height);

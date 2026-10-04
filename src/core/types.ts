@@ -144,6 +144,28 @@ export interface RequestTemplate {
   bonus: number;
 }
 
+export interface DecorFx {
+  /** Extra reputation at the end of each day. */
+  repPerDay?: number;
+  /** Customers happily pay this much more (0.05 = +5%). */
+  price?: number;
+  /** Extra customers per day. */
+  customers?: number;
+  /** Rare items show up more often at markets (0.3 = +30% rare weight). */
+  rare?: number;
+  /** Hidden gems show up more often (0.6 = +60% gem weight). */
+  gem?: number;
+  /** Rare-or-better items sell for this much more. */
+  rareSale?: number;
+}
+
+export interface DecorDef {
+  id: string;
+  cost: number;
+  tier: number;
+  fx: DecorFx;
+}
+
 export interface ProductDef {
   id: string;
   kind: 'consumable' | 'non_consumable';
@@ -183,4 +205,5 @@ export interface Balance {
   };
   daily: { rewardPerStar: number };
   catalogBonus: number;
+  decor: DecorDef[];
 }

@@ -90,22 +90,32 @@ export abstract class MiniGame {
     this.cursor.setPosition(u * STAGE - 30, v * STAGE - 40);
   }
 
-  /** Particle burst at stage unit coords (fewer with Reduced Motion). */
+  private emitters = new Map<string, Phaser.GameObjects.Particles.ParticleEmitter>();
+
+  /**
+   * Particle burst at stage unit coords (fewer with Reduced Motion). Emitters are created once per
+   * look and reused, so frequent small bursts stay cheap on phones.
+   */
   protected burst(u: number, v: number, tex: string, n: number, tints: number[], speed = 120): void {
     const count = session.settings().reducedMotion ? Math.max(1, Math.floor(n / 4)) : n;
-    const p = this.ctx.scene.add.particles(u * STAGE, v * STAGE, tex, {
-      speed: { min: speed * 0.4, max: speed },
-      angle: { min: 0, max: 360 },
-      scale: { start: 0.55, end: 0 },
-      alpha: { start: 1, end: 0 },
-      lifespan: { min: 300, max: 650 },
-      gravityY: tex === 'p_flake' || tex === 'p_dot' ? 300 : -60,
-      tint: tints,
-      emitting: false,
-    });
-    this.ctx.stage.add(p);
-    p.explode(count);
-    this.ctx.scene.time.delayedCall(800, () => p.destroy());
+    const key = `${tex}|${tints.join(',')}|${speed}`;
+    let p = this.emitters.get(key);
+    if (!p) {
+      p = this.ctx.scene.add.particles(0, 0, tex, {
+        speed: { min: speed * 0.4, max: speed },
+        angle: { min: 0, max: 360 },
+        scale: { start: 0.55, end: 0 },
+        alpha: { start: 1, end: 0 },
+        lifespan: { min: 300, max: 650 },
+        gravityY: tex === 'p_flake' || tex === 'p_dot' ? 300 : -60,
+        tint: tints,
+        emitting: false,
+      });
+      this.ctx.stage.add(p);
+      this.emitters.set(key, p);
+      this.objects.push(p);
+    }
+    p.explode(count, u * STAGE, v * STAGE);
   }
 
   protected sfx(kind: Parameters<typeof session.audio.play>[0], intensity = 1): void {

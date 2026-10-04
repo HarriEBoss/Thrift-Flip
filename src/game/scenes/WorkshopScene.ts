@@ -5,7 +5,7 @@ import { drawStepIcon, iconAd, iconArrow } from '../ui/icons';
 import { Coach } from '../ui/coach';
 import { C, FS, RARITY_COLORS } from '../theme';
 import { session } from '../session';
-import { buildDamage, compositeDamaged, drawCrack, LAYER_ORDER, type DamageSet } from '../art/damage';
+import { buildDamage, compositeDamaged, crackCanvas, LAYER_ORDER, type DamageSet } from '../art/damage';
 import { boxFor, ctx2d, drawItem, makeCanvas, setColorBlindMode } from '../art/itemArt';
 import { MiniGame, STAGE, type MiniCtx } from '../minigames/MiniGame';
 import { EraseGame } from '../minigames/EraseGame';
@@ -333,9 +333,7 @@ export class WorkshopScene extends GameScene {
     const base = this.add.image(0, 0, `${this.key}_base`).setOrigin(0, 0).setDisplaySize(STAGE, STAGE);
     this.stage.add(base);
     if (set.crack) {
-      const cc = makeCanvas(this.texSize);
-      drawCrack(ctx2d(cc), this.texSize, set.crack);
-      this.textures.addCanvas(`${this.key}_crack`, cc);
+      this.textures.addCanvas(`${this.key}_crack`, crackCanvas(set.layerSize, set.crack, set.sil));
       const img = this.add.image(0, 0, `${this.key}_crack`).setOrigin(0, 0).setDisplaySize(STAGE, STAGE);
       this.stage.add(img);
       this.crackG = null;
@@ -473,7 +471,7 @@ export class WorkshopScene extends GameScene {
       scene: this,
       stage: this.stage,
       set: this.set,
-      tex: this.texSize,
+      tex: this.set.layerSize,
       tools: toolParams(s, !this.dailyKey && s.day.premiumOnce),
       inst: this.inst,
       kind: st.k,

@@ -6,7 +6,10 @@
 export type SaveObj = Record<string, unknown> & { v: number };
 export type Migration = (old: SaveObj) => SaveObj;
 
-export const MIGRATIONS: Migration[] = [];
+export const MIGRATIONS: Migration[] = [
+  // v1 -> v2: shop decorations were added (owned decoration ids in `dc`).
+  (old) => ({ ...old, v: 2, dc: Array.isArray(old.dc) ? old.dc : [] }),
+];
 
 export const CURRENT_VERSION = MIGRATIONS.length + 1;
 

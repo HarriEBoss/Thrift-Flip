@@ -128,6 +128,8 @@ export interface GameState {
   perks: string[];
   /** Product ids purchased (non-consumables + once-only packs), for restore + UI. */
   owned: string[];
+  /** Owned shop decorations (ids). */
+  decor: string[];
   /** 120 chars: '0' unseen, '1' found, '2' perfectly restored. */
   catalog: string;
   requests: CustomerRequest[];
@@ -212,6 +214,7 @@ export function newGame(seed: number): GameState {
     upgrades: [],
     perks: [],
     owned: [],
+    decor: [],
     catalog: '0'.repeat(ITEMS.length),
     requests: [],
     stats: {

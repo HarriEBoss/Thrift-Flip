@@ -1,6 +1,7 @@
 import { BALANCE } from './data';
 import type { GameState } from './state';
 import type { ToolParams } from './types';
+import { decorFx } from './decor';
 
 export const BASE_TOOLS: ToolParams = {
   scrubBrush: 1,
@@ -84,7 +85,7 @@ export function revealsGems(state: GameState): boolean {
 }
 
 export function charmBonus(state: GameState): number {
-  return 1 + 0.05 * skillRank(state, 'charm');
+  return 1 + 0.05 * skillRank(state, 'charm') + decorFx(state).price;
 }
 
 export function shelfCapacity(state: GameState): number {
@@ -95,7 +96,7 @@ export function customersPerDay(state: GameState): number {
   const base = BALANCE.tiers[state.tier].customers;
   const repBonus = state.rep >= 100 ? 1 : 0;
   const perk = hasPerk(state, 'shop_expansion') ? 1 : 0;
-  return Math.min(8, Math.max(3, base + repBonus + perk));
+  return Math.min(8, Math.max(3, base + repBonus + perk + decorFx(state).customers));
 }
 
 /** Items the player may buy at the market per day: 3..6. */

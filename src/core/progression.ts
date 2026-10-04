@@ -75,6 +75,34 @@ export function upgradeTier(state: GameState): boolean {
   return true;
 }
 
+export interface NextGoal {
+  tierId: string;
+  coins: number;
+  cost: number;
+  rep: number;
+  repNeed: number;
+  /** 0..1 overall progress (the slower of coins and reputation). */
+  progress: number;
+  ready: boolean;
+}
+
+/** The next shop upgrade and how close the player is (for the "next goal" tracker). */
+export function nextGoal(state: GameState): NextGoal | null {
+  const n = nextTier(state);
+  if (!n) return null;
+  const pc = n.cost > 0 ? Math.min(1, state.coins / n.cost) : 1;
+  const pr = n.rep > 0 ? Math.min(1, state.rep / n.rep) : 1;
+  return {
+    tierId: n.id,
+    coins: state.coins,
+    cost: n.cost,
+    rep: state.rep,
+    repNeed: n.rep,
+    progress: Math.min(pc, pr),
+    ready: canUpgradeTier(state),
+  };
+}
+
 export function isMaxTier(state: GameState): boolean {
   return state.tier >= BALANCE.tiers.length - 1;
 }
