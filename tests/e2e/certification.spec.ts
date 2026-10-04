@@ -258,3 +258,61 @@ test('menus are reachable with touch only; heap stays small', async ({ browser }
   expect(heap).toBeLessThan(200 * 1024 * 1024);
   await ctx.close();
 });
+
+test('an error inside one frame does not freeze the game; workshop frees its canvases', async ({ page }) => {
+  test.setTimeout(180_000);
+  // Track every canvas so we can add up the pixel memory still held (iOS limits this).
+  await page.addInitScript(() => {
+    const list: HTMLCanvasElement[] = [];
+    (window as unknown as { __canvases: HTMLCanvasElement[] }).__canvases = list;
+    const orig = document.createElement.bind(document);
+    document.createElement = ((tag: string, o?: ElementCreationOptions) => {
+      const el = orig(tag, o);
+      if (tag.toLowerCase() === 'canvas') list.push(el as HTMLCanvasElement);
+      return el;
+    }) as typeof document.createElement;
+  });
+  await boot(page);
+  const heldMB = () =>
+    page.evaluate(() => {
+      const list = (window as unknown as { __canvases: HTMLCanvasElement[] }).__canvases;
+      return list.reduce((s, c) => s + c.width * c.height * 4, 0) / 2 ** 20;
+    });
+  const visitWorkshop = async (a: number) => {
+    await tf(page, (t) => {
+      t.setup({ tutorialDone: true, phase: 'market' });
+      t.goto('Market');
+    });
+    await waitForScene(page, 'Market');
+    await page.evaluate((idx) => {
+      const t = (window as unknown as { __tf: TfAny }).__tf;
+      t.setup({ phase: 'workshop' });
+      t.addItems([idx], false);
+      t.goto('Workshop');
+    }, a);
+    await waitForScene(page, 'Workshop');
+    await page.waitForTimeout(400);
+  };
+  await visitWorkshop(3);
+  const first = await heldMB();
+  for (const a of [11, 24, 38, 52, 67, 81, 95, 110]) await visitWorkshop(a);
+  const last = await heldMB();
+  console.log(`canvas memory held: first ${first.toFixed(1)} MB, after 8 more items ${last.toFixed(1)} MB`);
+  expect(last).toBeLessThan(first + 12);
+
+  // Throw inside a frame: the loop must keep running.
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  const before = await tf(page, (t) => t.frame());
+  await page.evaluate(() => {
+    const g = (window as unknown as { __tf: { game: { events: { once(e: string, f: () => void): void } } } })
+      .__tf.game;
+    g.events.once('step', () => {
+      throw new Error('e2e: injected frame error');
+    });
+  });
+  await page.waitForTimeout(1000);
+  expect(await tf(page, (t) => t.frame())).toBeGreaterThan(before + 10);
+  expect(await tf(page, (t) => t.loopRunning())).toBe(true);
+  expect(errors).toEqual([]);
+});

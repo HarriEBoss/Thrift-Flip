@@ -193,6 +193,13 @@ Next: Phase 3, the playable core loop in Phaser.
   the shop counter, and bigger shops find rarer items. Save format v2 with migration and fixtures.
   Balance re-run (BALANCE.md): about 4.8 real minutes per in-game day, with completion around 4 hours.
 
+## Playtest round 2 ✅
+- **Game froze on the reveal screen (day 2, iPhone).** Root cause: the Workshop kept the pixel memory
+  of every item's large canvases until Safari garbage-collected them (about 6 MB per item at 1×, much
+  more at 3×), which hits iOS's canvas memory limit after roughly a day of play. Canvases are now freed
+  immediately (canvas memory stays flat across items), and a frame guard keeps the game running if any
+  single frame throws.
+
 ## Definition of done: status
 | Item | Status |
 |---|---|

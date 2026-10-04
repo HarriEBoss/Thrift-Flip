@@ -132,6 +132,18 @@ Current version: **v2** (adds `dc`, the owned decorations; v1 saves migrate to a
 Saves happen at material progress: after each restoration and each sale (debounced), on purchases
 (forced), on day transitions (forced) and on platform pause (forced).
 
+## Robustness on phones
+
+- **Frame guard** (`guardLoop` in `game/bootGame.ts`): Phaser requests the next animation frame only
+  after the current one returns, so one uncaught exception would stop the game for good (a frozen
+  picture). The frame callback is wrapped: errors are logged through the platform, the loop keeps
+  running, and after 30 failing frames in a row the game returns to the main menu.
+- **Canvas memory**: iOS Safari counts canvas memory until garbage collection and refuses new canvases
+  past its limit. Canvases we are done with (workshop textures, damage layers, thumbnail intermediates,
+  evicted thumbnails, small read-back canvases) are shrunk to 0×0 immediately (`releaseCanvas`). An e2e
+  test checks that workshop visits do not accumulate canvas memory.
+- Sound effects are wrapped so an audio error can never break a frame.
+
 ## Pause, audio and lifecycle
 
 - `platform.onPause` triggers `game.loop.sleep()`, disables input, suspends the AudioContext, stops music scheduling

@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import { ITEMS } from '../../core/data';
 import type { ItemInstance } from '../../core/state';
-import { boxFor, ctx2d, drawItem, makeCanvas } from './itemArt';
+import { boxFor, ctx2d, drawItem, makeCanvas, releaseCanvas } from './itemArt';
 import { thumbnailCanvas } from './damage';
 
 /** Small LRU of generated textures so scenes can share thumbnails without leaking GPU memory. */
@@ -18,7 +18,11 @@ export function canvasToTexture(scene: Phaser.Scene, key: string, canvas: HTMLCa
   touch(key);
   while (order.length > MAX) {
     const old = order.shift()!;
-    if (tm.exists(old) && !isInUse(scene, old)) tm.remove(old);
+    if (tm.exists(old) && !isInUse(scene, old)) {
+      const src = tm.get(old).getSourceImage();
+      tm.remove(old);
+      if (src instanceof HTMLCanvasElement) releaseCanvas(src);
+    }
   }
   return key;
 }

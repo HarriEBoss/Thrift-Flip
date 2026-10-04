@@ -5,8 +5,15 @@ import { drawStepIcon, iconAd, iconArrow } from '../ui/icons';
 import { Coach } from '../ui/coach';
 import { C, FS, RARITY_COLORS } from '../theme';
 import { session } from '../session';
-import { buildDamage, compositeDamaged, crackCanvas, LAYER_ORDER, type DamageSet } from '../art/damage';
-import { boxFor, ctx2d, drawItem, makeCanvas, setColorBlindMode } from '../art/itemArt';
+import {
+  buildDamage,
+  compositeDamaged,
+  crackCanvas,
+  LAYER_ORDER,
+  releaseDamage,
+  type DamageSet,
+} from '../art/damage';
+import { boxFor, ctx2d, drawItem, makeCanvas, releaseCanvas, setColorBlindMode } from '../art/itemArt';
 import { MiniGame, STAGE, type MiniCtx } from '../minigames/MiniGame';
 import { EraseGame } from '../minigames/EraseGame';
 import { StickerGame } from '../minigames/StickerGame';
@@ -848,9 +855,14 @@ export class WorkshopScene extends GameScene {
         ...LAYER_ORDER,
       ]) {
         const k = `${this.key}_${suffix}`;
-        if (this.textures.exists(k)) this.textures.remove(k);
+        if (!this.textures.exists(k)) continue;
+        const src = this.textures.get(k).getSourceImage();
+        this.textures.remove(k);
+        // Free pixel memory now: iOS refuses new canvases once too many are waiting for GC.
+        if (src instanceof HTMLCanvasElement) releaseCanvas(src);
       }
     }
+    if (this.set) releaseDamage(this.set);
     this.key = '';
   }
 }

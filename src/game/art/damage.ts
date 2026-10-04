@@ -8,7 +8,7 @@ import { recipeFor } from '../../core/items';
 import type { ItemInstance } from '../../core/state';
 import type { StepKind } from '../../core/types';
 import { ITEMS } from '../../core/data';
-import { boxFor, ctx2d, drawItem, makeCanvas, silhouette } from './itemArt';
+import { boxFor, ctx2d, drawItem, makeCanvas, releaseCanvas, silhouette } from './itemArt';
 
 export interface StickerInfo {
   /** Unit coords of the sticker centre, size and rotation. */
@@ -226,6 +226,7 @@ export function insideTest(sil: HTMLCanvasElement): (u: number, v: number) => bo
   const x = small.getContext('2d', { willReadFrequently: true })!;
   x.drawImage(sil, 0, 0, n, n);
   const d = x.getImageData(0, 0, n, n).data;
+  releaseCanvas(small);
   const at = (cx: number, cy: number) =>
     cx >= 0 && cy >= 0 && cx < n && cy < n && d[(cy * n + cx) * 4 + 3] > 160;
   return (u, v) => {
@@ -405,6 +406,7 @@ export function gridFromLayer(
   const x = small.getContext('2d', { willReadFrequently: true })!;
   x.drawImage(layer, 0, 0, GRID, GRID);
   const data = x.getImageData(0, 0, GRID, GRID).data;
+  releaseCanvas(small);
   for (let cy = 0; cy < GRID; cy++) {
     for (let cx = 0; cx < GRID; cx++) {
       const a = data[(cy * GRID + cx) * 4 + 3];
@@ -421,5 +423,15 @@ export function thumbnailCanvas(inst: ItemInstance, size: number): HTMLCanvasEle
     drawItem(ctx2d(c), ITEMS[inst.a], boxFor(size), { paint: inst.col });
     return c;
   }
-  return compositeDamaged(buildDamage(inst, size));
+  const set = buildDamage(inst, size);
+  const out = compositeDamaged(set);
+  releaseDamage(set);
+  return out;
+}
+
+/** Frees every canvas a damage set owns (call once nothing draws from it any more). */
+export function releaseDamage(set: DamageSet): void {
+  releaseCanvas(set.base);
+  releaseCanvas(set.sil);
+  for (const c of Object.values(set.layers)) releaseCanvas(c);
 }

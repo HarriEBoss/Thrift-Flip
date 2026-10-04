@@ -173,6 +173,14 @@ export class AudioEngine {
     const last = this.lastPlayed.get(kind) ?? -1e9;
     if (now - last < gap) return;
     this.lastPlayed.set(kind, now);
+    try {
+      this.playNow(kind, intensity);
+    } catch {
+      // A sound effect must never break a game frame (e.g. an interrupted iOS audio session).
+    }
+  }
+
+  private playNow(kind: SfxKind, intensity: number): void {
     const ctx = this.ctx!;
     const t = ctx.currentTime + 0.005;
     const k = Math.max(0.1, Math.min(1, intensity));

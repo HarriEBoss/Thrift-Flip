@@ -49,6 +49,8 @@ export async function bootGame(platform: Platform, progress: (p: number) => void
     },
   });
 
+  guardLoop(game, platform);
+
   let lastKey = '';
   const resize = () => {
     const s = measure(parent);
@@ -89,6 +91,38 @@ export async function bootGame(platform: Platform, progress: (p: number) => void
   }, 1000);
 
   installDebugHooks(game);
+}
+
+/**
+ * Phaser asks for the next animation frame only after the current one returns, so a single
+ * exception anywhere in a frame (a tween callback, a timer, a scene update) would stop the game
+ * for good and leave a frozen picture. Wrap the frame callback: log the error and keep running.
+ * If frames keep failing, go back to the main menu instead of spinning on a broken scene.
+ */
+function guardLoop(game: Phaser.Game, platform: Platform): void {
+  type Raf = { start(cb: (t: number) => void, ...rest: unknown[]): void; callback: (t: number) => void };
+  const raf = (game.loop as unknown as { raf: Raf }).raf;
+  let streak = 0;
+  let recovered = false;
+  const wrap =
+    (cb: (t: number) => void) =>
+    (time: number): void => {
+      try {
+        cb(time);
+        streak = 0;
+      } catch (err) {
+        streak++;
+        if (streak === 1 || streak % 300 === 0) platform.logError(err);
+        if (streak === 30 && !recovered) {
+          recovered = true;
+          const active = game.scene.getScenes(true)[0];
+          if (active && active.scene.key !== 'MainMenu') active.scene.start('MainMenu');
+        }
+      }
+    };
+  const start = raf.start.bind(raf);
+  raf.start = (cb, ...rest) => start(wrap(cb), ...rest);
+  raf.callback = wrap(raf.callback);
 }
 
 function measure(el: HTMLElement): { w: number; h: number } {

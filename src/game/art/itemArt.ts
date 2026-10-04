@@ -256,6 +256,16 @@ export function makeCanvas(w: number, h: number = w): HTMLCanvasElement {
   return c;
 }
 
+/**
+ * Frees a canvas's pixel memory now. iOS Safari counts canvas memory until garbage collection and
+ * refuses new canvases past its limit, so canvases we are done with are shrunk to 0x0 straight away.
+ */
+export function releaseCanvas(c: HTMLCanvasElement | null | undefined): void {
+  if (!c) return;
+  c.width = 0;
+  c.height = 0;
+}
+
 export function ctx2d(c: HTMLCanvasElement): CanvasRenderingContext2D {
   const x = c.getContext('2d', { willReadFrequently: false });
   if (!x) throw new Error('2D canvas unavailable');
