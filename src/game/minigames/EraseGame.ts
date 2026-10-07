@@ -1,7 +1,6 @@
 import Phaser from 'phaser';
 import { MiniGame, STAGE, type MiniCtx } from './MiniGame';
 import { gridFromLayer } from '../art/damage';
-import { ctx2d, makeCanvas, releaseCanvas } from '../art/itemArt';
 import {
   CircularityMeter,
   CoverageGrid,
@@ -43,7 +42,8 @@ export class EraseGame extends MiniGame {
   private grid!: CoverageGrid;
   private canvas!: HTMLCanvasElement;
   private texture!: Phaser.Textures.CanvasTexture;
-  private brush!: HTMLCanvasElement;
+  private orig!: ImageData;
+  private out!: ImageData;
   private pending: Segment[] = [];
   private last: { u: number; v: number } | null = null;
   private spec!: EraseSpec;
@@ -104,7 +104,9 @@ export class EraseGame extends MiniGame {
       },
     };
     this.spec = specs[this.kind];
-    this.brush = this.makeBrush();
+    const lx = this.canvas.getContext('2d', { willReadFrequently: true })!;
+    this.orig = lx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+    this.out = lx.createImageData(this.canvas.width, this.canvas.height);
     this.emitter = this.add(
       this.ctx.scene.add.particles(0, 0, this.spec.particle, {
         speed: { min: 50, max: 150 },
@@ -118,20 +120,6 @@ export class EraseGame extends MiniGame {
       }),
     );
     this.makeCursor();
-  }
-
-  /** The soft round brush, rendered once and stamped with drawImage. */
-  private makeBrush(): HTMLCanvasElement {
-    const r = Math.max(2, Math.round(this.spec.radius * this.canvas.width));
-    const c = makeCanvas(r * 2);
-    const x = ctx2d(c);
-    const g = x.createRadialGradient(r, r, 0, r, r, r);
-    g.addColorStop(0, 'rgba(0,0,0,1)');
-    g.addColorStop(0.6, 'rgba(0,0,0,0.6)');
-    g.addColorStop(1, 'rgba(0,0,0,0)');
-    x.fillStyle = g;
-    x.fillRect(0, 0, r * 2, r * 2);
-    return c;
   }
 
   instruction(): string {
@@ -184,15 +172,9 @@ export class EraseGame extends MiniGame {
     const segs = this.pending;
     this.pending = [];
     const { radius } = this.spec;
-    const size = this.canvas.width;
-    const ctx = ctx2d(this.canvas);
-    const r = radius * size;
-    const hard = this.kind === 'rust' ? 0.55 : this.kind === 'polish' ? 0.7 : 0.85;
     let removed = 0;
     let travel = 0;
     let time = 0;
-    ctx.save();
-    ctx.globalCompositeOperation = 'destination-out';
     for (const sg of segs) {
       let power = this.spec.power;
       if (this.kind === 'polish') {
@@ -204,23 +186,10 @@ export class EraseGame extends MiniGame {
         power *= 0.6 + 0.4 * c;
       }
       removed += this.grid.stroke(sg.u0, sg.v0, sg.u1, sg.v1, radius, power);
-      const dist = Math.hypot(sg.u1 - sg.u0, sg.v1 - sg.v0);
-      travel += dist;
+      travel += Math.hypot(sg.u1 - sg.u0, sg.v1 - sg.v0);
       time += sg.dt;
-      const steps = Math.max(1, Math.ceil(dist / (radius * 0.35)));
-      ctx.globalAlpha = Math.min(1, power * hard * 1.6);
-      for (let s = 1; s <= steps; s++) {
-        const t = s / steps;
-        ctx.drawImage(
-          this.brush,
-          (sg.u0 + (sg.u1 - sg.u0) * t) * size - r,
-          (sg.v0 + (sg.v1 - sg.v0) * t) * size - r,
-          r * 2,
-          r * 2,
-        );
-      }
     }
-    ctx.restore();
+    this.renderLayer();
     this.texture.refresh();
     const end = segs[segs.length - 1];
     const now = performance.now();
@@ -238,9 +207,34 @@ export class EraseGame extends MiniGame {
     }
   }
 
-  override destroy(): void {
-    super.destroy();
-    releaseCanvas(this.brush);
+  /**
+   * Pixel-art erasing: each layer pixel shows its original grime scaled by how much damage is left
+   * in its grid cell, in a few chunky steps (full, 70%, 40%, gone).
+   */
+  private renderLayer(): void {
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+    const n = this.grid.n;
+    const { mask, amount, start } = this.grid;
+    const src = this.orig.data;
+    const dst = this.out.data;
+    for (let y = 0; y < h; y++) {
+      const cy = Math.min(n - 1, Math.floor((y * n) / h)) * n;
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        const cell = cy + Math.min(n - 1, Math.floor((x * n) / w));
+        let level = 1;
+        if (mask[cell]) {
+          const f = start[cell] > 0 ? amount[cell] / start[cell] : 0;
+          level = f <= 0.02 ? 0 : f < 0.4 ? 0.4 : f < 0.75 ? 0.7 : 1;
+        }
+        dst[i] = src[i];
+        dst[i + 1] = src[i + 1];
+        dst[i + 2] = src[i + 2];
+        dst[i + 3] = src[i + 3] * level;
+      }
+    }
+    this.canvas.getContext('2d')!.putImageData(this.out, 0, 0);
   }
 
   override finishVisuals(): void {

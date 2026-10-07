@@ -174,7 +174,7 @@ export class AuctionScene extends GameScene {
     this.card.addAt(this.img, 1);
     const vr = visibleRarity(s, lot);
     this.nameT.setText(ITEMS[lot.a].name + (vr > 0 ? `  ${'★'.repeat(vr)}` : ''));
-    this.nameT.setColor(vr > 0 ? '#' + RARITY_COLORS[vr].toString(16).padStart(6, '0') : '#3d2c25');
+    this.nameT.setColor(vr > 0 ? '#' + RARITY_COLORS[vr].toString(16).padStart(6, '0') : '#2a1f3d');
     const [lo, hi] = offerEstimate(s, lot);
     this.estT.setText(t('market.worth', { lo, hi }) + (vr > 0 ? ` · ${rarityLabel(vr)}` : ''));
     session.audio.play('stamp');

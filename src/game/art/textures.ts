@@ -2,7 +2,8 @@ import type Phaser from 'phaser';
 import { ITEMS } from '../../core/data';
 import type { ItemInstance } from '../../core/state';
 import { boxFor, ctx2d, drawItem, makeCanvas, releaseCanvas } from './itemArt';
-import { thumbnailCanvas } from './damage';
+import { PIXEL_WORLD, thumbnailCanvas, upscale } from './damage';
+import { addPixelCanvas } from './pixel';
 
 /** Small LRU of generated textures so scenes can share thumbnails without leaking GPU memory. */
 const order: string[] = [];
@@ -14,7 +15,7 @@ export function canvasToTexture(scene: Phaser.Scene, key: string, canvas: HTMLCa
     touch(key);
     return key;
   }
-  tm.addCanvas(key, canvas);
+  addPixelCanvas(tm, key, canvas);
   touch(key);
   while (order.length > MAX) {
     const old = order.shift()!;
@@ -69,13 +70,15 @@ export function archetypeThumb(
     touch(key);
     return key;
   }
-  const c = makeCanvas(size);
-  const x = ctx2d(c);
+  const px = makeCanvas(PIXEL_WORLD);
+  const x = ctx2d(px);
   if (mode === 'mystery') {
-    drawItem(x, ITEMS[a], boxFor(size), { mode: 'mask' });
+    drawItem(x, ITEMS[a], boxFor(PIXEL_WORLD), { mode: 'mask' });
     x.globalCompositeOperation = 'source-in';
-    x.fillStyle = 'rgba(61,44,37,0.28)';
-    x.fillRect(0, 0, size, size);
-  } else drawItem(x, ITEMS[a], boxFor(size));
+    x.fillStyle = 'rgba(42,31,61,0.28)';
+    x.fillRect(0, 0, PIXEL_WORLD, PIXEL_WORLD);
+  } else drawItem(x, ITEMS[a], boxFor(PIXEL_WORLD));
+  const c = upscale(px, size);
+  releaseCanvas(px);
   return canvasToTexture(scene, key, c);
 }

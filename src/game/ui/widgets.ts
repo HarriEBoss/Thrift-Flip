@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { C, FONT, FS, hex } from '../theme';
+import { pixelDraw, type Pen } from '../art/pixel';
 
 /** Anything the keyboard focus system can move between. */
 export interface Focusable {
@@ -488,7 +489,7 @@ export class ProgressBar extends Phaser.GameObjects.Container {
 }
 
 /** A coin glyph (circle with an embossed star-ish mark), vector so it stays crisp. */
-export function drawCoin(g: Phaser.GameObjects.Graphics, x: number, y: number, r: number): void {
+export function vCoin(g: Pen, x: number, y: number, r: number): void {
   g.fillStyle(C.mustardDark, 1);
   g.fillCircle(x, y + r * 0.12, r);
   g.fillStyle(C.gold, 1);
@@ -501,14 +502,7 @@ export function drawCoin(g: Phaser.GameObjects.Graphics, x: number, y: number, r
   g.fillCircle(x - r * 0.4, y - r * 0.4, r * 0.18);
 }
 
-export function drawStar(
-  g: Phaser.GameObjects.Graphics,
-  x: number,
-  y: number,
-  r: number,
-  fill: number,
-  stroke = C.ink,
-): void {
+export function vStar(g: Pen, x: number, y: number, r: number, fill: number, stroke = C.ink): void {
   const pts: Phaser.Math.Vector2[] = [];
   for (let i = 0; i < 10; i++) {
     const a = -Math.PI / 2 + (i * Math.PI) / 5;
@@ -519,4 +513,25 @@ export function drawStar(
   g.fillPoints(pts, true);
   g.lineStyle(Math.max(2, r * 0.14), stroke, 1);
   g.strokePoints(pts, true, true);
+}
+
+/** Pixel-art coin centred at (x, y) with radius r. */
+export function drawCoin(g: Phaser.GameObjects.Graphics, x: number, y: number, r: number): void {
+  const grid = Math.max(10, Math.min(16, Math.round(r / 1.6)));
+  pixelDraw(g, 'coin', { grid, extent: 48, size: r * 2.4, ox: x, oy: y }, (p) => vCoin(p, 0, 0, 20));
+}
+
+/** Pixel-art star centred at (x, y) with radius r. */
+export function drawStar(
+  g: Phaser.GameObjects.Graphics,
+  x: number,
+  y: number,
+  r: number,
+  fill: number,
+  stroke = C.ink,
+): void {
+  const grid = Math.max(11, Math.min(19, Math.round(r / 1.7)));
+  pixelDraw(g, `star|${fill}|${stroke}`, { grid, extent: 46, size: r * 2.3, ox: x, oy: y }, (p) =>
+    vStar(p, 0, 0, 20, fill, stroke),
+  );
 }

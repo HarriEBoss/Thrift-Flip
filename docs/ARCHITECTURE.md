@@ -27,14 +27,14 @@ src/
     session.ts         the single GameState + SaveManager + AudioEngine + platform
     scenes/            Boot, MainMenu, Market, Auction, Workshop, Shop, Summary, Catalog, Daily, Complete
     minigames/         EraseGame (scrub/rust/sand/polish), Sticker, Glue, Paint, Wire
-    art/               itemArt (vector parts → Canvas 2D), damage layers, characters, texture LRU
+    art/               pixel pipeline, itemArt (vector parts → pixel sprites), damage layers, characters, texture LRU
     audio/             procedural Web Audio SFX + generative music
     ui/                layout frame, widgets (Button/Slider/ProgressBar), icons, modals, menus, coach
   platform/          Platform interface + YouTube / iOS / web adapters (the ONLY place for
                      ytgame, Capacitor, storage, locale and ad/IAP SDKs)
   i18n/              string tables (en.json) + loader with fallback
   data/              items, categories (vector shapes), recipes, customers, markets, requests, balance
-  assets/            fonts (Fredoka, OFL), manifest.json (art swap-in points), items/ (optional art)
+  assets/            fonts (Pixelify Sans, OFL), manifest.json (art swap-in points), items/ (optional art)
 ```
 
 ## Platform adapter
@@ -76,8 +76,7 @@ Erase-style games follow the brief's rule: **no per-frame GPU reads.**
    pointer events, update the grid, and erase the canvas (`destination-out`) by stamping one
    pre-rendered soft brush image. The texture is uploaded once per frame and particles come from one
    cached emitter (throttled), which keeps phones smooth.
-4. Damage layers are capped at 512 px (`MAX_LAYER` in `game/art/damage.ts`) whatever the stage size, so
-   each upload stays small on high-DPR phones.
+4. Damage layers live in the 64×64 pixel world, so each texture upload is tiny on any phone.
 5. Completion and score are computed from the grid in `src/core/minigame.ts`. Polish finishes at 85%
    coverage (`POLISH_DONE`), and circles add a bonus rather than being required.
 
@@ -101,19 +100,38 @@ next shop tier with coin and reputation progress (`nextGoal` in `core/progressio
 
 ## Asset pipeline
 
+**Art style: pixel art.** Everything is still _authored_ as simple vector shapes (easy to change, tiny
+to ship) and _shown_ as pixel art by one pipeline in `game/art/pixel.ts`:
+
+1. the shapes are drawn into a canvas at 4× the target pixel grid;
+2. each 4×4 block becomes one pixel with its most common colour (no muddy blends);
+3. a 1-pixel ink outline (only where none exists) and light/shadow rims are added;
+4. the bitmap is either blitted with nearest-neighbour scaling (items, thumbnails, the workshop) or
+   emitted as solid rectangles into a Phaser Graphics object (`pixelDraw`: characters, decorations,
+   icons, coins, stars), so every call site that draws into a Graphics stays unchanged.
+
+Bitmaps are cached. Other pieces of the look: stepped pixel corners for every rounded rectangle
+(`ui/pixelChrome.ts`, installed at boot), block particles (BootScene), a twinkle background, the
+bright palette in `theme.ts` and the Pixelify Sans font.
+
 - **Items:** 40 vector shapes in `src/data/categories.json` (rects, ellipses, polygons, lines and arcs in a
   100×100 box, with colour tokens). The 120 items in `src/data/items.json` pick a shape plus body and accent colours.
-  `game/art/itemArt.ts` renders them with Canvas 2D at the needed resolution. The same data
-  produces the silhouette masks.
+  `game/art/itemArt.ts` turns them into 56×56 pixel sprites. The same sprites produce the silhouette masks.
+- **The workshop is a 64×64 pixel world** (`PIXEL_WORLD` in `game/art/damage.ts`): the item, every damage
+  layer, cracks, stickers and paint live at 64×64 and are shown with nearest-neighbour filtering. Damage
+  layers are pixel-generated or dithered (ordered Bayer dither). Erasing reads the 64×64 coverage grid
+  directly, so grime disappears pixel by pixel in chunky steps (full, 70%, 40%, gone).
+- **Thumbnails** are built at 64×64 and upscaled by whole numbers (256 or 192).
 - **Swapping in hand-made art:** put a square transparent PNG or WebP in `src/assets/items/` and map the
   item id to it in `src/assets/manifest.json` (`"items": { "kit_polka_dot_mug": "mug.png" }`).
   `game/art/manifest.ts` loads overrides after `gameReady` (lazy). Silhouettes and paint recolouring
   work automatically, and no code changes are needed.
-- **Characters** (Rory the Raccoon and the customers) are drawn from persona data in `game/art/characters.ts`.
+- **Characters** (Rory the Raccoon and the customers) are drawn from persona data in `game/art/characters.ts`
+  and turned into pixel art (cached per persona and mood).
 - **Audio** is fully procedural (`game/audio/AudioEngine.ts`), including SFX and three short generative
   music loops. `manifest.json` has `music` slots for future licensed or original tracks
   (see HUMAN_TODO).
-- **Font:** Fredoka (SIL OFL 1.1), bundled as woff2. No CDN.
+- **Font:** Pixelify Sans (SIL OFL 1.1), bundled as woff2. No CDN.
 
 ## Saving
 

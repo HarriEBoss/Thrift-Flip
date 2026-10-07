@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { MiniGame, STAGE } from './MiniGame';
+import { addPixelCanvas } from '../art/pixel';
 import { drawResidue, drawSticker } from '../art/damage';
 import { ctx2d, makeCanvas } from '../art/itemArt';
 import { peelStep, stickerScore, type PeelState } from '../../core/minigame';
@@ -25,7 +26,7 @@ export class StickerGame extends MiniGame {
     drawSticker(ctx2d(this.canvas), this.ctx.tex, s, 0);
     const key = `${this.ctx.key}_sticker`;
     if (this.ctx.scene.textures.exists(key)) this.ctx.scene.textures.remove(key);
-    this.tex = this.ctx.scene.textures.addCanvas(key, this.canvas)!;
+    this.tex = addPixelCanvas(this.ctx.scene.textures, key, this.canvas);
     const img = this.add(this.ctx.scene.add.image(0, 0, key).setOrigin(0, 0));
     img.setDisplaySize(STAGE, STAGE);
     this.flap = this.add(this.ctx.scene.add.graphics());

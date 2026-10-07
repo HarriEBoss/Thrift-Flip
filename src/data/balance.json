@@ -214,63 +214,63 @@
   "palette": [
     {
       "id": "red",
-      "hex": "#e5533d"
+      "hex": "#e43b44"
     },
     {
       "id": "orange",
-      "hex": "#f08a3c"
+      "hex": "#f77622"
     },
     {
       "id": "yellow",
-      "hex": "#f4c542"
+      "hex": "#fee761"
     },
     {
       "id": "green",
-      "hex": "#6dbb5a"
+      "hex": "#63c74d"
     },
     {
       "id": "mint",
-      "hex": "#a8e0c5"
+      "hex": "#94f2c4"
     },
     {
       "id": "teal",
-      "hex": "#2fa59c"
+      "hex": "#21b3a8"
     },
     {
       "id": "blue",
-      "hex": "#4a8fd9"
+      "hex": "#3c8cf0"
     },
     {
       "id": "purple",
-      "hex": "#9b6fd6"
+      "hex": "#9a4fe0"
     },
     {
       "id": "pink",
-      "hex": "#f28fa6"
+      "hex": "#ff7eb6"
     },
     {
       "id": "cream",
-      "hex": "#f4e3c1"
+      "hex": "#ffe9b8"
     },
     {
       "id": "brown",
-      "hex": "#9a6a44"
+      "hex": "#a0592f"
     },
     {
       "id": "black",
-      "hex": "#4a4a52"
+      "hex": "#3a3a50"
     },
     {
       "id": "white",
-      "hex": "#f7f5ef"
+      "hex": "#fafaf2"
     },
     {
       "id": "silver",
-      "hex": "#c3c8cf"
+      "hex": "#c0cbdc"
     },
     {
       "id": "gold",
-      "hex": "#e8b93a"
+      "hex": "#ffc23d"
     }
   ],
   "paintColors": [

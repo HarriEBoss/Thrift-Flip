@@ -210,6 +210,15 @@ Next: Phase 3, the playable core loop in Phaser.
   temporary canvases are freed at once. The playtest build shows the error text if anything still
   fails, so the next report can name the cause.
 
+## Art style: pixel art (owner feedback) ✅
+- The owner did not like the flat vector look and chose **pixel art**; everything looked too simple, and
+  characters, screens, buttons and colours all needed work.
+- One pipeline (`game/art/pixel.ts`) turns all existing vector art into pixel art (items, characters,
+  decorations, icons, coins, stars), with outlines and light/shadow rims. The workshop became a 64×64
+  pixel world with dithered grime that comes off pixel by pixel. UI boxes and buttons get stepped pixel
+  corners, particles are pixel blocks, the background is a pixel twinkle pattern, the palette is brighter,
+  and the font is Pixelify Sans (OFL).
+
 ## Definition of done: status
 | Item | Status |
 |---|---|

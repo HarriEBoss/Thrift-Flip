@@ -5,18 +5,19 @@
  */
 import { BALANCE, ITEMS, category, paletteHex } from '../../core/data';
 import type { ColorToken, ItemArchetype, Part } from '../../core/types';
+import { addOutline, addRims, bitmapCanvas, modeDownsample } from './pixel';
 
 export const FIXED: Record<Exclude<ColorToken, 'B' | 'A' | 'S' | 'H'>, string> = {
-  K: '#3d2c25',
-  M: '#b9c0c8',
-  W: '#b5773f',
-  G: '#cfeef2',
-  L: '#fffaf0',
-  Y: '#ffe27a',
-  R: '#e5533d',
+  K: '#2a1f3d',
+  M: '#c0cbdc',
+  W: '#be6f3a',
+  G: '#c8f4ff',
+  L: '#fffbea',
+  Y: '#fee761',
+  R: '#e43b44',
 };
 
-const OUTLINE = '#3d2c25';
+const OUTLINE = '#2a1f3d';
 
 /** Hand-made art overrides loaded from assets/manifest.json (item id -> image). */
 const overrides = new Map<string, CanvasImageSource>();
@@ -162,12 +163,95 @@ function roundRect(
   ctx.closePath();
 }
 
+/** Item sprites are this many pixels across (the 100x100 part space maps onto it). */
+export const SPRITE = 56;
+
+const sprites = new Map<string, HTMLCanvasElement>();
+
+/** The item as pixel art: SPRITE x SPRITE canvas (cached). */
+function itemSprite(
+  arch: ItemArchetype,
+  mode: 'color' | 'mask',
+  paint: string | undefined,
+  shadow: boolean,
+): HTMLCanvasElement {
+  const key = `${arch.id}|${mode}|${paint ?? ''}|${shadow ? 1 : 0}|${cbMode ? 1 : 0}|${overrides.has(arch.id) ? 1 : 0}`;
+  const hit = sprites.get(key);
+  if (hit) {
+    sprites.delete(key);
+    sprites.set(key, hit);
+    return hit;
+  }
+  let out: HTMLCanvasElement;
+  if (mode === 'mask') {
+    // The mask is exactly the coloured sprite's footprint, so masks and art always line up.
+    out = makeCanvas(SPRITE);
+    const x = ctx2d(out);
+    x.drawImage(itemSprite(arch, 'color', paint, false), 0, 0);
+    x.globalCompositeOperation = 'source-in';
+    x.fillStyle = '#ffffff';
+    x.fillRect(0, 0, SPRITE, SPRITE);
+  } else {
+    const big = makeCanvas(SPRITE * 4);
+    const bx = big.getContext('2d', { willReadFrequently: true })!;
+    drawItemVector(bx, arch, { x: 0, y: 0, size: SPRITE * 4 }, { paint, shadow: false });
+    const bmp = modeDownsample(bx.getImageData(0, 0, big.width, big.height), SPRITE, SPRITE, 4);
+    releaseCanvas(big);
+    addRims(bmp);
+    addOutline(bmp);
+    if (shadow) {
+      // Hard-edged pixel shadow under the item (only where the item is not).
+      const cx = SPRITE * 0.5;
+      const cy = SPRITE * 0.95;
+      const rx = SPRITE * 0.34;
+      const ry = Math.max(1.5, SPRITE * 0.045);
+      for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
+        for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
+          if (x < 0 || y < 0 || x >= SPRITE || y >= SPRITE) continue;
+          const dx = (x + 0.5 - cx) / rx;
+          const dy = (y + 0.5 - cy) / ry;
+          if (dx * dx + dy * dy > 1) continue;
+          const i = (y * SPRITE + x) * 4;
+          if (bmp.data[i + 3] > 0) continue;
+          bmp.data[i] = 42;
+          bmp.data[i + 1] = 31;
+          bmp.data[i + 2] = 61;
+          bmp.data[i + 3] = 56;
+        }
+      }
+    }
+    out = bitmapCanvas(bmp);
+  }
+  sprites.set(key, out);
+  if (sprites.size > 400) {
+    const old = sprites.keys().next().value as string;
+    releaseCanvas(sprites.get(old));
+    sprites.delete(old);
+  }
+  return out;
+}
+
 /**
- * Draws an item. `mode`:
- *  - 'color': full art with ink outlines and a soft drop shadow
+ * Draws an item as pixel art, scaled with hard pixel edges into `box`. `mode`:
+ *  - 'color': full art with outlines, light/shadow rims and a pixel drop shadow
  *  - 'mask':  solid white silhouette (for compositing / coverage masks)
  */
 export function drawItem(
+  ctx: CanvasRenderingContext2D,
+  arch: ItemArchetype,
+  box: ArtBox,
+  opts: { mode?: 'color' | 'mask'; paint?: string; shadow?: boolean } = {},
+): void {
+  const mode = opts.mode ?? 'color';
+  const sprite = itemSprite(arch, mode, opts.paint, mode === 'color' && opts.shadow !== false);
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(sprite, box.x, box.y, box.size, box.size);
+  ctx.restore();
+}
+
+/** The vector source art (rendered large, then turned into pixels by {@link itemSprite}). */
+function drawItemVector(
   ctx: CanvasRenderingContext2D,
   arch: ItemArchetype,
   box: ArtBox,
@@ -202,7 +286,7 @@ export function drawItem(
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
   if (mode === 'color' && opts.shadow !== false) {
-    ctx.fillStyle = 'rgba(61,44,37,0.18)';
+    ctx.fillStyle = 'rgba(42,31,61,0.18)';
     ctx.beginPath();
     ctx.ellipse(ox + 50 * k, oy + 95 * k, 34 * k, 4.5 * k, 0, 0, Math.PI * 2);
     ctx.fill();
@@ -243,9 +327,9 @@ export function drawItem(
   ctx.restore();
 }
 
-/** Standard square art box inside a canvas of `size` px (7% margin). */
+/** Standard square art box inside a canvas of `size` px (7% margin, whole pixels). */
 export function boxFor(size: number): ArtBox {
-  const m = size * 0.07;
+  const m = Math.round(size * 0.07);
   return { x: m, y: m, size: size - 2 * m };
 }
 

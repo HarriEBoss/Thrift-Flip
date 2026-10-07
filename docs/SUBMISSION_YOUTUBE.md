@@ -43,7 +43,7 @@ Legend:
 | Never lock orientation | No `lockOrientation` anywhere; both orientations have layouts | A: grep in review; M |
 | Touch AND mouse everywhere; keyboard for menus; Esc closes modals and is never `preventDefault`-ed | Phaser pointer events; Tab/arrows/Enter focus navigation; Esc handler | A: `loop.spec.ts` (mouse-only and touch-only full loop), `certification.spec.ts` (Esc on every modal, `defaultPrevented === false`, touch-only menus) |
 | Haptics toggle | Settings → Vibration (shown where haptics exist) | M (iOS) |
-| Crisp at all resolutions and DPRs | Canvas at DPR (cap 3), vector graphics, text resolution follows scale, item textures sized to device pixels | M: screenshots at DPR 1/2/3 (`npm run screenshots`) |
+| Crisp at all resolutions and DPRs | Canvas at DPR (cap 3), pixel art with nearest-neighbour scaling, text resolution follows scale | M: screenshots at DPR 1/2/3 (`npm run screenshots`) |
 | No exit button, sharing prompts, external links, QR-like graphics, ToS, login, or personal-info prompts | None exist; external links and the store hidden through `capabilities` | A: bundle checker (no absolute URLs except SDK and XML namespaces); `i18n.test.ts`; M: UI review |
 | No icons resembling YouTube close/mute/menu near those controls | No ✕, speaker or hamburger icons. The home button is a house icon at bottom-left; settings is a text button | M |
 | Clear "no more content" state | `CompleteScene` ("You've flipped it all! … no more new stuff to unlock"), shown once; endless play after | A: `content.spec.ts`, `catalog.test.ts` |
@@ -95,7 +95,7 @@ Legend:
 - **Audience:** general audience (13+). Bright, friendly, all-ages art, but **not made for kids**. Do not use
   "for kids/children" wording or child-directed marketing in any metadata.
 - **IP:** all items are generic (no real brands); all art and audio are original or generated in code; the font is
-  Fredoka (OFL). No logos or branding in the title, thumbnails or description.
+  Pixelify Sans (OFL). No logos or branding in the title, thumbnails or description.
 
 ### Title (max length per portal; verify)
 **Thrift Flip**

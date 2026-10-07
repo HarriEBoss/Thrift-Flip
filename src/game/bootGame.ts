@@ -5,6 +5,7 @@ import { cappedDpr } from './ui/layout';
 import { SCENES } from './scenes';
 import { installDebugHooks } from './debug';
 import { C } from './theme';
+import { installPixelChrome } from './ui/pixelChrome';
 
 /**
  * Creates the Phaser game. Rendering happens at devicePixelRatio (capped at 3): the canvas
@@ -16,7 +17,10 @@ export async function bootGame(platform: Platform, progress: (p: number) => void
   try {
     // Make sure the bundled font is ready before any text is rasterised.
     await Promise.race([
-      Promise.all([document.fonts.load("600 32px 'Fredoka'"), document.fonts.load("700 32px 'Fredoka'")]),
+      Promise.all([
+        document.fonts.load("500 32px 'Pixelify Sans'"),
+        document.fonts.load("700 32px 'Pixelify Sans'"),
+      ]),
       new Promise((r) => setTimeout(r, 1500)),
     ]);
   } catch {
@@ -28,6 +32,7 @@ export async function bootGame(platform: Platform, progress: (p: number) => void
   const size = measure(parent);
   const dpr = cappedDpr(window.devicePixelRatio);
 
+  installPixelChrome();
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent,

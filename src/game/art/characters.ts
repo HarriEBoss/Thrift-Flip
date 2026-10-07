@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { C } from '../theme';
 import type { Persona } from '../../core/types';
+import { pixelDraw, type Pen } from './pixel';
 
 type G = Phaser.GameObjects.Graphics;
 const hexNum = (h: string) => parseInt(h.replace('#', ''), 16);
@@ -8,7 +9,7 @@ const hexNum = (h: string) => parseInt(h.replace('#', ''), 16);
 export type Mood = 'happy' | 'think' | 'sad' | 'wow';
 
 /** Rory the Raccoon, the game's mascot and coach. Drawn centred at (0,0), ~s tall. */
-export function drawRaccoon(g: G, s: number, mood: Mood = 'happy'): void {
+function vRaccoon(g: Pen, s: number, mood: Mood = 'happy'): void {
   const k = s / 200;
   const ink = C.ink;
   g.lineStyle(5 * k, ink, 1);
@@ -81,7 +82,7 @@ export function drawRaccoon(g: G, s: number, mood: Mood = 'happy'): void {
 }
 
 /** A customer bust built from persona data (skin, hair, shirt, hat style) with a mood face. */
-export function drawCustomer(g: G, p: Persona, s: number, mood: Mood = 'happy'): void {
+function vCustomer(g: Pen, p: Persona, s: number, mood: Mood = 'happy'): void {
   const k = s / 200;
   const ink = C.ink;
   const skin = hexNum(p.look.skin);
@@ -193,4 +194,27 @@ export function drawCustomer(g: G, p: Persona, s: number, mood: Mood = 'happy'):
   g.fillStyle(C.pink, 0.5);
   g.fillCircle(-36 * k, 4 * k, 8 * k);
   g.fillCircle(36 * k, 4 * k, 8 * k);
+}
+
+/** Rory as pixel art (drawn into a Graphics), centred at (0,0), about `s` tall. */
+export function drawRaccoon(g: G, s: number, mood: Mood = 'happy'): void {
+  const ref = 200;
+  pixelDraw(
+    g,
+    `raccoon|${mood}`,
+    { grid: 52, extent: ref * 1.06, size: s * 1.06, cx: 8, cy: 5, ox: (8 * s) / ref, oy: (5 * s) / ref },
+    (pen) => vRaccoon(pen, ref, mood),
+  );
+}
+
+/** A customer as pixel art (drawn into a Graphics), centred at (0,0), about `s` tall. */
+export function drawCustomer(g: G, p: Persona, s: number, mood: Mood = 'happy'): void {
+  const ref = 200;
+  const l = p.look;
+  pixelDraw(
+    g,
+    `cust|${l.skin}|${l.hair}|${l.shirt}|${l.hat}|${mood}`,
+    { grid: 60, extent: ref * 1.32, size: s * 1.32, cy: -6, oy: (-6 * s) / ref },
+    (pen) => vCustomer(pen, p, ref, mood),
+  );
 }

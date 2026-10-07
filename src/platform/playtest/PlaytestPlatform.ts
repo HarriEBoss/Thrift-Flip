@@ -101,7 +101,7 @@ export class PlaytestPlatform implements Platform {
     const el = document.createElement('div');
     el.style.cssText =
       'position:fixed;left:8px;right:8px;bottom:8px;z-index:60;padding:10px 12px;border-radius:12px;' +
-      'background:#3d2c25;color:#fffaf0;font:13px/1.35 system-ui,sans-serif;opacity:.94;word-break:break-word';
+      'background:#2a1f3d;color:#fffaf0;font:13px/1.35 system-ui,sans-serif;opacity:.94;word-break:break-word';
     el.textContent = `Oops, something went wrong (please send a screenshot): ${e.message} ${where}`.slice(
       0,
       400,
@@ -120,10 +120,10 @@ export class PlaytestPlatform implements Platform {
       el.setAttribute('role', 'dialog');
       el.style.cssText =
         'position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;' +
-        'background:rgba(30,24,40,0.86);font-family:Fredoka,"Trebuchet MS",system-ui,sans-serif;padding:16px';
+        'background:rgba(30,24,40,0.86);font-family:"Pixelify Sans","Courier New",system-ui,sans-serif;padding:16px';
       el.innerHTML =
-        '<div style="max-width:420px;background:#fffaf0;color:#3d2c25;border:4px solid #3d2c25;border-radius:24px;' +
-        'padding:24px 22px;text-align:center;box-shadow:0 8px 0 rgba(0,0,0,.25)">' +
+        '<div style="max-width:420px;background:#fffaf0;color:#2a1f3d;border:4px solid #2a1f3d;border-radius:0;' +
+        'padding:24px 22px;text-align:center;box-shadow:8px 8px 0 rgba(42,31,61,.35)">' +
         `<div style="font-size:26px;font-weight:700;margin-bottom:8px">${title}</div>` +
         `<div style="font-size:17px;line-height:1.4">${body}</div>` +
         '<div style="margin-top:16px;height:10px;border-radius:5px;background:#e9dccb;overflow:hidden">' +

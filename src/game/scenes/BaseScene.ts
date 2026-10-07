@@ -192,14 +192,17 @@ export abstract class BaseScene extends Phaser.Scene implements UiHost {
     g.clear();
     g.fillStyle(this.bgColors.base, 1);
     g.fillRect(0, 0, f.screenW, f.screenH);
-    // Soft polka dots in logical units so the pattern scales with the frame.
+    // Pixel twinkles (little plus shapes) in logical units so the pattern scales with the frame.
     const step = 90 * f.scale;
-    const r = 9 * f.scale;
+    const u = 5 * f.scale;
     g.fillStyle(this.bgColors.dots, 1);
     let row = 0;
     for (let y = (f.y % step) - step; y < f.screenH + step; y += step, row++) {
       const off = row % 2 ? step / 2 : 0;
-      for (let x = (f.x % step) - step + off; x < f.screenW + step; x += step) g.fillCircle(x, y, r);
+      for (let x = (f.x % step) - step + off; x < f.screenW + step; x += step) {
+        g.fillRect(x - u * 1.5, y - u / 2, u * 3, u);
+        g.fillRect(x - u / 2, y - u * 1.5, u, u * 3);
+      }
     }
   }
 

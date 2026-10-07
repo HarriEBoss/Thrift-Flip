@@ -1,13 +1,14 @@
 import Phaser from 'phaser';
 import { C } from '../theme';
 import type { StepKind } from '../../core/types';
-import { drawCoin, drawStar } from './widgets';
+import { vCoin, vStar } from './widgets';
+import { pixelDraw, type Pen } from '../art/pixel';
 
 type G = Phaser.GameObjects.Graphics;
 const V = (x: number, y: number) => new Phaser.Math.Vector2(x, y);
 
 /** Step icons (vector, centred at 0,0, roughly `s` wide). Distinct shapes, never colour alone. */
-export function drawStepIcon(g: G, kind: StepKind, s: number): void {
+function v_drawStepIcon(g: Pen, kind: StepKind, s: number): void {
   const k = s / 40;
   g.lineStyle(2.5 * k, C.ink, 1);
   switch (kind) {
@@ -80,7 +81,7 @@ export function drawStepIcon(g: G, kind: StepKind, s: number): void {
       g.fillStyle(C.sky, 1);
       g.fillRoundedRect(-14 * k, -4 * k, 20 * k, 16 * k, 6 * k);
       g.strokeRoundedRect(-14 * k, -4 * k, 20 * k, 16 * k, 6 * k);
-      drawStar(g, 10 * k, -10 * k, 8 * k, C.gold);
+      vStar(g, 10 * k, -10 * k, 8 * k, C.gold);
       break;
     case 'wire': // plug
       g.fillStyle(C.inkSoft, 1);
@@ -99,15 +100,15 @@ export function drawStepIcon(g: G, kind: StepKind, s: number): void {
   }
 }
 
-export function iconCoin(g: G, s: number): void {
-  drawCoin(g, 0, 0, s * 0.42);
+function v_iconCoin(g: Pen, s: number): void {
+  vCoin(g, 0, 0, s * 0.42);
 }
 
-export function iconStar(g: G, s: number, fill: number = C.gold): void {
-  drawStar(g, 0, 0, s * 0.45, fill);
+function v_iconStar(g: Pen, s: number, fill: number = C.gold): void {
+  vStar(g, 0, 0, s * 0.45, fill);
 }
 
-export function iconHeart(g: G, s: number): void {
+function v_iconHeart(g: Pen, s: number): void {
   const k = s / 40;
   g.fillStyle(C.pink, 1);
   g.lineStyle(2.5 * k, C.ink, 1);
@@ -121,7 +122,7 @@ export function iconHeart(g: G, s: number): void {
   g.strokePath();
 }
 
-export function iconHome(g: G, s: number): void {
+function v_iconHome(g: Pen, s: number): void {
   const k = s / 40;
   g.fillStyle(C.white, 1);
   g.lineStyle(2.5 * k, C.ink, 1);
@@ -140,7 +141,7 @@ export function iconHome(g: G, s: number): void {
   g.fillRect(-3 * k, 5 * k, 6 * k, 9 * k);
 }
 
-export function iconGift(g: G, s: number): void {
+function v_iconGift(g: Pen, s: number): void {
   const k = s / 40;
   g.lineStyle(2.5 * k, C.ink, 1);
   g.fillStyle(C.pink, 1);
@@ -158,7 +159,7 @@ export function iconGift(g: G, s: number): void {
 }
 
 /** "Play" triangle inside a TV-ish rounded rect: marks buttons that show an optional ad. */
-export function iconAd(g: G, s: number): void {
+function v_iconAd(g: Pen, s: number): void {
   const k = s / 40;
   g.lineStyle(2.5 * k, C.ink, 1);
   g.fillStyle(C.white, 1);
@@ -169,7 +170,7 @@ export function iconAd(g: G, s: number): void {
   g.strokeTriangle(-5 * k, -6 * k, -5 * k, 6 * k, 7 * k, 0);
 }
 
-export function iconArrow(g: G, s: number, dir: 1 | -1 = 1): void {
+function v_iconArrow(g: Pen, s: number, dir: 1 | -1 = 1): void {
   const k = (s / 40) * dir;
   g.fillStyle(C.white, 1);
   g.lineStyle(2.5 * Math.abs(k), C.ink, 1);
@@ -186,7 +187,7 @@ export function iconArrow(g: G, s: number, dir: 1 | -1 = 1): void {
   g.strokePoints(pts, true);
 }
 
-export function iconBook(g: G, s: number): void {
+function v_iconBook(g: Pen, s: number): void {
   const k = s / 40;
   g.lineStyle(2.5 * k, C.ink, 1);
   g.fillStyle(C.teal, 1);
@@ -194,10 +195,10 @@ export function iconBook(g: G, s: number): void {
   g.strokeRoundedRect(-14 * k, -14 * k, 28 * k, 28 * k, 4 * k);
   g.fillStyle(C.white, 1);
   g.fillRect(-10 * k, -10 * k, 4 * k, 20 * k);
-  drawStar(g, 3 * k, 0, 7 * k, C.gold);
+  vStar(g, 3 * k, 0, 7 * k, C.gold);
 }
 
-export function iconTool(g: G, s: number): void {
+function v_iconTool(g: Pen, s: number): void {
   const k = s / 40;
   g.lineStyle(2.5 * k, C.ink, 1);
   g.fillStyle(0xb9c0c8, 1);
@@ -208,7 +209,7 @@ export function iconTool(g: G, s: number): void {
   g.strokeRoundedRect(-12 * k, -16 * k, 24 * k, 10 * k, 3 * k);
 }
 
-export function iconCalendar(g: G, s: number): void {
+function v_iconCalendar(g: Pen, s: number): void {
   const k = s / 40;
   g.lineStyle(2.5 * k, C.ink, 1);
   g.fillStyle(C.white, 1);
@@ -216,10 +217,10 @@ export function iconCalendar(g: G, s: number): void {
   g.strokeRoundedRect(-14 * k, -12 * k, 28 * k, 26 * k, 4 * k);
   g.fillStyle(C.terracotta, 1);
   g.fillRect(-14 * k, -12 * k, 28 * k, 8 * k);
-  drawStar(g, 0, 5 * k, 7 * k, C.gold);
+  vStar(g, 0, 5 * k, 7 * k, C.gold);
 }
 
-export function iconShopBag(g: G, s: number): void {
+function v_iconShopBag(g: Pen, s: number): void {
   const k = s / 40;
   g.lineStyle(2.5 * k, C.ink, 1);
   g.fillStyle(C.mustard, 1);
@@ -228,9 +229,66 @@ export function iconShopBag(g: G, s: number): void {
   g.beginPath();
   g.arc(0, -6 * k, 7 * k, Math.PI, 0, false);
   g.strokePath();
-  drawStar(g, 0, 4 * k, 6 * k, C.white);
+  vStar(g, 0, 4 * k, 6 * k, C.white);
+}
+
+function v_iconSparkle(g: Pen, s: number): void {
+  vStar(g, 0, 0, s * 0.42, C.gold);
+}
+
+/** Icon size in pixels for an on-screen size (about 3 logical units per art pixel). */
+const gridFor = (s: number) => Math.max(12, Math.min(20, Math.round(s / 3)));
+
+export function drawStepIcon(g: G, kind: StepKind, s: number): void {
+  pixelDraw(g, `drawStepIcon|${kind}`, { grid: gridFor(s), extent: 40, size: s }, (p) =>
+    v_drawStepIcon(p, kind, 40),
+  );
+}
+
+export function iconCoin(g: G, s: number): void {
+  pixelDraw(g, `iconCoin`, { grid: gridFor(s), extent: 40, size: s }, (p) => v_iconCoin(p, 40));
+}
+
+export function iconStar(g: G, s: number, fill: number = C.gold): void {
+  pixelDraw(g, `iconStar|${fill}`, { grid: gridFor(s), extent: 40, size: s }, (p) => v_iconStar(p, 40, fill));
+}
+
+export function iconHeart(g: G, s: number): void {
+  pixelDraw(g, `iconHeart`, { grid: gridFor(s), extent: 40, size: s }, (p) => v_iconHeart(p, 40));
+}
+
+export function iconHome(g: G, s: number): void {
+  pixelDraw(g, `iconHome`, { grid: gridFor(s), extent: 40, size: s }, (p) => v_iconHome(p, 40));
+}
+
+export function iconGift(g: G, s: number): void {
+  pixelDraw(g, `iconGift`, { grid: gridFor(s), extent: 40, size: s }, (p) => v_iconGift(p, 40));
+}
+
+export function iconAd(g: G, s: number): void {
+  pixelDraw(g, `iconAd`, { grid: gridFor(s), extent: 40, size: s }, (p) => v_iconAd(p, 40));
+}
+
+export function iconArrow(g: G, s: number, dir: 1 | -1 = 1): void {
+  pixelDraw(g, `iconArrow|${dir}`, { grid: gridFor(s), extent: 40, size: s }, (p) => v_iconArrow(p, 40, dir));
+}
+
+export function iconBook(g: G, s: number): void {
+  pixelDraw(g, `iconBook`, { grid: gridFor(s), extent: 40, size: s }, (p) => v_iconBook(p, 40));
+}
+
+export function iconTool(g: G, s: number): void {
+  pixelDraw(g, `iconTool`, { grid: gridFor(s), extent: 40, size: s }, (p) => v_iconTool(p, 40));
+}
+
+export function iconCalendar(g: G, s: number): void {
+  pixelDraw(g, `iconCalendar`, { grid: gridFor(s), extent: 40, size: s }, (p) => v_iconCalendar(p, 40));
+}
+
+export function iconShopBag(g: G, s: number): void {
+  pixelDraw(g, `iconShopBag`, { grid: gridFor(s), extent: 40, size: s }, (p) => v_iconShopBag(p, 40));
 }
 
 export function iconSparkle(g: G, s: number): void {
-  drawStar(g, 0, 0, s * 0.42, C.gold);
+  pixelDraw(g, `iconSparkle`, { grid: gridFor(s), extent: 40, size: s }, (p) => v_iconSparkle(p, 40));
 }

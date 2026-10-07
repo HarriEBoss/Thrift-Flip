@@ -26,43 +26,129 @@ export interface StickerInfo {
 
 const STICKER_LABELS = ['50¢', 'SALE', '$1', '2 FOR 1', 'OLD', '25¢', 'LOT 7', '??'];
 
+/** The game's pixel world: the workshop stage is this many art pixels across. */
+export const PIXEL_WORLD = 64;
+
 function clipToSilhouette(layer: HTMLCanvasElement, sil: HTMLCanvasElement): void {
   const c = ctx2d(layer);
   c.save();
   c.globalCompositeOperation = 'destination-in';
+  c.imageSmoothingEnabled = false;
   c.drawImage(sil, 0, 0, layer.width, layer.height);
   c.restore();
 }
 
-/** Brown grime blotches and specks. Heavier damage = more coverage. */
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+
+/**
+ * Turns a soft overlay into pixel art: strong areas become solid pixels, faint areas become an
+ * ordered (Bayer) dither pattern, so grime and haze read as chunky retro texture.
+ */
+function ditherLayer(layer: HTMLCanvasElement, solidAt = 0.78, shown = 235): void {
+  const x = layer.getContext('2d', { willReadFrequently: true })!;
+  const img = x.getImageData(0, 0, layer.width, layer.height);
+  const d = img.data;
+  const w = layer.width;
+  for (let i = 0; i < d.length; i += 4) {
+    const a = d[i + 3] / 255;
+    if (a <= 0) continue;
+    const p = i / 4;
+    const t = (BAYER[((Math.floor(p / w) & 3) << 2) | ((p % w) & 3)] + 0.5) / 16;
+    if (a >= solidAt) d[i + 3] = 255;
+    else d[i + 3] = a / solidAt > t ? shown : 0;
+  }
+  x.putImageData(img, 0, 0);
+}
+
+/** A 1-pixel line (Bresenham) for pixel-sized canvases. */
+function pixelLine(x: CanvasRenderingContext2D, x0: number, y0: number, x1: number, y1: number): void {
+  let ax = Math.round(x0);
+  let ay = Math.round(y0);
+  const bx = Math.round(x1);
+  const by = Math.round(y1);
+  const dx = Math.abs(bx - ax);
+  const dy = -Math.abs(by - ay);
+  const sx = ax < bx ? 1 : -1;
+  const sy = ay < by ? 1 : -1;
+  let err = dx + dy;
+  for (;;) {
+    x.fillRect(ax, ay, 1, 1);
+    if (ax === bx && ay === by) break;
+    const e2 = 2 * err;
+    if (e2 >= dy) {
+      err += dy;
+      ax += sx;
+    }
+    if (e2 <= dx) {
+      err += dx;
+      ay += sy;
+    }
+  }
+}
+
+/** Nearest-neighbour upscale of a pixel canvas into a `size` x `size` canvas. */
+export function upscale(src: HTMLCanvasElement, size: number): HTMLCanvasElement {
+  const c = makeCanvas(size);
+  const x = ctx2d(c);
+  x.imageSmoothingEnabled = false;
+  x.drawImage(src, 0, 0, size, size);
+  return c;
+}
+
+/**
+ * Brown grime as pixel art: dense clumps plus a dithered haze and dark specks, generated per pixel
+ * so the item underneath stays readable. Heavier damage = more coverage.
+ */
 export function drawDirt(size: number, seed: number, d: number, sil: HTMLCanvasElement): HTMLCanvasElement {
   const c = makeCanvas(size);
   const x = ctx2d(c);
   const rng = new Rng(hashSeed(seed, 'dirt'));
-  const blobs = 18 + d * 12;
-  for (let i = 0; i < blobs; i++) {
-    const cx = rng.range(0.08, 0.92) * size;
-    const cy = rng.range(0.08, 0.92) * size;
-    const r = rng.range(0.07, 0.17) * size;
-    const g = x.createRadialGradient(cx, cy, 0, cx, cy, r);
-    const tone = rng.pick(['107,79,42', '92,70,40', '125,98,58', '80,66,52']);
-    g.addColorStop(0, `rgba(${tone},0.85)`);
-    g.addColorStop(0.7, `rgba(${tone},0.7)`);
-    g.addColorStop(1, `rgba(${tone},0)`);
-    x.fillStyle = g;
-    x.beginPath();
-    x.arc(cx, cy, r, 0, Math.PI * 2);
-    x.fill();
+  const tones: Array<[number, number, number]> = [
+    [120, 86, 46],
+    [102, 74, 42],
+    [138, 104, 60],
+  ];
+  const blobs = Array.from({ length: 9 + d * 5 }, () => ({
+    x: rng.range(0.1, 0.9) * size,
+    y: rng.range(0.1, 0.9) * size,
+    r: rng.range(0.08, 0.18) * size,
+    tone: rng.int(0, tones.length - 1),
+  }));
+  const base = 0.16 + d * 0.07;
+  const img = x.createImageData(size, size);
+  const px = img.data;
+  for (let y = 0; y < size; y++) {
+    for (let xx = 0; xx < size; xx++) {
+      let dens = base;
+      let tone = 0;
+      let best = 0;
+      for (const b of blobs) {
+        const q = 1 - Math.hypot(xx + 0.5 - b.x, y + 0.5 - b.y) / b.r;
+        if (q <= 0) continue;
+        const v = q * 0.95;
+        dens += v;
+        if (v > best) {
+          best = v;
+          tone = b.tone;
+        }
+      }
+      const t = (BAYER[((y & 3) << 2) | (xx & 3)] + 0.5) / 16;
+      const i = (y * size + xx) * 4;
+      if (rng.next() < 0.035) {
+        px[i] = 64;
+        px[i + 1] = 44;
+        px[i + 2] = 30;
+        px[i + 3] = 255;
+      } else if (dens > t) {
+        const [r, g, b] = tones[tone];
+        px[i] = r;
+        px[i + 1] = g;
+        px[i + 2] = b;
+        px[i + 3] = dens > 0.85 ? 245 : 215;
+      }
+    }
   }
-  // Full grime wash so the whole item looks dusty.
-  x.fillStyle = `rgba(110,86,52,${0.32 + d * 0.1})`;
-  x.fillRect(0, 0, size, size);
-  for (let i = 0; i < 160; i++) {
-    x.fillStyle = `rgba(60,44,30,${rng.range(0.4, 0.9)})`;
-    x.beginPath();
-    x.arc(rng.next() * size, rng.next() * size, rng.range(0.003, 0.012) * size, 0, Math.PI * 2);
-    x.fill();
-  }
+  x.putImageData(img, 0, 0);
   clipToSilhouette(c, sil);
   return c;
 }
@@ -114,6 +200,7 @@ export function drawRust(
     }
   }
   clipToSilhouette(c, sil);
+  ditherLayer(c, 0.6);
   const hardness = (u: number, v: number) => {
     let h = 0;
     for (const p of patches) if (Math.hypot(p.x - u, p.y - v) < p.r * 0.9) h = Math.max(h, p.h);
@@ -143,6 +230,7 @@ export function drawWorn(size: number, seed: number, sil: HTMLCanvasElement): HT
     x.stroke();
   }
   clipToSilhouette(c, sil);
+  ditherLayer(c, 0.9);
   return c;
 }
 
@@ -169,6 +257,7 @@ export function drawFaded(size: number, seed: number, sil: HTMLCanvasElement): H
     x.fill();
   }
   clipToSilhouette(c, sil);
+  ditherLayer(c, 0.75, 200);
   return c;
 }
 
@@ -176,9 +265,10 @@ export function drawFaded(size: number, seed: number, sil: HTMLCanvasElement): H
 export function drawDull(size: number, sil: HTMLCanvasElement): HTMLCanvasElement {
   const c = makeCanvas(size);
   const x = ctx2d(c);
-  x.fillStyle = 'rgba(140,140,150,0.5)';
+  x.fillStyle = 'rgba(140,140,150,0.62)';
   x.fillRect(0, 0, size, size);
   clipToSilhouette(c, sil);
+  ditherLayer(c, 0.9, 210);
   return c;
 }
 
@@ -188,6 +278,19 @@ export function drawCrack(
   path: Array<{ x: number; y: number }>,
   color = '#2a1d17',
 ): void {
+  if (size <= 128) {
+    // Pixel world: 1-pixel lines.
+    ctx.save();
+    ctx.fillStyle = color;
+    for (let i = 0; i + 1 < path.length; i++)
+      pixelLine(ctx, path[i].x * size, path[i].y * size, path[i + 1].x * size, path[i + 1].y * size);
+    for (let i = 1; i < path.length - 1; i += 2) {
+      const p = path[i];
+      pixelLine(ctx, p.x * size, p.y * size, (p.x + 0.03) * size, (p.y + 0.035) * size);
+    }
+    ctx.restore();
+    return;
+  }
   ctx.save();
   ctx.strokeStyle = color;
   ctx.lineWidth = size * 0.012;
@@ -242,7 +345,8 @@ export function stickerFor(seed: number): StickerInfo {
   const y = rng.range(0.42, 0.62);
   const w = rng.range(0.22, 0.28);
   const h = w * 0.62;
-  const rot = rng.range(-0.25, 0.25);
+  rng.range(-0.25, 0.25); // (rotation no longer used: pixel stickers sit straight)
+  const rot = 0;
   const corner = rng.int(0, 3);
   return {
     x,
@@ -261,6 +365,33 @@ export function stickerFor(seed: number): StickerInfo {
 export function drawSticker(ctx: CanvasRenderingContext2D, size: number, s: StickerInfo, progress = 0): void {
   const keep = 1 - progress;
   if (keep <= 0.001) return;
+  if (size <= 128) {
+    // Pixel sticker: straight, 1-pixel border, red "price" marks.
+    const w = Math.max(4, Math.round(s.w * size));
+    const h = Math.max(3, Math.round(s.h * size));
+    const ow = Math.max(1, Math.round(w * keep));
+    const left = Math.round(s.x * size - w / 2);
+    const top = Math.round(s.y * size - h / 2);
+    const ox = s.cx < 0 ? left + (w - ow) : left;
+    ctx.save();
+    ctx.fillStyle = 'rgba(42,31,61,0.35)';
+    ctx.fillRect(ox + 1, top + 1, ow, h);
+    ctx.fillStyle = '#2a1f3d';
+    ctx.fillRect(ox, top, ow, h);
+    ctx.fillStyle = s.color;
+    if (ow > 2) ctx.fillRect(ox + 1, top + 1, ow - 2, h - 2);
+    ctx.fillStyle = '#c0392b';
+    const rows = h >= 7 ? [Math.floor(h / 2) - 1, Math.floor(h / 2) + 1] : [Math.floor(h / 2)];
+    rows.forEach((ry, i) => {
+      const len = Math.max(1, Math.round((w - 4) * (i === 0 ? 0.8 : 0.5)));
+      for (let k = 0; k < len; k++) {
+        const px = left + 2 + k;
+        if (px > ox && px < ox + ow - 1) ctx.fillRect(px, top + ry, 1, 1);
+      }
+    });
+    ctx.restore();
+    return;
+  }
   ctx.save();
   ctx.translate(s.x * size, s.y * size);
   ctx.rotate(s.rot);
@@ -270,10 +401,10 @@ export function drawSticker(ctx: CanvasRenderingContext2D, size: number, s: Stic
   const ow = w * keep;
   const oh = h;
   const ox = s.cx < 0 ? -w / 2 + (w - ow) : -w / 2;
-  ctx.fillStyle = 'rgba(61,44,37,0.25)';
+  ctx.fillStyle = 'rgba(42,31,61,0.25)';
   ctx.fillRect(ox + 3, -oh / 2 + 4, ow, oh);
   ctx.fillStyle = s.color;
-  ctx.strokeStyle = '#3d2c25';
+  ctx.strokeStyle = '#2a1f3d';
   ctx.lineWidth = size * 0.006;
   ctx.beginPath();
   ctx.rect(ox, -oh / 2, ow, oh);
@@ -298,7 +429,12 @@ export function drawResidue(ctx: CanvasRenderingContext2D, size: number, s: Stic
   ctx.translate(s.x * size, s.y * size);
   ctx.rotate(s.rot);
   ctx.fillStyle = 'rgba(230,214,160,0.85)';
-  ctx.fillRect((-s.w * size) / 2, (-s.h * size) / 2, s.w * size * 0.6, s.h * size);
+  ctx.fillRect(
+    Math.round((-s.w * size) / 2),
+    Math.round((-s.h * size) / 2),
+    Math.round(s.w * size * 0.6),
+    Math.round(s.h * size),
+  );
   ctx.restore();
 }
 
@@ -384,6 +520,7 @@ export const LAYER_ORDER: StepKind[] = ['paint', 'polish', 'sand', 'rust', 'scru
 export function compositeDamaged(set: DamageSet, target?: HTMLCanvasElement): HTMLCanvasElement {
   const out = target ?? makeCanvas(set.size);
   const x = ctx2d(out);
+  x.imageSmoothingEnabled = false;
   x.clearRect(0, 0, out.width, out.height);
   x.drawImage(set.base, 0, 0, out.width, out.height);
   if (set.crack) {
@@ -422,14 +559,17 @@ export function gridFromLayer(
 
 /** Item thumbnail (dirty when not restored). */
 export function thumbnailCanvas(inst: ItemInstance, size: number): HTMLCanvasElement {
+  const px = makeCanvas(PIXEL_WORLD);
   if (inst.q >= 0) {
-    const c = makeCanvas(size);
-    drawItem(ctx2d(c), ITEMS[inst.a], boxFor(size), { paint: inst.col });
-    return c;
+    drawItem(ctx2d(px), ITEMS[inst.a], boxFor(PIXEL_WORLD), { paint: inst.col });
+  } else {
+    const set = buildDamage(inst, PIXEL_WORLD);
+    compositeDamaged(set, px);
+    releaseDamage(set);
   }
-  const set = buildDamage(inst, size);
-  const out = compositeDamaged(set);
-  releaseDamage(set);
+  if (size === PIXEL_WORLD) return px;
+  const out = upscale(px, size);
+  releaseCanvas(px);
   return out;
 }
 

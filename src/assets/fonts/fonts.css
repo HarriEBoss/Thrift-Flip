@@ -1,15 +1,15 @@
-/* Fredoka (SIL Open Font License 1.1), bundled locally: no font CDN, woff2 only. */
+/* Pixelify Sans (SIL Open Font License 1.1), bundled locally: no font CDN, woff2 only. */
 @font-face {
-  font-family: 'Fredoka';
+  font-family: 'Pixelify Sans';
   font-style: normal;
   font-display: swap;
-  font-weight: 600;
-  src: url(./fredoka-latin-600-normal.woff2) format('woff2');
+  font-weight: 400 600;
+  src: url(./pixelify-sans-latin-500-normal.woff2) format('woff2');
 }
 @font-face {
-  font-family: 'Fredoka';
+  font-family: 'Pixelify Sans';
   font-style: normal;
   font-display: swap;
   font-weight: 700;
-  src: url(./fredoka-latin-700-normal.woff2) format('woff2');
+  src: url(./pixelify-sans-latin-700-normal.woff2) format('woff2');
 }

@@ -108,7 +108,7 @@ browsing or search history, sensitive info. The game itself has no accounts, no 
 - Notes for the reviewer (paste):
 
 > Thrift Flip is a native-wrapped HTML5 game built with Phaser and Capacitor. All game code, art (generated
-> vector art) and audio (procedural Web Audio) are bundled inside the app; nothing is loaded from a website.
+> pixel art) and audio (procedural Web Audio) are bundled inside the app; nothing is loaded from a website.
 > It is fully playable offline.
 > - In-app purchases: Main Menu → "Shop Perks" (also reachable from the Day Summary after day 3 via
 >   "Starter Pack deal"). Restore Purchases: Settings → "Restore purchases" or the bottom of Shop Perks.
@@ -132,7 +132,7 @@ browsing or search history, sensitive info. The game itself has no accounts, no 
 - [ ] **Privacy policy URL** (required): host docs/PRIVACY_POLICY.md after legal review, and use the same URL in
       `config.ts` and App Store Connect.
 - [ ] **Advertising identifier:** answered via the privacy label (ATT is implemented).
-- [ ] **Content rights:** all content is original or licensed (Fredoka OFL, Phaser MIT). Confirm in App Store Connect.
+- [ ] **Content rights:** all content is original or licensed (Pixelify Sans OFL, Phaser MIT). Confirm in App Store Connect.
 
 ## 9. Screenshots & metadata
 

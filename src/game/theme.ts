@@ -1,31 +1,37 @@
-/** Warm, bright, kid-friendly flat palette (creams, teals, mustard, terracotta + candy accents). */
+/**
+ * Bright pixel-art palette: warm creams for backgrounds, saturated candy colours for buttons and
+ * accents, and a deep navy-purple "ink" for outlines and text strokes.
+ */
 export const C = {
-  cream: 0xfdf3e1,
-  cream2: 0xfbe7c4,
-  sand: 0xf3d3a1,
-  paper: 0xfffaf0,
+  cream: 0xfff3d6,
+  cream2: 0xffe3a6,
+  sand: 0xf9c86b,
+  paper: 0xfffbea,
   white: 0xffffff,
-  ink: 0x3d2c25,
-  inkSoft: 0x6b5448,
-  teal: 0x2f8f8a,
-  tealDark: 0x1d5a57,
-  tealLight: 0x8fd3cb,
-  mustard: 0xf2b33d,
-  mustardDark: 0xb07a14,
-  terracotta: 0xe0663f,
-  terracottaDark: 0x8a3b22,
-  pink: 0xf28fa6,
-  sky: 0x7cc6e8,
-  leaf: 0x7bbf5a,
-  leafDark: 0x3f7a2a,
-  purple: 0x9b7ede,
-  gold: 0xffd34d,
-  shadow: 0x3d2c25,
+  ink: 0x2a1f3d,
+  inkSoft: 0x5d5478,
+  teal: 0x1aa89c,
+  tealDark: 0x0f6b6f,
+  tealLight: 0x8ef0e0,
+  mustard: 0xffc23d,
+  mustardDark: 0xd9861a,
+  terracotta: 0xf2603a,
+  terracottaDark: 0xa8322b,
+  pink: 0xff7eb6,
+  sky: 0x4fb6ff,
+  leaf: 0x4cc65a,
+  leafDark: 0x228a3c,
+  purple: 0x9a5cf0,
+  gold: 0xffd93d,
+  shadow: 0x2a1f3d,
 } as const;
 
 export const hex = (c: number): string => '#' + c.toString(16).padStart(6, '0');
 
-export const FONT = "'Fredoka', 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif";
+export const FONT = "'Pixelify Sans', 'Courier New', monospace";
+
+/** One "pixel" of UI chrome (corners, borders, shadows) in logical units. */
+export const PX = 4;
 
 /** Font sizes in logical units (frame short side = 720). */
 export const FS = {

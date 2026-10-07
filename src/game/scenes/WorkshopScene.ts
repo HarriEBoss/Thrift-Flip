@@ -10,9 +10,11 @@ import {
   compositeDamaged,
   crackCanvas,
   LAYER_ORDER,
+  PIXEL_WORLD,
   releaseDamage,
   type DamageSet,
 } from '../art/damage';
+import { addPixelCanvas } from '../art/pixel';
 import { boxFor, ctx2d, drawItem, makeCanvas, releaseCanvas, setColorBlindMode } from '../art/itemArt';
 import { MiniGame, STAGE, type MiniCtx } from '../minigames/MiniGame';
 import { EraseGame } from '../minigames/EraseGame';
@@ -220,6 +222,16 @@ export class WorkshopScene extends GameScene {
       strokeW: 5,
       shadow: 8,
     });
+    // Pixel cutting mat: a soft grid aligned to the 64-pixel art world (every 8 art pixels).
+    const cell = S / 8;
+    this.stageFrame.fillStyle(0xeef6f3, 1);
+    this.stageFrame.fillRect(sx, sy, S, S);
+    this.stageFrame.fillStyle(0xd5ebe5, 1);
+    const line = Math.max(2, S / 160);
+    for (let i = 1; i < 8; i++) {
+      this.stageFrame.fillRect(sx + i * cell - line / 2, sy, line, S);
+      this.stageFrame.fillRect(sx, sy + i * cell - line / 2, S, line);
+    }
     if (this.mini instanceof PaintGame) this.mini.layoutPalette();
     this.reveal?.setData('relayout', true);
     if (this.view === 'reveal' && this.reveal) this.layoutReveal();
@@ -317,17 +329,17 @@ export class WorkshopScene extends GameScene {
     this.stepIdx = 0;
     this.paintChoice = null;
     this.key = `ws_${inst.uid}_${Date.now() % 100000}`;
-    const px = this.stageSize * this.frame.scale;
-    this.texSize = Math.max(384, Math.min(1024, Math.ceil(px / 64) * 64));
+    // Pixel art: the whole stage is one small pixel world, scaled up with hard edges.
+    this.texSize = PIXEL_WORLD;
     const set = buildDamage(inst, this.texSize);
     this.set = set;
     // before snapshot for the reveal
-    this.textures.addCanvas(`${this.key}_before`, compositeDamaged(set));
-    this.textures.addCanvas(`${this.key}_base`, set.base);
+    addPixelCanvas(this.textures, `${this.key}_before`, compositeDamaged(set));
+    addPixelCanvas(this.textures, `${this.key}_base`, set.base);
     const base = this.add.image(0, 0, `${this.key}_base`).setOrigin(0, 0).setDisplaySize(STAGE, STAGE);
     this.stage.add(base);
     if (set.crack) {
-      this.textures.addCanvas(`${this.key}_crack`, crackCanvas(set.layerSize, set.crack, set.sil));
+      addPixelCanvas(this.textures, `${this.key}_crack`, crackCanvas(set.layerSize, set.crack, set.sil));
       const img = this.add.image(0, 0, `${this.key}_crack`).setOrigin(0, 0).setDisplaySize(STAGE, STAGE);
       this.stage.add(img);
       this.crackG = null;
@@ -336,7 +348,7 @@ export class WorkshopScene extends GameScene {
     for (const k of LAYER_ORDER) {
       const layer = set.layers[k];
       if (!layer) continue;
-      this.textures.addCanvas(`${this.key}_${k}`, layer);
+      addPixelCanvas(this.textures, `${this.key}_${k}`, layer);
       const img = this.add.image(0, 0, `${this.key}_${k}`).setOrigin(0, 0).setDisplaySize(STAGE, STAGE);
       this.stage.add(img);
       this.layerImages[k] = img;
@@ -606,7 +618,7 @@ export class WorkshopScene extends GameScene {
     this.instruction.setText(t('reveal.title'));
     const after = makeCanvas(this.texSize);
     drawItem(ctx2d(after), ITEMS[inst.a], boxFor(this.texSize), { paint: inst.col });
-    this.textures.addCanvas(`${this.key}_after`, after);
+    addPixelCanvas(this.textures, `${this.key}_after`, after);
     for (const o of [...this.stage.list]) (o as Phaser.GameObjects.GameObject).destroy();
     this.layerImages = {};
     const r = this.add.container(0, 0);
