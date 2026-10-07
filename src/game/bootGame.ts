@@ -95,15 +95,32 @@ export async function bootGame(platform: Platform, progress: (p: number) => void
 
 /**
  * Phaser asks for the next animation frame only after the current one returns, so a single
- * exception anywhere in a frame (a tween callback, a timer, a scene update) would stop the game
- * for good and leave a frozen picture. Wrap the frame callback: log the error and keep running.
- * If frames keep failing, go back to the main menu instead of spinning on a broken scene.
+ * exception anywhere in a frame (a tween callback, a timer, a scene update, a draw) would stop the
+ * game for good and leave a frozen picture. The frame callback is wrapped and, if frames keep
+ * failing, the game repairs itself in steps instead of kicking the player out:
+ * 1. after a few failing frames, hide anything that still points at a removed texture;
+ * 2. if that does not help, restart the current scene (it rebuilds from the saved state);
+ * 3. only if the restarted scene fails straight away, go back to the main menu.
  */
 function guardLoop(game: Phaser.Game, platform: Platform): void {
   type Raf = { start(cb: (t: number) => void, ...rest: unknown[]): void; callback: (t: number) => void };
   const raf = (game.loop as unknown as { raf: Raf }).raf;
   let streak = 0;
-  let recovered = false;
+  let lastRestart = -1e9;
+  const recover = (): void => {
+    const active = game.scene.getScenes(true);
+    if (streak === 3) {
+      for (const sc of active) hideBrokenTextures(sc.children.list);
+    } else if (streak === 20) {
+      const sc = active[0];
+      if (!sc) return;
+      const now = performance.now();
+      const again = now - lastRestart < 8000;
+      lastRestart = now;
+      if (again && sc.scene.key !== 'MainMenu') sc.scene.start('MainMenu');
+      else sc.scene.restart();
+    }
+  };
   const wrap =
     (cb: (t: number) => void) =>
     (time: number): void => {
@@ -113,16 +130,30 @@ function guardLoop(game: Phaser.Game, platform: Platform): void {
       } catch (err) {
         streak++;
         if (streak === 1 || streak % 300 === 0) platform.logError(err);
-        if (streak === 30 && !recovered) {
-          recovered = true;
-          const active = game.scene.getScenes(true)[0];
-          if (active && active.scene.key !== 'MainMenu') active.scene.start('MainMenu');
+        try {
+          recover();
+        } catch (e) {
+          platform.logError(e);
         }
+        if (streak >= 20) streak = 3; // keep trying the later steps on a cadence
       }
     };
   const start = raf.start.bind(raf);
   raf.start = (cb, ...rest) => start(wrap(cb), ...rest);
   raf.callback = wrap(raf.callback);
+}
+
+/** Hides display objects whose texture was removed (drawing them throws every frame). */
+function hideBrokenTextures(list: Phaser.GameObjects.GameObject[]): void {
+  for (const o of list) {
+    const img = o as Phaser.GameObjects.Image;
+    if (img.texture && img.frame) {
+      // A destroyed texture leaves its frames without a source.
+      if (!img.frame.source || !img.frame.texture) img.setVisible(false);
+    }
+    const children = (o as Phaser.GameObjects.Container).list;
+    if (Array.isArray(children)) hideBrokenTextures(children as Phaser.GameObjects.GameObject[]);
+  }
 }
 
 function measure(el: HTMLElement): { w: number; h: number } {

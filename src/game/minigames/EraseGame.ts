@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { MiniGame, STAGE, type MiniCtx } from './MiniGame';
 import { gridFromLayer } from '../art/damage';
-import { ctx2d, makeCanvas } from '../art/itemArt';
+import { ctx2d, makeCanvas, releaseCanvas } from '../art/itemArt';
 import {
   CircularityMeter,
   CoverageGrid,
@@ -236,6 +236,11 @@ export class EraseGame extends MiniGame {
       this.lastMilestone = milestone;
       session.haptic('light');
     }
+  }
+
+  override destroy(): void {
+    super.destroy();
+    releaseCanvas(this.brush);
   }
 
   override finishVisuals(): void {

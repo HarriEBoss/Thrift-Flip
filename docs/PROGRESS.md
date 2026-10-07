@@ -200,6 +200,16 @@ Next: Phase 3, the playable core loop in Phaser.
   immediately (canvas memory stays flat across items), and a frame guard keeps the game running if any
   single frame throws.
 
+## Playtest round 3 ✅
+- **"Do it!" before bonus steps removed.** Bonus steps start straight away like every other step; a
+  Skip button sits next to Done, and a short toast says it is a bonus step.
+- **"Lags out and goes back to the main screen".** That was the frame guard's last resort after a run
+  of failing frames. Changes: the guard now repairs in place (hide objects with removed textures, then
+  restart the current scene) and works more than once per session; the thumbnail cache no longer
+  evicts textures shown inside containers (drawing a removed texture throws every frame); more
+  temporary canvases are freed at once. The playtest build shows the error text if anything still
+  fails, so the next report can name the cause.
+
 ## Definition of done: status
 | Item | Status |
 |---|---|

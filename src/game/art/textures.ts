@@ -33,8 +33,15 @@ function touch(key: string): void {
   order.push(key);
 }
 
+/** True when any object in the scene (including inside containers) still shows this texture. */
 function isInUse(scene: Phaser.Scene, key: string): boolean {
-  return scene.children.list.some((o) => (o as Phaser.GameObjects.Image).texture?.key === key);
+  const walk = (list: Phaser.GameObjects.GameObject[]): boolean =>
+    list.some((o) => {
+      if ((o as Phaser.GameObjects.Image).texture?.key === key) return true;
+      const children = (o as Phaser.GameObjects.Container).list;
+      return Array.isArray(children) && walk(children as Phaser.GameObjects.GameObject[]);
+    });
+  return walk(scene.children.list);
 }
 
 export const THUMB = 256;

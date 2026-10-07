@@ -58,7 +58,6 @@ export class WorkshopScene extends GameScene {
   private panel!: Phaser.GameObjects.Container;
   private doneBtn!: Button;
   private skipBtn!: Button;
-  private doBtn!: Button;
   private goldBtn!: Button;
   private counter!: Phaser.GameObjects.Text;
   private texSize = 512;
@@ -132,19 +131,11 @@ export class WorkshopScene extends GameScene {
       onClick: () => this.completeStep(),
     });
     this.skipBtn = new Button(this, 0, 0, {
-      w: 200,
+      w: 180,
       h: 72,
       label: t('common.skip'),
       color: C.inkSoft,
       onClick: () => this.skipStep(),
-    });
-    this.doBtn = new Button(this, 0, 0, {
-      w: 260,
-      h: 80,
-      label: t('mg.doIt'),
-      color: C.terracotta,
-      fontSize: FS.h3,
-      onClick: () => this.startGame(),
     });
     this.goldBtn = new Button(this, 0, 0, {
       w: 260,
@@ -157,7 +148,6 @@ export class WorkshopScene extends GameScene {
     });
     this.mark('done', this.doneBtn);
     this.mark('skip', this.skipBtn);
-    this.mark('do', this.doBtn);
     this.mark('golden', this.goldBtn);
     this.root.add([
       this.stageFrame,
@@ -169,7 +159,6 @@ export class WorkshopScene extends GameScene {
       this.counter,
       this.doneBtn,
       this.skipBtn,
-      this.doBtn,
       this.goldBtn,
     ]);
     this.itemTotal = this.dailyKey ? 1 : workshopQueue(s).length;
@@ -202,9 +191,8 @@ export class WorkshopScene extends GameScene {
       const py = sy + S + (f.h < 1100 ? 145 : 170);
       this.panel.setPosition(f.w / 2, py);
       const by = f.h - 60;
-      this.doneBtn.setPosition(f.w / 2 + 40, by);
-      this.skipBtn.setPosition(f.w / 2 - 170, by);
-      this.doBtn.setPosition(f.w / 2 + 110, by);
+      this.doneBtn.setPosition(f.w / 2 + 60, by);
+      this.skipBtn.setPosition(f.w / 2 - 150, by);
       this.goldBtn.setPosition(f.w / 2, py - 40);
     } else {
       S = Math.max(360, Math.min(600, f.h - 130));
@@ -218,7 +206,6 @@ export class WorkshopScene extends GameScene {
       this.panel.setPosition(rx, 440);
       this.doneBtn.setPosition(rx + 120, f.h - 70);
       this.skipBtn.setPosition(rx - 120, f.h - 70);
-      this.doBtn.setPosition(rx + 120, f.h - 70);
       this.goldBtn.setPosition(rx, 400);
       this.homeBtn.setPosition(sx + S + 60, f.h - 54);
     }
@@ -449,19 +436,10 @@ export class WorkshopScene extends GameScene {
     this.renderChips();
     const st = this.recipe[this.stepIdx];
     this.bar.setValue(0);
+    // Bonus steps start straight away like any other step; Skip sits next to Done.
+    this.startGame();
     if (!st.req) {
-      this.instruction.setText(t('mg.optional', { step: t(`step.${st.k}`) }));
-      this.doBtn.setVisible(true);
-      this.skipBtn.setVisible(true);
-      this.doneBtn.setVisible(false);
-      this.bar.setVisible(false);
-      if (!session.state.flags.tutorialDone) this.skipBtn.setVisible(false);
-      this.coach?.say(t('tut.bonus'), {
-        target: { x: this.doBtn.x, y: this.doBtn.y - 40 },
-        at: this.frame.portrait ? 'top' : 'right',
-      });
-    } else {
-      this.startGame();
+      this.toast(t('mg.optional', { step: t(`step.${st.k}`) }), C.leafDark);
     }
   }
 
@@ -469,8 +447,7 @@ export class WorkshopScene extends GameScene {
     if (!this.inst || !this.set) return;
     const s = session.state;
     const st = this.recipe[this.stepIdx];
-    this.doBtn.setVisible(false);
-    this.skipBtn.setVisible(false);
+    this.skipBtn.setVisible(!st.req && s.flags.tutorialDone);
     this.doneBtn.setVisible(true);
     this.bar.setVisible(true);
     this.goldBtn.setVisible(false);
@@ -622,7 +599,6 @@ export class WorkshopScene extends GameScene {
     this.view = 'reveal';
     this.doneBtn.setVisible(false);
     this.skipBtn.setVisible(false);
-    this.doBtn.setVisible(false);
     this.goldBtn.setVisible(false);
     this.bar.setVisible(false);
     this.chips.setVisible(false);
@@ -798,7 +774,7 @@ export class WorkshopScene extends GameScene {
     const info: Record<string, unknown> = {
       view: this.view,
       kind: this.mini ? st?.k : null,
-      pendingOptional: !this.mini && st && !st.req && this.view === 'steps',
+      pendingOptional: false,
       progress: this.mini ? this.mini.progress() : 0,
       stage: { x: m.tx, y: m.ty, size },
       step: this.stepIdx,

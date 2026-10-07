@@ -20,7 +20,12 @@ export class PlaytestPlatform implements Platform {
     privacyOptions: false,
   };
 
-  async init(): Promise<void> {}
+  private lastShown = 0;
+
+  async init(): Promise<void> {
+    window.addEventListener('error', (e) => this.logError(e.error ?? e.message));
+    window.addEventListener('unhandledrejection', (e) => this.logError(e.reason));
+  }
   notifyFirstFrame(): void {}
   notifyGameReady(): void {}
   onPause(_cb: () => void): void {}
@@ -83,6 +88,27 @@ export class PlaytestPlatform implements Platform {
   haptic(_kind: 'light' | 'medium' | 'success'): void {}
   logError(err: unknown): void {
     console.error('[ThriftFlip]', err);
+    this.showError(err);
+  }
+
+  /** Playtest only: a small note the tester can screenshot so we know what went wrong. */
+  private showError(err: unknown): void {
+    const now = Date.now();
+    if (now - this.lastShown < 15000) return;
+    this.lastShown = now;
+    const e = err instanceof Error ? err : new Error(String(err));
+    const where = (e.stack ?? '').split('\n').slice(1, 3).join(' · ');
+    const el = document.createElement('div');
+    el.style.cssText =
+      'position:fixed;left:8px;right:8px;bottom:8px;z-index:60;padding:10px 12px;border-radius:12px;' +
+      'background:#3d2c25;color:#fffaf0;font:13px/1.35 system-ui,sans-serif;opacity:.94;word-break:break-word';
+    el.textContent = `Oops, something went wrong (please send a screenshot): ${e.message} ${where}`.slice(
+      0,
+      400,
+    );
+    el.addEventListener('click', () => el.remove());
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 12000);
   }
   logWarning(msg: string): void {
     console.warn('[ThriftFlip]', msg);

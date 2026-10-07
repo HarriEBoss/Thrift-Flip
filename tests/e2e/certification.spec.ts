@@ -15,6 +15,9 @@ type TfAny = {
   goto(k: string, d?: object): void;
   session: { state: { settings: { music: number; sfx: number } }; applySettings(): void };
 };
+// Raw Phaser access in a few robustness tests.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Loose = any;
 const tf = <T>(page: Page, fn: (t: TfAny) => T) =>
   page.evaluate(`(${fn.toString()})(window.__tf)`) as Promise<T>;
 
@@ -141,6 +144,7 @@ test('no overall mute button on YouTube; Esc closes every modal without preventD
   const before = await tf(page, (t) => (t.state() as { coins: number }).coins);
   await press(page, 'mouse', 'upgrades');
   await press(page, 'mouse', 'hub_decor');
+  await page.waitForTimeout(600); // let the list finish its pop-in so the tap lands on the right row
   await press(page, 'mouse', 'decor_plant');
   await esc();
   const after = await tf(page, (t) => t.state() as { coins: number; decor: string[] });
@@ -311,8 +315,47 @@ test('an error inside one frame does not freeze the game; workshop frees its can
       throw new Error('e2e: injected frame error');
     });
   });
-  await page.waitForTimeout(1000);
-  expect(await tf(page, (t) => t.frame())).toBeGreaterThan(before + 10);
+  await expect.poll(() => tf(page, (t) => t.frame()), { timeout: 8000 }).toBeGreaterThan(before + 10);
   expect(await tf(page, (t) => t.loopRunning())).toBe(true);
   expect(errors).toEqual([]);
+
+  // A picture whose texture is removed while on screen (inside a container) throws on every draw.
+  // The game must repair itself in place, not freeze or jump to the main menu.
+  await tf(page, (t) => {
+    t.setup({ tutorialDone: true, phase: 'market' });
+    t.goto('Market');
+  });
+  await waitForScene(page, 'Market');
+  await page.evaluate(() => {
+    const g = (window as unknown as { __tf: { game: Loose } }).__tf.game;
+    const sc = g.scene.getScene('Market');
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    g.textures.addCanvas('e2e_gone', c);
+    sc.add.container(100, 100, [sc.add.image(0, 0, 'e2e_gone')]);
+  });
+  await page.waitForTimeout(300);
+  await page.evaluate(() =>
+    (window as unknown as { __tf: { game: Loose } }).__tf.game.textures.remove('e2e_gone'),
+  );
+  const f0 = await tf(page, (t) => t.frame());
+  await expect.poll(() => tf(page, (t) => t.frame()), { timeout: 8000 }).toBeGreaterThan(f0 + 10);
+  expect(await scene(page)).toBe('Market');
+
+  // A scene that keeps failing for a while is restarted in place (state is kept).
+  const day = await tf(page, (t) => (t.state() as { day: { n: number } }).day.n);
+  await page.evaluate(() => {
+    const g = (window as unknown as { __tf: { game: Loose } }).__tf.game;
+    let n = 0;
+    const boom = () => {
+      if (++n > 25) g.events.off('step', boom);
+      else throw new Error('e2e: repeated frame error');
+    };
+    g.events.on('step', boom);
+  });
+  const f1 = await tf(page, (t) => t.frame());
+  await expect.poll(() => tf(page, (t) => t.frame()), { timeout: 15000 }).toBeGreaterThan(f1 + 10);
+  expect(await scene(page)).toBe('Market');
+  expect(await tf(page, (t) => t.loopRunning())).toBe(true);
+  expect(await tf(page, (t) => (t.state() as { day: { n: number } }).day.n)).toBe(day);
 });

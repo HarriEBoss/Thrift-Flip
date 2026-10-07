@@ -136,8 +136,12 @@ Saves happen at material progress: after each restoration and each sale (debounc
 
 - **Frame guard** (`guardLoop` in `game/bootGame.ts`): Phaser requests the next animation frame only
   after the current one returns, so one uncaught exception would stop the game for good (a frozen
-  picture). The frame callback is wrapped: errors are logged through the platform, the loop keeps
-  running, and after 30 failing frames in a row the game returns to the main menu.
+  picture). The frame callback is wrapped and errors are logged through the platform. If frames keep
+  failing, the game repairs itself in steps: hide objects whose texture was removed, then restart the
+  current scene (it rebuilds from the saved state), and only if that fails straight away, go to the
+  main menu. The playtest build also shows the error text on screen so testers can screenshot it.
+- **Thumbnail cache** (`game/art/textures.ts`): the LRU never evicts a texture that any object in the
+  scene still shows, including objects inside containers.
 - **Canvas memory**: iOS Safari counts canvas memory until garbage collection and refuses new canvases
   past its limit. Canvases we are done with (workshop textures, damage layers, thumbnail intermediates,
   evicted thumbnails, small read-back canvases) are shrunk to 0×0 immediately (`releaseCanvas`). An e2e

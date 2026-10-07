@@ -386,7 +386,11 @@ export function compositeDamaged(set: DamageSet, target?: HTMLCanvasElement): HT
   const x = ctx2d(out);
   x.clearRect(0, 0, out.width, out.height);
   x.drawImage(set.base, 0, 0, out.width, out.height);
-  if (set.crack) x.drawImage(crackCanvas(out.width, set.crack, set.sil), 0, 0, out.width, out.height);
+  if (set.crack) {
+    const crack = crackCanvas(out.width, set.crack, set.sil);
+    x.drawImage(crack, 0, 0, out.width, out.height);
+    releaseCanvas(crack);
+  }
   for (const k of LAYER_ORDER) {
     const l = set.layers[k];
     if (l) x.drawImage(l, 0, 0, out.width, out.height);
