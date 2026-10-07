@@ -34,7 +34,7 @@ src/
                      ytgame, Capacitor, storage, locale and ad/IAP SDKs)
   i18n/              string tables (en.json) + loader with fallback
   data/              items, categories (vector shapes), recipes, customers, markets, requests, balance
-  assets/            fonts (Pixelify Sans, OFL), manifest.json (art swap-in points), items/ (optional art)
+  assets/            fonts (Nunito, OFL), manifest.json (art swap-in points), items/ (optional art)
 ```
 
 ## Platform adapter
@@ -112,7 +112,7 @@ to ship) and _shown_ as pixel art by one pipeline in `game/art/pixel.ts`:
 
 Bitmaps are cached. Other pieces of the look: stepped pixel corners for every rounded rectangle
 (`ui/pixelChrome.ts`, installed at boot), block particles (BootScene), a twinkle background, the
-bright palette in `theme.ts` and the Pixelify Sans font.
+bright palette in `theme.ts` and the Nunito font.
 
 - **Items:** 40 vector shapes in `src/data/categories.json` (rects, ellipses, polygons, lines and arcs in a
   100×100 box, with colour tokens). The 120 items in `src/data/items.json` pick a shape plus body and accent colours.
@@ -131,7 +131,7 @@ bright palette in `theme.ts` and the Pixelify Sans font.
 - **Audio** is fully procedural (`game/audio/AudioEngine.ts`), including SFX and three short generative
   music loops. `manifest.json` has `music` slots for future licensed or original tracks
   (see HUMAN_TODO).
-- **Font:** Pixelify Sans (SIL OFL 1.1), bundled as woff2. No CDN.
+- **Font:** Nunito (SIL OFL 1.1), bundled as woff2. No CDN.
 
 ## Saving
 

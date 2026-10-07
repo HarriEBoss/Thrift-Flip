@@ -120,7 +120,7 @@ export class PlaytestPlatform implements Platform {
       el.setAttribute('role', 'dialog');
       el.style.cssText =
         'position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;' +
-        'background:rgba(30,24,40,0.86);font-family:"Pixelify Sans","Courier New",system-ui,sans-serif;padding:16px';
+        'background:rgba(30,24,40,0.86);font-family:"Nunito","Trebuchet MS",system-ui,sans-serif;padding:16px';
       el.innerHTML =
         '<div style="max-width:420px;background:#fffaf0;color:#2a1f3d;border:4px solid #2a1f3d;border-radius:0;' +
         'padding:24px 22px;text-align:center;box-shadow:8px 8px 0 rgba(42,31,61,.35)">' +

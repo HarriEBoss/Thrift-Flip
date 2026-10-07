@@ -286,7 +286,7 @@
   "save.corruptBody": "Your saved shop couldn't be opened. We kept a backup copy safe. Want to start a brand-new shop?",
   "save.startFresh": "Start fresh",
   "catalog.setDone": "Set complete: {cat}! +5% sale price forever!",
-  "credits.body": "Thrift Flip\nGame design, code, art & sound: made with love\nAll art and music generated in code\nFont: Pixelify Sans (SIL Open Font License)\nEngine: Phaser (MIT License)\nThanks for playing!",
+  "credits.body": "Thrift Flip\nGame design, code, art & sound: made with love\nAll art and music generated in code\nFont: Nunito (SIL Open Font License)\nEngine: Phaser (MIT License)\nThanks for playing!",
   "tut.market": "Hi, I'm Rory! Let's find some treasure. Tap the dirty mug!",
   "tut.buy": "Only 4 coins? Buy it!",
   "tut.toWorkshop": "Great find! Now let's clean it up in the workshop.",
@@ -348,5 +348,6 @@
   "decor.fx.rep": "+{n} rep a day",
   "decor.fx.rare": "Rarer finds",
   "decor.fx.gem": "More hidden gems",
-  "decor.fx.rareSale": "Rare items sell +{n}%"
+  "decor.fx.rareSale": "Rare items sell +{n}%",
+  "decor.locked": "Locked"
 }

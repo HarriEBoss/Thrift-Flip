@@ -1,15 +1,16 @@
-/* Pixelify Sans (SIL Open Font License 1.1), bundled locally: no font CDN, woff2 only. */
+/* Nunito (SIL Open Font License 1.1), bundled locally: no font CDN, woff2 only.
+   Heavy weights only: "normal" text uses ExtraBold, bold text uses Black, for easy reading on phones. */
 @font-face {
-  font-family: 'Pixelify Sans';
+  font-family: 'Nunito';
   font-style: normal;
   font-display: swap;
-  font-weight: 400 600;
-  src: url(./pixelify-sans-latin-500-normal.woff2) format('woff2');
+  font-weight: 400 699;
+  src: url(./nunito-latin-800-normal.woff2) format('woff2');
 }
 @font-face {
-  font-family: 'Pixelify Sans';
+  font-family: 'Nunito';
   font-style: normal;
   font-display: swap;
-  font-weight: 700;
-  src: url(./pixelify-sans-latin-700-normal.woff2) format('woff2');
+  font-weight: 700 900;
+  src: url(./nunito-latin-900-normal.woff2) format('woff2');
 }

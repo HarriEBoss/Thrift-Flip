@@ -132,7 +132,7 @@ browsing or search history, sensitive info. The game itself has no accounts, no 
 - [ ] **Privacy policy URL** (required): host docs/PRIVACY_POLICY.md after legal review, and use the same URL in
       `config.ts` and App Store Connect.
 - [ ] **Advertising identifier:** answered via the privacy label (ATT is implemented).
-- [ ] **Content rights:** all content is original or licensed (Pixelify Sans OFL, Phaser MIT). Confirm in App Store Connect.
+- [ ] **Content rights:** all content is original or licensed (Nunito OFL, Phaser MIT). Confirm in App Store Connect.
 
 ## 9. Screenshots & metadata
 

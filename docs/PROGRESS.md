@@ -217,7 +217,11 @@ Next: Phase 3, the playable core loop in Phaser.
   decorations, icons, coins, stars), with outlines and light/shadow rims. The workshop became a 64×64
   pixel world with dithered grime that comes off pixel by pixel. UI boxes and buttons get stepped pixel
   corners, particles are pixel blocks, the background is a pixel twinkle pattern, the palette is brighter,
-  and the font is Pixelify Sans (OFL).
+  and the font was Pixelify Sans (OFL).
+- **Readability pass (owner: "hard to read everything").** The pixel font was replaced with Nunito
+  ExtraBold/Black (OFL), all font sizes went up, secondary text is darker, market item names stay on one
+  line, locked decorations say "Locked" with the requirement in the description, and grime and rust are
+  less speckled so items stay recognisable.
 
 ## Definition of done: status
 | Item | Status |

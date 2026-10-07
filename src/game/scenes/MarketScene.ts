@@ -280,10 +280,9 @@ export class MarketScene extends GameScene {
     const img = this.add.image(0, -h * 0.12, instanceThumb(this, offerInstance(o)));
     img.setDisplaySize(w * 0.82, w * 0.82);
     c.add(img);
-    const name = makeText(this, 0, h * 0.3, ITEMS[o.a].name, Math.max(16, Math.round(w * 0.1)), C.ink, {
-      wrap: w - 12,
-    });
-    if (name.height > h * 0.2) name.setScale((h * 0.2) / name.height);
+    // One line, shrunk to fit, so it never runs into the price tag.
+    const name = makeText(this, 0, h * 0.3, ITEMS[o.a].name, Math.max(16, Math.round(w * 0.1)), C.ink);
+    if (name.width > w - 14) name.setScale((w - 14) / name.width);
     c.add(name);
     // price tag
     const price = priceFor(s, o);

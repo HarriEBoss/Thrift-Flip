@@ -51,6 +51,6 @@ Everything that code cannot do. Items are grouped by platform and listed roughly
 ## Content & assets
 - [ ] **Music/art rights:** all current art and audio are generated in code by this project (original). If you
       replace them with licensed or commissioned work (`src/assets/manifest.json`), keep written proof of rights.
-- [ ] Font: Pixelify Sans is SIL OFL 1.1; the license text is in `src/assets/fonts/OFL-LICENSE.txt` (keep it with the font).
+- [ ] Font: Nunito is SIL OFL 1.1; the license text is in `src/assets/fonts/OFL-LICENSE.txt` (keep it with the font).
 - [ ] Optional: human playtest with a few target players (all ages) and tune `src/data/balance.json`, then
       rerun `npx tsx scripts/simulate.ts --write`.

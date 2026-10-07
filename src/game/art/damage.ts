@@ -114,7 +114,7 @@ export function drawDirt(size: number, seed: number, d: number, sil: HTMLCanvasE
     r: rng.range(0.08, 0.18) * size,
     tone: rng.int(0, tones.length - 1),
   }));
-  const base = 0.16 + d * 0.07;
+  const base = 0.08 + d * 0.05;
   const img = x.createImageData(size, size);
   const px = img.data;
   for (let y = 0; y < size; y++) {
@@ -134,7 +134,7 @@ export function drawDirt(size: number, seed: number, d: number, sil: HTMLCanvasE
       }
       const t = (BAYER[((y & 3) << 2) | (xx & 3)] + 0.5) / 16;
       const i = (y * size + xx) * 4;
-      if (rng.next() < 0.035) {
+      if (rng.next() < 0.015) {
         px[i] = 64;
         px[i + 1] = 44;
         px[i + 2] = 30;
@@ -200,7 +200,7 @@ export function drawRust(
     }
   }
   clipToSilhouette(c, sil);
-  ditherLayer(c, 0.6);
+  ditherLayer(c, 0.4);
   const hardness = (u: number, v: number) => {
     let h = 0;
     for (const p of patches) if (Math.hypot(p.x - u, p.y - v) < p.r * 0.9) h = Math.max(h, p.h);

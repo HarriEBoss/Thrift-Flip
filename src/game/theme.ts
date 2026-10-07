@@ -9,7 +9,7 @@ export const C = {
   paper: 0xfffbea,
   white: 0xffffff,
   ink: 0x2a1f3d,
-  inkSoft: 0x5d5478,
+  inkSoft: 0x463e5e,
   teal: 0x1aa89c,
   tealDark: 0x0f6b6f,
   tealLight: 0x8ef0e0,
@@ -28,19 +28,19 @@ export const C = {
 
 export const hex = (c: number): string => '#' + c.toString(16).padStart(6, '0');
 
-export const FONT = "'Pixelify Sans', 'Courier New', monospace";
+export const FONT = "'Nunito', 'Arial Rounded MT Bold', 'Trebuchet MS', system-ui, sans-serif";
 
 /** One "pixel" of UI chrome (corners, borders, shadows) in logical units. */
 export const PX = 4;
 
-/** Font sizes in logical units (frame short side = 720). */
+/** Font sizes in logical units (frame short side = 720). Sized up for easy reading on phones. */
 export const FS = {
-  tiny: 20,
-  small: 24,
-  body: 28,
-  button: 30,
-  h3: 34,
-  h2: 44,
+  tiny: 23,
+  small: 26,
+  body: 30,
+  button: 32,
+  h3: 36,
+  h2: 46,
   h1: 64,
   hero: 92,
 } as const;

@@ -17,10 +17,7 @@ export async function bootGame(platform: Platform, progress: (p: number) => void
   try {
     // Make sure the bundled font is ready before any text is rasterised.
     await Promise.race([
-      Promise.all([
-        document.fonts.load("500 32px 'Pixelify Sans'"),
-        document.fonts.load("700 32px 'Pixelify Sans'"),
-      ]),
+      Promise.all([document.fonts.load("400 32px 'Nunito'"), document.fonts.load("700 32px 'Nunito'")]),
       new Promise((r) => setTimeout(r, 1500)),
     ]);
   } catch {

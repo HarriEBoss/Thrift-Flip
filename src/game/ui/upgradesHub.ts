@@ -180,24 +180,20 @@ export function openDecor(scene: BaseScene, onChange?: () => void): void {
     art.setPosition(-255, -2);
     if (st === 'locked') art.setAlpha(0.35);
     const name = makeText(scene, -210, -14, t(`decor.${d.id}`), FS.small, C.ink, { align: 'left' });
-    const desc = makeText(scene, -210, 16, fxText(d.fx), FS.tiny, C.inkSoft, {
+    const needs = t('upgrades.needTier', { tier: t(`tier.${BALANCE.tiers[d.tier].id}`) });
+    const desc = makeText(scene, -210, 16, st === 'locked' ? needs : fxText(d.fx), FS.tiny, C.inkSoft, {
       align: 'left',
       bold: false,
       wrap: 300,
     });
     row.add([g, art, name, desc]);
-    const label =
-      st === 'owned'
-        ? t('common.owned')
-        : st === 'locked'
-          ? t('upgrades.needTier', { tier: t(`tier.${BALANCE.tiers[d.tier].id}`) })
-          : String(d.cost);
+    const label = st === 'owned' ? t('common.owned') : st === 'locked' ? t('decor.locked') : String(d.cost);
     const b = new Button(scene, 205, 0, {
       w: 160,
       h: 64,
       label,
       color: st === 'available' ? C.leaf : C.inkSoft,
-      fontSize: st === 'locked' ? FS.tiny : FS.small,
+      fontSize: FS.small,
       icon: st === 'available' || st === 'poor' ? (gr, sz) => iconCoin(gr, sz) : undefined,
       onClick: () => {
         if (buyDecor(s, d.id)) {

@@ -95,7 +95,7 @@ Legend:
 - **Audience:** general audience (13+). Bright, friendly, all-ages art, but **not made for kids**. Do not use
   "for kids/children" wording or child-directed marketing in any metadata.
 - **IP:** all items are generic (no real brands); all art and audio are original or generated in code; the font is
-  Pixelify Sans (OFL). No logos or branding in the title, thumbnails or description.
+  Nunito (OFL). No logos or branding in the title, thumbnails or description.
 
 ### Title (max length per portal; verify)
 **Thrift Flip**
