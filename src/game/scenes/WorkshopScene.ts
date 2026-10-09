@@ -68,6 +68,9 @@ export class WorkshopScene extends GameScene {
   private lastMove = 0;
   private view: View = 'steps';
   private reveal: Phaser.GameObjects.Container | null = null;
+  /** The reveal's before/after sweep state (its tween must stop when the item is cleaned up). */
+  private revealSplit: { f: number } | null = null;
+  private revealSweep: Phaser.Tweens.TweenChain | null = null;
   private stageSize = STAGE;
   private paintChoice: string | null = null;
   private stepLocked = false;
@@ -103,6 +106,8 @@ export class WorkshopScene extends GameScene {
     this.down = false;
     this.view = 'steps';
     this.reveal = null;
+    this.revealSplit = null;
+    this.revealSweep = null;
     this.paintChoice = null;
     this.stepLocked = false;
     this.coach = null;
@@ -633,6 +638,8 @@ export class WorkshopScene extends GameScene {
     });
     this.stage.add([afterImg, beforeImg, divider, lblB, lblA]);
     const setSplit = (f: number) => {
+      // The item may already be gone (Next pressed mid-sweep): never touch destroyed objects.
+      if (!beforeImg.active || !divider.active || !beforeImg.frame?.texture) return;
       const tw = this.texSize;
       beforeImg.setCrop(0, 0, Math.max(0, f * tw), tw);
       divider.clear();
@@ -649,9 +656,10 @@ export class WorkshopScene extends GameScene {
       divider.fillTriangle(x + 20, STAGE / 2, x + 8, STAGE / 2 - 10, x + 8, STAGE / 2 + 10);
     };
     const split = { f: 1 };
+    this.revealSplit = split;
     setSplit(1);
     // Auto sweep for a satisfying, clip-able reveal.
-    this.tweens.chain({
+    this.revealSweep = this.tweens.chain({
       tweens: [
         {
           targets: split,
@@ -822,6 +830,12 @@ export class WorkshopScene extends GameScene {
   }
 
   private cleanupItem(): void {
+    this.revealSweep?.destroy();
+    this.revealSweep = null;
+    if (this.revealSplit) {
+      this.tweens.killTweensOf(this.revealSplit);
+      this.revealSplit = null;
+    }
     this.destroyGame();
     this.reveal?.destroy();
     this.reveal = null;

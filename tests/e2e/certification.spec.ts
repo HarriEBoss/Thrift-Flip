@@ -359,3 +359,42 @@ test('an error inside one frame does not freeze the game; workshop frees its can
   expect(await tf(page, (t) => t.loopRunning())).toBe(true);
   expect(await tf(page, (t) => (t.state() as { day: { n: number } }).day.n)).toBe(day);
 });
+
+test('pressing Next while the before/after slider is still sweeping does not break the game', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => {
+    if (m.type() === 'error') errors.push(m.text());
+  });
+  await boot(page);
+  await page.evaluate(() => {
+    const t = (window as unknown as { __tf: Loose }).__tf;
+    t.setup({ tutorialDone: true, phase: 'workshop', day: 4 });
+    t.addItems([17, 3], false);
+    t.goto('Workshop');
+  });
+  await waitForScene(page, 'Workshop');
+  // Finish every step of the first item, then press Next the moment the reveal appears.
+  for (let i = 0; i < 60; i++) {
+    const view = await page.evaluate(() => {
+      const sc = (window as unknown as { __tf: Loose }).__tf.game.scene.getScene('Workshop');
+      if (sc.view === 'reveal') return 'reveal';
+      if (sc.mini && !sc.stepLocked) sc.completeStep();
+      return sc.view;
+    });
+    if (view === 'reveal') break;
+    await page.waitForTimeout(500);
+  }
+  await page.evaluate(() => {
+    const sc = (window as unknown as { __tf: Loose }).__tf.game.scene.getScene('Workshop');
+    if (sc.view !== 'reveal') throw new Error('reveal not reached');
+    sc.nextItem();
+  });
+  const f0 = await tf(page, (t) => t.frame());
+  await expect.poll(() => tf(page, (t) => t.frame()), { timeout: 15000 }).toBeGreaterThan(f0 + 40);
+  expect(errors).toEqual([]);
+  expect(await scene(page)).toBe('Workshop');
+});

@@ -223,6 +223,14 @@ Next: Phase 3, the playable core loop in Phaser.
   line, locked decorations say "Locked" with the requirement in the description, and grime and rust are
   less speckled so items stay recognisable.
 
+## Playtest round 4 ✅
+- **Error report from the owner's phone** (via the playtest error note): `Cannot read properties of null
+  (reading 'sourceSize') at setCropUVs`. Cause: pressing "Next item" while the reveal's before/after slider
+  was still sweeping. The old item's texture was removed, but the sweep tween kept cropping the destroyed
+  image on every frame, which caused the lag and, after 20 failing frames, the scene restart (the earlier
+  "lags out and goes back to the main screen"). Fix: the sweep tween is stopped when the item is cleaned up,
+  and the slider never touches destroyed objects. A new e2e test reproduces the exact error on the old code.
+
 ## Definition of done: status
 | Item | Status |
 |---|---|
