@@ -28,14 +28,7 @@ import {
 } from '../art/repairArt';
 import { colorsFor, releaseCanvas } from '../art/itemArt';
 import { session } from '../session';
-import {
-  at,
-  drawGauge,
-  drawSlot,
-  type BotAction,
-  type RepairTask,
-  type TaskHost,
-} from './repair/host';
+import { at, drawGauge, drawSlot, type BotAction, type RepairTask, type TaskHost } from './repair/host';
 import { makeTask } from './repair/tasks';
 
 type Phase = 'turn' | 'screws' | 'twist' | 'heat' | 'cover' | 'task' | 'test' | 'close' | 'done';
