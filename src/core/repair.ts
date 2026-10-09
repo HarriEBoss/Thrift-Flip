@@ -14,15 +14,41 @@ import type { CategoryId } from './types';
  * zoom in on the hood.
  */
 export type RepairView = 'base' | 'back' | 'hood';
-/** How the cover comes off: screws, a twist-off case back, or a hood you lift. */
-export type LidKind = 'screws' | 'twist' | 'hood';
+/** How the cover comes off: screws, a twist-off case back, a hood you lift, or a glued phone back. */
+export type LidKind = 'screws' | 'twist' | 'hood' | 'glued';
 /** What is inside. 'bay' is an engine bay whose engine is a movable part (engine swaps). */
-export type Inside = 'socket' | 'board' | 'tubes' | 'movement' | 'battery' | 'pc' | 'engine' | 'bay';
+export type Inside =
+  | 'socket'
+  | 'board'
+  | 'tubes'
+  | 'movement'
+  | 'battery'
+  | 'pc'
+  | 'engine'
+  | 'bay'
+  | 'phone'
+  | 'robot'
+  | 'rocket';
 /** What lights up (or starts) when the repair is tested. */
 export type Glow = 'bulb' | 'tubes' | 'screen' | 'led' | 'engine';
 /** A part that gets swapped for a new one. */
-export type PartKind = 'battery' | 'fan' | 'ram' | 'drive' | 'cell' | 'plug' | 'cooler' | 'gpu';
-export type Fluid = 'oil' | 'coolant';
+export type PartKind =
+  | 'battery'
+  | 'fan'
+  | 'ram'
+  | 'drive'
+  | 'cell'
+  | 'plug'
+  | 'cooler'
+  | 'gpu'
+  | 'screen'
+  | 'camera'
+  | 'servo'
+  | 'chip'
+  | 'pump';
+export type Fluid = 'oil' | 'coolant' | 'fuel';
+/** Plug sets: PC motherboard cables, phone flex cables, robot wiring harness (pins); engine and rocket fuel hoses. */
+export type CableSetId = 'pc' | 'phone' | 'harness' | 'hoses' | 'fuel';
 /** Corners / centre of the compartment where things sit. */
 export type Zone = 'tl' | 'tr' | 'bl' | 'br' | 'c';
 
@@ -44,7 +70,7 @@ export type TaskSpec =
   /** Engine swap: hoist the old engine out, or lower the new one in. */
   | { k: 'hoist'; dir: 'out' | 'in' }
   /** Plug each cable or hose into its matching socket (by shape and label). */
-  | { k: 'cables'; set: 'pc' | 'hoses' }
+  | { k: 'cables'; set: CableSetId }
   /** Blow the dust bunnies away with the air can. */
   | { k: 'dust'; n: number }
   /** Squeeze thermal paste onto the CPU: a pea-sized dot, not too much. */
@@ -254,6 +280,204 @@ const FIX_RIGS: Record<string, Rig> = {
     aspect: 1.5,
     tasks: [{ k: 'swap', part: 'battery' }, { k: 'pour', fluid: 'coolant' }, { k: 'wires' }],
   }),
+  // Phones: open the back (a glued back needs the heat gun first), swap the worn part, reconnect.
+  'phones:0': rig({
+    view: 'back',
+    panel: 'rect',
+    screws: 2,
+    inside: 'phone',
+    glow: 'screen',
+    aspect: 0.9,
+    tasks: [{ k: 'swap', part: 'cell' }, { k: 'cables', set: 'phone' }, { k: 'wires' }],
+  }),
+  'phones:1': rig({
+    view: 'back',
+    panel: 'rect',
+    screws: 4,
+    inside: 'phone',
+    glow: 'screen',
+    aspect: 0.9,
+    tasks: [
+      { k: 'swap', part: 'screen', zone: 'c' },
+      { k: 'swap', part: 'cell' },
+      { k: 'cables', set: 'phone' },
+    ],
+  }),
+  'phones:2': rig({
+    view: 'back',
+    panel: 'rect',
+    lid: 'glued',
+    screws: 0,
+    inside: 'phone',
+    glow: 'screen',
+    aspect: 0.9,
+    tasks: [
+      { k: 'swap', part: 'cell' },
+      { k: 'swap', part: 'camera', zone: 'tl' },
+      { k: 'cables', set: 'phone' },
+    ],
+  }),
+  'phones:3': rig({
+    view: 'back',
+    panel: 'rect',
+    lid: 'glued',
+    screws: 0,
+    inside: 'phone',
+    glow: 'screen',
+    aspect: 1.2,
+    tasks: [
+      { k: 'dust', n: 3 },
+      { k: 'swap', part: 'cell' },
+      { k: 'cables', set: 'phone' },
+    ],
+  }),
+  'phones:4': rig({
+    view: 'back',
+    panel: 'round',
+    lid: 'twist',
+    screws: 0,
+    inside: 'phone',
+    glow: 'screen',
+    tasks: [
+      { k: 'dust', n: 2 },
+      { k: 'swap', part: 'cell' },
+    ],
+  }),
+  // Robots: motors (servos), controller chips, batteries and the wiring harness.
+  'robots:0': rig({
+    view: 'back',
+    panel: 'rect',
+    inside: 'robot',
+    glow: 'led',
+    aspect: 1.2,
+    tasks: [
+      { k: 'swap', part: 'servo', zone: 'tl' },
+      { k: 'swap', part: 'chip' },
+      { k: 'cables', set: 'harness' },
+    ],
+  }),
+  'robots:1': rig({
+    view: 'back',
+    panel: 'rect',
+    inside: 'robot',
+    glow: 'led',
+    aspect: 1.0,
+    tasks: [{ k: 'dust', n: 3 }, { k: 'swap', part: 'battery' }, { k: 'wires' }],
+  }),
+  'robots:2': rig({
+    view: 'base',
+    panel: 'round',
+    screws: 4,
+    inside: 'robot',
+    glow: 'led',
+    tasks: [
+      { k: 'dust', n: 4 },
+      { k: 'swap', part: 'servo' },
+      { k: 'swap', part: 'cell', zone: 'tl' },
+    ],
+  }),
+  'robots:3': rig({
+    view: 'base',
+    panel: 'rect',
+    inside: 'robot',
+    glow: 'led',
+    aspect: 1.2,
+    tasks: [
+      { k: 'swap', part: 'servo', zone: 'tl' },
+      { k: 'swap', part: 'cell' },
+      { k: 'cables', set: 'harness' },
+    ],
+  }),
+  'robots:4': rig({
+    view: 'back',
+    panel: 'rect',
+    screws: 6,
+    inside: 'robot',
+    glow: 'led',
+    aspect: 1.3,
+    tasks: [
+      { k: 'swap', part: 'servo', zone: 'tl' },
+      { k: 'swap', part: 'chip', zone: 'c' },
+      { k: 'cables', set: 'harness' },
+      { k: 'wires' },
+    ],
+  }),
+  // Rockets and spacecraft: fuel systems, pumps, avionics.
+  'rockets:0': rig({
+    view: 'back',
+    panel: 'rect',
+    screws: 6,
+    inside: 'rocket',
+    glow: 'engine',
+    aspect: 1.05,
+    tasks: [
+      { k: 'drain', fluid: 'fuel' },
+      { k: 'bolts', n: 4, dir: 'out', at: 'engine' },
+      { k: 'swap', part: 'pump', zone: 'c' },
+      { k: 'bolts', n: 4, dir: 'in', at: 'engine' },
+      { k: 'cables', set: 'fuel' },
+      { k: 'pour', fluid: 'fuel' },
+      { k: 'wires' },
+    ],
+  }),
+  'rockets:1': rig({
+    view: 'back',
+    panel: 'rect',
+    screws: 4,
+    inside: 'rocket',
+    glow: 'screen',
+    aspect: 1.1,
+    tasks: [
+      { k: 'dust', n: 3 },
+      { k: 'swap', part: 'chip', zone: 'tl' },
+      { k: 'swap', part: 'cell' },
+      { k: 'cables', set: 'harness' },
+      { k: 'wires' },
+    ],
+  }),
+  'rockets:2': rig({
+    view: 'back',
+    panel: 'rect',
+    screws: 6,
+    inside: 'rocket',
+    glow: 'engine',
+    aspect: 1.05,
+    tasks: [
+      { k: 'drain', fluid: 'fuel' },
+      { k: 'swap', part: 'pump', zone: 'c' },
+      { k: 'cables', set: 'fuel' },
+      { k: 'pour', fluid: 'fuel' },
+    ],
+  }),
+  'rockets:3': rig({
+    view: 'back',
+    panel: 'rect',
+    screws: 6,
+    inside: 'rocket',
+    glow: 'screen',
+    aspect: 1.05,
+    tasks: [
+      { k: 'swap', part: 'chip', zone: 'tl' },
+      { k: 'cables', set: 'harness' },
+      { k: 'pour', fluid: 'coolant' },
+      { k: 'wires' },
+    ],
+  }),
+  'rockets:4': rig({
+    view: 'back',
+    panel: 'rect',
+    screws: 4,
+    inside: 'robot',
+    glow: 'led',
+    aspect: 1.2,
+    tasks: [
+      { k: 'dust', n: 4 },
+      { k: 'swap', part: 'servo', zone: 'tl' },
+      { k: 'swap', part: 'cell' },
+      { k: 'cables', set: 'harness' },
+      { k: 'wires' },
+    ],
+  }),
 };
 
 const DEFAULT_FIX_RIG = rig({
@@ -353,6 +577,16 @@ export function partSize(kind: PartKind): { w: number; h: number } {
       return { w: 0.07, h: 0.17 };
     case 'gpu':
       return { w: 0.4, h: 0.11 };
+    case 'screen':
+      return { w: 0.24, h: 0.3 };
+    case 'camera':
+      return { w: 0.09, h: 0.09 };
+    case 'servo':
+      return { w: 0.17, h: 0.12 };
+    case 'chip':
+      return { w: 0.16, h: 0.12 };
+    case 'pump':
+      return { w: 0.2, h: 0.18 };
   }
 }
 
@@ -460,6 +694,48 @@ export function hoistLayout(r: Rig): { seat: Pt; up: Pt; w: number; h: number } 
   };
 }
 
+type CableShape = Omit<CableDef, 'plug'>;
+
+/** The plugs of each set and where their sockets are (the shape and label are the clue). */
+const CABLE_SETS: Record<CableSetId, (P: (fx: number, fy: number) => Pt) => CableShape[]> = {
+  pc: (P) => [
+    { id: 'atx', label: '24', w: 0.12, h: 0.045, color: 0x2a2a2e, socket: P(0.78, 0.0) },
+    { id: 'cpu', label: 'CPU', w: 0.06, h: 0.045, color: 0x2a2a2e, socket: P(-0.2, -0.78) },
+    { id: 'gpu', label: 'GPU', w: 0.07, h: 0.04, color: 0x2a2a2e, socket: P(0.42, 0.28) },
+    { id: 'sata', label: 'SATA', w: 0.07, h: 0.022, color: 0xf2c12e, socket: P(0.72, 0.62) },
+    { id: 'fp', label: 'FP', w: 0.04, h: 0.028, color: 0xe03c31, socket: P(0.2, 0.75) },
+  ],
+  phone: (P) => [
+    { id: 'lcd', label: 'LCD', w: 0.09, h: 0.026, color: 0xd9861a, socket: P(0.0, -0.4) },
+    { id: 'bat', label: 'BAT', w: 0.065, h: 0.026, color: 0xd9861a, socket: P(-0.42, 0.05) },
+    { id: 'cam', label: 'CAM', w: 0.05, h: 0.022, color: 0xd9861a, socket: P(0.4, 0.12) },
+    { id: 'btn', label: 'BTN', w: 0.035, h: 0.02, color: 0xd9861a, socket: P(-0.1, 0.45) },
+  ],
+  harness: (P) => [
+    { id: 'm1', label: 'M1', w: 0.06, h: 0.06, color: 0x2a2a2e, socket: P(-0.78, -0.12) },
+    { id: 'm2', label: 'M2', w: 0.06, h: 0.06, color: 0x2a2a2e, socket: P(0.78, -0.12) },
+    { id: 'ctrl', label: 'CTRL', w: 0.1, h: 0.04, color: 0x2a2a2e, socket: P(0.0, -0.78) },
+    { id: 'pwr', label: 'PWR', w: 0.07, h: 0.05, color: 0xe03c31, socket: P(0.45, 0.4) },
+  ],
+  hoses: (P) => [
+    { id: 'rad', label: 'RAD', w: 0.075, h: 0.075, color: 0x2a2a2e, socket: P(0.8, -0.1) },
+    { id: 'heat', label: 'HEAT', w: 0.05, h: 0.05, color: 0x3a3a40, socket: P(-0.8, -0.1) },
+    { id: 'fuel', label: 'FUEL', w: 0.04, h: 0.04, color: 0x2f6fd0, socket: P(0.8, 0.32) },
+    { id: 'air', label: 'AIR', w: 0.09, h: 0.09, color: 0x55595f, socket: P(-0.8, 0.32) },
+  ],
+  fuel: (P) => [
+    { id: 'fuel', label: 'FUEL', w: 0.075, h: 0.075, color: 0xd9861a, socket: P(-0.8, -0.1) },
+    { id: 'lox', label: 'LOX', w: 0.075, h: 0.075, color: 0x4fb6ff, socket: P(0.8, -0.1) },
+    { id: 'he', label: 'He', w: 0.045, h: 0.045, color: 0x9a5cf0, socket: P(-0.8, 0.32) },
+    { id: 'n2', label: 'N2', w: 0.055, h: 0.055, color: 0x3a3a40, socket: P(0.8, 0.32) },
+  ],
+};
+
+/** Pin plugs (motherboard, phone, robot) or round hoses (engine, rocket). */
+export function cableStyle(set: CableSetId): 'pins' | 'hose' {
+  return set === 'hoses' || set === 'fuel' ? 'hose' : 'pins';
+}
+
 /** A cable (PC) or hose (engine): its plug's start position, its socket, label and shape. */
 export interface CableDef {
   id: string;
@@ -472,24 +748,10 @@ export interface CableDef {
   socket: Pt;
 }
 
-export function cableSet(r: Rig, set: 'pc' | 'hoses', seed: number): CableDef[] {
+export function cableSet(r: Rig, set: CableSetId, seed: number): CableDef[] {
   const g = panelGeom(r);
   const P = (fx: number, fy: number): Pt => ({ u: g.cx + g.rx * fx, v: g.cy + g.ry * fy });
-  const defs =
-    set === 'pc'
-      ? [
-          { id: 'atx', label: '24', w: 0.12, h: 0.045, color: 0x2a2a2e, socket: P(0.78, 0.0) },
-          { id: 'cpu', label: 'CPU', w: 0.06, h: 0.045, color: 0x2a2a2e, socket: P(-0.2, -0.78) },
-          { id: 'gpu', label: 'GPU', w: 0.07, h: 0.04, color: 0x2a2a2e, socket: P(0.42, 0.28) },
-          { id: 'sata', label: 'SATA', w: 0.07, h: 0.022, color: 0xf2c12e, socket: P(0.72, 0.62) },
-          { id: 'fp', label: 'FP', w: 0.04, h: 0.028, color: 0xe03c31, socket: P(0.2, 0.75) },
-        ]
-      : [
-          { id: 'rad', label: 'RAD', w: 0.075, h: 0.075, color: 0x2a2a2e, socket: P(0.8, -0.1) },
-          { id: 'heat', label: 'HEAT', w: 0.05, h: 0.05, color: 0x3a3a40, socket: P(-0.8, -0.1) },
-          { id: 'fuel', label: 'FUEL', w: 0.04, h: 0.04, color: 0x2f6fd0, socket: P(0.8, 0.32) },
-          { id: 'air', label: 'AIR', w: 0.09, h: 0.09, color: 0x55595f, socket: P(-0.8, 0.32) },
-        ];
+  const defs = CABLE_SETS[set](P);
   // Loose plugs lie in a row along the bottom, shuffled so they are not in socket order.
   const rng = new Rng(seed);
   const order = rng.shuffle(defs.map((_, i) => i));
@@ -516,6 +778,8 @@ export function dustLayout(r: Rig, n: number, seed: number): Pt[] {
 
 /** Seconds of holding the spanner on an engine bolt (they are tighter than case screws). */
 export const BOLT_SECONDS = 0.8;
+/** Seconds of the heat gun to soften the glue of a glued phone back. */
+export const HEAT_SECONDS = 1.5;
 /** Seconds of air to blow one dust bunny away. */
 export const DUST_SECONDS = 0.35;
 

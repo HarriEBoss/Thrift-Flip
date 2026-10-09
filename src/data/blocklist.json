@@ -1,0 +1,5 @@
+{
+  "note": "Words a company name may not contain. 'word' entries must match a whole word; 'part' entries are rejected anywhere (after removing spaces and look-alike characters).",
+  "word": ["ass", "arse", "tit", "tits", "cum", "fag", "hoe", "ho", "jap", "kkk", "nazi", "piss", "poo", "poop", "sex", "sexy", "slut", "spic", "wank", "whore", "hell", "damn", "crap", "butt", "boob", "boobs", "nude", "kill", "die", "drug", "drugs", "weed", "porn", "fart", "pee", "dumb", "stupid", "idiot", "loser", "ugly", "hate"],
+  "part": ["fuck", "shit", "bitch", "cunt", "dick", "cock", "pussy", "nigg", "fagg", "bastard", "asshole", "penis", "vagina", "rape", "hitler", "retard", "wanker", "twat", "dildo", "boner", "horny", "kys", "suicide"]
+}

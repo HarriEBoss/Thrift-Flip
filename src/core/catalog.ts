@@ -1,4 +1,4 @@
-import { BALANCE, ITEMS } from './data';
+import { BALANCE, ITEMS, category } from './data';
 import type { GameState } from './state';
 import type { CategoryId } from './types';
 
@@ -64,6 +64,10 @@ export function catalogFoundCount(state: GameState): number {
   return n;
 }
 
+/**
+ * Every market item found (robots and rockets only come in as business jobs; they are part of the
+ * catalog but not of the "flipped it all" goal).
+ */
 export function catalogComplete(state: GameState): boolean {
-  return catalogFoundCount(state) === ITEMS.length;
+  return ITEMS.every((it, i) => !!category(it.cat).business || catalogState(state, i) > 0);
 }

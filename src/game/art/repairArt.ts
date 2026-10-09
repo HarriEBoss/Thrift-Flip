@@ -11,6 +11,7 @@ import {
   pourLayout,
   swapLayout,
   zonePt,
+  type Fluid,
   type PartKind,
   type Rig,
   type WireLayout,
@@ -390,6 +391,108 @@ export function drawCompartment(
       x.fill();
       break;
     }
+    case 'phone': {
+      // Phone insides: a blue-black logic board around a big battery bay, shields and flex sockets.
+      const pw = g.rx * s * 1.6;
+      const ph = g.ry * s * 1.6;
+      const px = g.cx * s - pw / 2;
+      const py = g.cy * s - ph / 2;
+      x.fillStyle = '#2b3140';
+      roundRectPath(x, px, py, pw, ph, s * 0.03);
+      x.fill();
+      const mb = x.createLinearGradient(0, py, 0, py + ph);
+      mb.addColorStop(0, '#1f4a6e');
+      mb.addColorStop(1, '#13304a');
+      x.fillStyle = mb;
+      roundRectPath(x, px + pw * 0.04, py + ph * 0.04, pw * 0.92, ph * 0.3, s * 0.015);
+      x.fill();
+      x.fillStyle = '#b8bec8';
+      for (let i = 0; i < 3; i++)
+        roundRectPath(x, px + pw * (0.08 + i * 0.3), py + ph * 0.09, pw * 0.22, ph * 0.18, s * 0.008);
+      x.fill();
+      x.strokeStyle = 'rgba(232,196,90,0.55)';
+      x.lineWidth = s * 0.003;
+      for (let i = 0; i < 12; i++) {
+        const sx = px + pw * (0.05 + rng.next() * 0.9);
+        const sy = py + ph * (0.4 + rng.next() * 0.55);
+        x.beginPath();
+        x.moveTo(sx, sy);
+        x.lineTo(sx + rng.range(-0.06, 0.06) * s, sy);
+        x.stroke();
+      }
+      break;
+    }
+    case 'robot': {
+      // Robot chassis: a metal frame with motor mounts in the corners and a gear train.
+      const cw = g.rx * s * 1.7;
+      const ch = g.ry * s * 1.6;
+      const chx = g.cx * s - cw / 2;
+      const chy = g.cy * s - ch / 2;
+      const m = x.createLinearGradient(0, chy, 0, chy + ch);
+      m.addColorStop(0, '#9aa1ad');
+      m.addColorStop(1, '#5d636e');
+      x.fillStyle = m;
+      if (rig.panel === 'round') {
+        // Round robots (vacuums): a round chassis.
+        x.beginPath();
+        x.arc(g.cx * s, g.cy * s, g.rx * s * 0.86, 0, Math.PI * 2);
+      } else roundRectPath(x, chx, chy, cw, ch, s * 0.02);
+      x.fill();
+      x.fillStyle = 'rgba(20,18,26,0.35)';
+      for (let i = 0; i < 5; i++)
+        for (let j = 0; j < 4; j++) {
+          x.beginPath();
+          x.arc(chx + cw * (0.1 + i * 0.2), chy + ch * (0.12 + j * 0.25), s * 0.012, 0, Math.PI * 2);
+          x.fill();
+        }
+      gear(x, g.cx * s - g.rx * s * 0.15, g.cy * s + g.ry * s * 0.15, s * 0.07, 12);
+      gear(x, g.cx * s + g.rx * s * 0.12, g.cy * s + g.ry * s * 0.28, s * 0.05, 10);
+      break;
+    }
+    case 'rocket': {
+      // Rocket engine section: a bell nozzle at the bottom, tank domes at the top, plumbing.
+      const ew = g.rx * s * 1.7;
+      const top = (g.cy - g.ry * 0.95) * s;
+      const tg = x.createLinearGradient(0, top, 0, top + g.ry * s * 0.5);
+      tg.addColorStop(0, '#e7eaf0');
+      tg.addColorStop(1, '#8d94a1');
+      x.fillStyle = tg;
+      for (const fx of [-0.45, 0.45]) {
+        x.beginPath();
+        x.ellipse(
+          (g.cx + g.rx * fx) * s,
+          top + g.ry * s * 0.2,
+          ew * 0.22,
+          g.ry * s * 0.28,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        x.fill();
+      }
+      const ny = (g.cy + g.ry * 0.35) * s;
+      const ng = x.createLinearGradient(g.cx * s - ew * 0.3, 0, g.cx * s + ew * 0.3, 0);
+      ng.addColorStop(0, '#5b3a22');
+      ng.addColorStop(0.5, '#c9853f');
+      ng.addColorStop(1, '#5b3a22');
+      x.fillStyle = ng;
+      x.beginPath();
+      x.moveTo(g.cx * s - ew * 0.1, ny);
+      x.lineTo(g.cx * s + ew * 0.1, ny);
+      x.lineTo(g.cx * s + ew * 0.24, (g.cy + g.ry * 0.95) * s);
+      x.lineTo(g.cx * s - ew * 0.24, (g.cy + g.ry * 0.95) * s);
+      x.closePath();
+      x.fill();
+      x.strokeStyle = '#b8bec8';
+      x.lineWidth = s * 0.018;
+      for (const fx of [-0.3, 0.3]) {
+        x.beginPath();
+        x.moveTo((g.cx + g.rx * fx) * s, top + g.ry * s * 0.45);
+        x.bezierCurveTo((g.cx + g.rx * fx) * s, g.cy * s, g.cx * s, g.cy * s - g.ry * s * 0.1, g.cx * s, ny);
+        x.stroke();
+      }
+      break;
+    }
     case 'board': {
       // Green circuit board with gold traces and parts.
       const pw = g.rx * s * 1.6;
@@ -519,7 +622,11 @@ export function drawCompartment(
     if (t.k !== 'pour' || (rig.inside === 'bay' && t.fluid === 'oil')) continue;
     // Filler neck and cap (yellow for oil, blue for coolant).
     const pl = pourLayout(rig, 'pour', t.fluid);
-    const col = t.fluid === 'oil' ? ['#ffe27a', '#c79a14'] : ['#9fd8ff', '#2f6fd0'];
+    const col = {
+      oil: ['#ffe27a', '#c79a14'],
+      coolant: ['#9fd8ff', '#2f6fd0'],
+      fuel: ['#ffc48a', '#d9561a'],
+    }[t.fluid];
     const cg = x.createRadialGradient(
       pl.cap.u * s - s * 0.01,
       pl.cap.v * s - s * 0.01,
@@ -548,7 +655,7 @@ export function drawCompartment(
     return c;
   }
   // Terminal block under the terminals: white plastic, or a black fuse box on an engine.
-  const motor = rig.inside === 'engine' || rig.inside === 'bay';
+  const motor = ['engine', 'bay', 'rocket', 'robot'].includes(rig.inside);
   const tb = x.createLinearGradient(0, by - s * 0.05, 0, by + s * 0.05);
   tb.addColorStop(0, motor ? '#4a4852' : '#fbfbf7');
   tb.addColorStop(1, motor ? '#222128' : '#c9c6bd');
@@ -887,6 +994,117 @@ export function drawPart(kind: PartKind, broken: boolean, px = 400): HTMLCanvasE
       x.fillRect(w * 0.3, h * 0.66, w * 0.4, h * 0.26);
       x.fillRect(w * 0.42, h * 0.92, w * 0.16, h * 0.08);
       break;
+    case 'screen': {
+      // Phone screen: black glass, a bright display and a gold flex cable at the bottom.
+      x.fillStyle = '#0e0f13';
+      roundRectPath(x, 0, 0, w, h * 0.9, w * 0.1);
+      x.fill();
+      const d = x.createLinearGradient(0, 0, w, h);
+      d.addColorStop(0, '#5fd3ff');
+      d.addColorStop(1, '#2a5bd7');
+      x.fillStyle = d;
+      roundRectPath(x, w * 0.07, h * 0.05, w * 0.86, h * 0.78, w * 0.05);
+      x.fill();
+      x.fillStyle = 'rgba(255,255,255,0.35)';
+      x.beginPath();
+      x.moveTo(w * 0.07, h * 0.05);
+      x.lineTo(w * 0.5, h * 0.05);
+      x.lineTo(w * 0.07, h * 0.45);
+      x.fill();
+      x.fillStyle = '#d9861a';
+      x.fillRect(w * 0.38, h * 0.88, w * 0.24, h * 0.12);
+      break;
+    }
+    case 'camera':
+      x.fillStyle = lin('#4a4d55', '#1c1d22');
+      roundRectPath(x, 0, 0, w, h, w * 0.18);
+      x.fill();
+      for (const [cx, cy] of [
+        [0.32, 0.32],
+        [0.68, 0.68],
+      ]) {
+        x.fillStyle = '#0d0e11';
+        x.beginPath();
+        x.arc(w * cx, h * cy, w * 0.2, 0, Math.PI * 2);
+        x.fill();
+        x.fillStyle = '#3a6fd0';
+        x.beginPath();
+        x.arc(w * cx, h * cy, w * 0.1, 0, Math.PI * 2);
+        x.fill();
+        x.fillStyle = 'rgba(255,255,255,0.7)';
+        x.beginPath();
+        x.arc(w * cx - w * 0.04, h * cy - h * 0.04, w * 0.035, 0, Math.PI * 2);
+        x.fill();
+      }
+      break;
+    case 'servo':
+      // Servo motor: blue box, mounting tabs, output gear and a three-wire lead.
+      x.fillStyle = lin('#c9ccd3', '#7b828f');
+      x.fillRect(0, h * 0.35, w, h * 0.18);
+      x.fillStyle = lin('#4f8ff0', '#1f4fa8');
+      roundRectPath(x, w * 0.12, h * 0.08, w * 0.76, h * 0.84, w * 0.06);
+      x.fill();
+      x.fillStyle = '#f4f2ec';
+      x.beginPath();
+      x.arc(w * 0.34, h * 0.42, h * 0.2, 0, Math.PI * 2);
+      x.fill();
+      x.fillStyle = '#8a8070';
+      x.beginPath();
+      x.arc(w * 0.34, h * 0.42, h * 0.07, 0, Math.PI * 2);
+      x.fill();
+      for (const [i, col] of ['#8b5a2b', '#e03c31', '#f2c12e'].entries()) {
+        x.fillStyle = col;
+        x.fillRect(w * 0.62, h * (0.62 + i * 0.09), w * 0.38, h * 0.07);
+      }
+      break;
+    case 'chip':
+      // Controller board: green PCB, a big black chip, pins and a status LED.
+      x.fillStyle = lin('#2f8a4c', '#1d5e33');
+      roundRectPath(x, 0, 0, w, h, w * 0.05);
+      x.fill();
+      x.fillStyle = '#16161b';
+      x.fillRect(w * 0.28, h * 0.22, w * 0.44, h * 0.56);
+      x.fillStyle = '#c9ccd3';
+      for (let i = 0; i < 6; i++) {
+        x.fillRect(w * (0.3 + i * 0.07), h * 0.12, w * 0.03, h * 0.1);
+        x.fillRect(w * (0.3 + i * 0.07), h * 0.78, w * 0.03, h * 0.1);
+      }
+      x.fillStyle = '#7dff8a';
+      x.beginPath();
+      x.arc(w * 0.12, h * 0.2, h * 0.07, 0, Math.PI * 2);
+      x.fill();
+      x.fillStyle = '#d9a63a';
+      x.fillRect(0, h * 0.84, w * 0.18, h * 0.16);
+      break;
+    case 'pump': {
+      // Turbopump: a round housing with a pipe flange on each side.
+      x.fillStyle = lin('#e7eaf0', '#7b828f', false);
+      x.fillRect(0, h * 0.38, w, h * 0.24);
+      x.fillStyle = '#5b616b';
+      x.fillRect(0, h * 0.3, w * 0.08, h * 0.4);
+      x.fillRect(w * 0.92, h * 0.3, w * 0.08, h * 0.4);
+      const pg = x.createRadialGradient(w * 0.44, h * 0.42, 0, w / 2, h / 2, h * 0.48);
+      pg.addColorStop(0, '#f4f5f8');
+      pg.addColorStop(1, '#6b717c');
+      x.fillStyle = pg;
+      x.beginPath();
+      x.arc(w / 2, h / 2, h * 0.46, 0, Math.PI * 2);
+      x.fill();
+      x.strokeStyle = '#3a3d45';
+      x.lineWidth = h * 0.04;
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        x.beginPath();
+        x.moveTo(w / 2, h / 2);
+        x.lineTo(w / 2 + Math.cos(a) * h * 0.3, h / 2 + Math.sin(a) * h * 0.3);
+        x.stroke();
+      }
+      x.fillStyle = '#d9861a';
+      x.beginPath();
+      x.arc(w / 2, h / 2, h * 0.1, 0, Math.PI * 2);
+      x.fill();
+      break;
+    }
   }
   if (broken) {
     // Scorch marks, grime and a crack.
@@ -913,10 +1131,12 @@ export function drawPart(kind: PartKind, broken: boolean, px = 400): HTMLCanvasE
 }
 
 /** An oil (or coolant) can, already tipped so the spout points down-left. */
-export function drawCan(fluid: 'oil' | 'coolant', w: number, h: number): HTMLCanvasElement {
+export function drawCan(fluid: Fluid, w: number, h: number): HTMLCanvasElement {
   const c = makeCanvas(w, h);
   const x = ctx2d(c);
-  const body = fluid === 'oil' ? ['#ffd34d', '#c78d14'] : ['#8fd0ff', '#2f6fd0'];
+  const body = { oil: ['#ffd34d', '#c78d14'], coolant: ['#8fd0ff', '#2f6fd0'], fuel: ['#ffb36b', '#d9561a'] }[
+    fluid
+  ];
   const g = x.createLinearGradient(w * 0.3, 0, w, 0);
   g.addColorStop(0, body[0]);
   g.addColorStop(1, body[1]);
@@ -939,7 +1159,7 @@ export function drawCan(fluid: 'oil' | 'coolant', w: number, h: number): HTMLCan
   x.font = `bold ${Math.round(h * 0.13)}px sans-serif`;
   x.textAlign = 'center';
   x.textBaseline = 'middle';
-  x.fillText(fluid === 'oil' ? 'OIL' : 'COOL', w * 0.63, h * 0.41);
+  x.fillText({ oil: 'OIL', coolant: 'COOL', fuel: 'FUEL' }[fluid], w * 0.63, h * 0.41);
   x.strokeStyle = '#2a2a2e';
   x.lineWidth = w * 0.05;
   x.beginPath();

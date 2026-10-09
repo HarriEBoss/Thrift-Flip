@@ -307,10 +307,78 @@ export function iconSparkle(g: G, s: number): void {
   pixelDraw(g, `iconSparkle`, { grid: gridFor(s), extent: 40, size: s }, (p) => v_iconSparkle(p, 40));
 }
 
-/** Workshop signs: a toolbox (Repair Shop), a computer (Computer Workshop), a car (Car Garage). */
+/** Business signs: price tag, phone, computer, car, robot, rocket (and a toolbox for jobs). */
 function v_iconWorkshop(g: Pen, id: string, s: number): void {
   const k = s / 40;
   g.lineStyle(2.5 * k, C.ink, 1);
+  if (id === 'phone') {
+    g.fillStyle(C.purple, 1);
+    g.fillRoundedRect(-10 * k, -18 * k, 20 * k, 36 * k, 4 * k);
+    g.strokeRoundedRect(-10 * k, -18 * k, 20 * k, 36 * k, 4 * k);
+    g.fillStyle(C.tealLight, 1);
+    g.fillRect(-7 * k, -13 * k, 14 * k, 22 * k);
+    g.fillStyle(C.cream, 1);
+    g.fillCircle(0, 13.5 * k, 2.2 * k);
+    return;
+  }
+  if (id === 'robotics') {
+    g.fillStyle(0xc0cbdc, 1);
+    g.fillRoundedRect(-14 * k, -10 * k, 28 * k, 22 * k, 5 * k);
+    g.strokeRoundedRect(-14 * k, -10 * k, 28 * k, 22 * k, 5 * k);
+    g.fillStyle(C.sky, 1);
+    g.fillCircle(-6 * k, 0, 4 * k);
+    g.fillCircle(6 * k, 0, 4 * k);
+    g.strokeCircle(-6 * k, 0, 4 * k);
+    g.strokeCircle(6 * k, 0, 4 * k);
+    g.fillStyle(C.ink, 1);
+    g.fillRect(-6 * k, 7 * k, 12 * k, 2.5 * k);
+    g.fillRect(-1.2 * k, -18 * k, 2.4 * k, 8 * k);
+    g.fillStyle(C.terracotta, 1);
+    g.fillCircle(0, -18 * k, 3.5 * k);
+    g.fillStyle(0xc0cbdc, 1);
+    g.fillRect(-18 * k, -4 * k, 4 * k, 10 * k);
+    g.fillRect(14 * k, -4 * k, 4 * k, 10 * k);
+    return;
+  }
+  if (id === 'rocket') {
+    g.fillStyle(C.terracotta, 1);
+    g.fillPoints([V(-6 * k, 8 * k), V(-14 * k, 16 * k), V(-6 * k, 14 * k)], true);
+    g.fillPoints([V(6 * k, 8 * k), V(14 * k, 16 * k), V(6 * k, 14 * k)], true);
+    g.fillStyle(C.white, 1);
+    g.fillPoints(
+      [V(0, -19 * k), V(7 * k, -7 * k), V(7 * k, 14 * k), V(-7 * k, 14 * k), V(-7 * k, -7 * k)],
+      true,
+    );
+    g.strokePoints(
+      [V(0, -19 * k), V(7 * k, -7 * k), V(7 * k, 14 * k), V(-7 * k, 14 * k), V(-7 * k, -7 * k)],
+      true,
+    );
+    g.fillStyle(C.sky, 1);
+    g.fillCircle(0, -3 * k, 3.5 * k);
+    g.strokeCircle(0, -3 * k, 3.5 * k);
+    g.fillStyle(C.mustard, 1);
+    g.fillPoints([V(-4 * k, 15 * k), V(4 * k, 15 * k), V(0, 21 * k)], true);
+    return;
+  }
+  if (id === 'reselling') {
+    // Price tag.
+    g.fillStyle(C.mustard, 1);
+    g.fillPoints(
+      [V(-16 * k, -6 * k), V(-6 * k, -16 * k), V(16 * k, -16 * k), V(16 * k, 6 * k), V(-6 * k, 6 * k)],
+      true,
+    );
+    g.strokePoints(
+      [V(-16 * k, -6 * k), V(-6 * k, -16 * k), V(16 * k, -16 * k), V(16 * k, 6 * k), V(-6 * k, 6 * k)],
+      true,
+    );
+    g.fillStyle(C.cream, 1);
+    g.fillCircle(-7 * k, -5 * k, 2.5 * k);
+    g.strokeCircle(-7 * k, -5 * k, 2.5 * k);
+    g.fillStyle(C.leaf, 1);
+    g.fillRoundedRect(-14 * k, 8 * k, 28 * k, 10 * k, 3 * k);
+    g.strokeRoundedRect(-14 * k, 8 * k, 28 * k, 10 * k, 3 * k);
+    return;
+  }
   if (id === 'computer') {
     g.fillStyle(0xd9d4c4, 1);
     g.fillRoundedRect(-17 * k, -15 * k, 34 * k, 24 * k, 3 * k);
@@ -323,7 +391,7 @@ function v_iconWorkshop(g: Pen, id: string, s: number): void {
     g.fillRect(-4 * k, 9 * k, 8 * k, 5 * k);
     g.fillRoundedRect(-12 * k, 13 * k, 24 * k, 5 * k, 2 * k);
     g.strokeRoundedRect(-12 * k, 13 * k, 24 * k, 5 * k, 2 * k);
-  } else if (id === 'garage') {
+  } else if (id === 'garage' || id === 'mechanic') {
     g.fillStyle(C.terracotta, 1);
     g.fillPoints(
       [

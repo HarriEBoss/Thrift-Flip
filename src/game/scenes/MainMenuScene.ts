@@ -166,6 +166,7 @@ export class MainMenuScene extends GameScene {
       this.version,
     ]);
     if (isContentComplete(s)) this.tagline.setText(t('menu.allDone'));
+    else if (s.flags.named) this.tagline.setText(s.company);
     this.markReady();
     session.audio.music('menu');
     if (session.loadOutcome.kind === 'corrupt') this.time.delayedCall(50, () => this.corruptSave());
@@ -216,7 +217,9 @@ export class MainMenuScene extends GameScene {
   private play(): void {
     const s = session.state;
     session.audio.play('whoosh');
-    this.scene.start(PHASE_SCENE[s.day.ph]);
+    // First play (or an older save): name the company before the day starts.
+    if (!s.flags.named) this.scene.start('Name', { next: PHASE_SCENE[s.day.ph] });
+    else this.scene.start(PHASE_SCENE[s.day.ph]);
   }
 
   private async gift(): Promise<void> {

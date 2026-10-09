@@ -10,7 +10,10 @@ export type CategoryId =
   | 'bikes'
   | 'curios'
   | 'tech'
-  | 'vehicles';
+  | 'vehicles'
+  | 'phones'
+  | 'robots'
+  | 'rockets';
 export const CATEGORY_IDS: readonly CategoryId[] = [
   'kitchen',
   'ceramics',
@@ -22,6 +25,9 @@ export const CATEGORY_IDS: readonly CategoryId[] = [
   'curios',
   'tech',
   'vehicles',
+  'phones',
+  'robots',
+  'rockets',
 ];
 
 export type StepKind = 'sticker' | 'scrub' | 'rust' | 'sand' | 'glue' | 'wire' | 'fix' | 'paint' | 'polish';
@@ -62,6 +68,8 @@ export interface RecipeStepTemplate {
 export interface CategoryDef {
   id: CategoryId;
   unlockTier: number;
+  /** Only comes in as customer jobs at this business (never at markets, never on sale). */
+  business?: string;
   /** Shape variants (arrays of parts). Item archetypes reference these by index. */
   shapes: Part[][];
 }
@@ -218,4 +226,38 @@ export interface Balance {
   daily: { rewardPerStar: number };
   catalogBonus: number;
   decor: DecorDef[];
+  empire: EmpireBalance;
+}
+
+/** A kind of job a business offers: what items, how many a day, and the fee curve. */
+export interface JobDef {
+  /** 'service': the item's own repair; 'pc' / 'engine': a full PC rebuild / engine swap. */
+  k: 'service' | 'pc' | 'engine';
+  cats: CategoryId[];
+  /** Only these item shapes (e.g. PC rebuilds only for desktop PCs, engine swaps only for cars). */
+  shapes?: number[];
+  /** Offers per day. */
+  n: number;
+  /** Fee = base x fee[0] + fee[1] + damage x fee[2]. */
+  fee: [number, number, number];
+}
+
+/** One rung of the business ladder (data-driven: add a business by adding an entry). */
+export interface BusinessDef {
+  id: string;
+  /** Coins you must have saved before you can open it. */
+  capital: number;
+  /** Share of the capital spent to open it. */
+  spendPct: number;
+  /** Daily income when a manager runs it (used from the delegation phase on). */
+  income: number;
+  needs: { business?: string; shopTier?: number };
+  jobs: JobDef[];
+}
+
+export interface EmpireBalance {
+  businesses: BusinessDef[];
+  /** Tip for great work: fee x max(0, quality - from) x rate. */
+  jobTip: { from: number; rate: number };
+  jobRep: { done: number; perfect: number };
 }

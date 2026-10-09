@@ -1,0 +1,13 @@
+{
+  "first": [
+    "Sparkle", "Happy", "Golden", "Lucky", "Sunny", "Mighty", "Cosmic", "Shiny", "Turbo", "Clever",
+    "Brave", "Super", "Jolly", "Rocket", "Bright", "Speedy", "Magic", "Starry", "Rainbow", "Busy",
+    "Fizzy", "Bouncy", "Zippy", "Atomic", "Galaxy", "Thunder", "Electric", "Neon", "Nifty", "Handy"
+  ],
+  "second": [
+    "Fix", "Gadget", "Flip", "Bolt", "Spark", "Wrench", "Gizmo", "Fox", "Panda", "Robot",
+    "Comet", "Star", "Owl", "Gear", "Widget", "Beaver", "Otter", "Penguin", "Tiger", "Rabbit",
+    "Sprocket", "Circuit", "Rocket", "Hammer", "Magnet", "Turtle", "Koala", "Dragon", "Pixel", "Moon"
+  ],
+  "suffix": ["Co.", "Inc.", "Works", "Labs", "Ltd.", "Group", "Industries", "Corp.", "Repairs", "Shop", "& Friends", "Empire"]
+}

@@ -5,6 +5,7 @@ import {
   playMarket,
   playShop,
   playSummary,
+  passNaming,
   playWorkshop,
   press,
   scene,
@@ -24,7 +25,9 @@ for (const mode of ['mouse', 'touch'] as Mode[]) {
       await page.goto('/');
       await waitForScene(page, 'MainMenu');
       await press(page, mode, 'play');
+      await passNaming(page, mode, mode === 'touch' ? 'type' : 'spin');
       await waitForScene(page, 'Market');
+      if (mode === 'touch') expect(await tf(page, (t) => t.state().company)).toBe('Robo Fix');
       // Tutorial: one dirty mug.
       await playMarket(page, mode, 1);
       expect(await scene(page)).toBe('Workshop');

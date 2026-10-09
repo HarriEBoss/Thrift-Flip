@@ -127,22 +127,42 @@ two long rigs: a **PC rebuild** (dust, cooler + paste, memory, graphics card, ca
 cables) and an **engine swap** (drain, 4 bolts out, hoist out, hoist in, 4 bolts in, 4 hoses, oil, coolant,
 battery, ignition wiring). All layouts are pure and unit-tested; the score is the product of the task scores.
 
-## Workshops and customer jobs (`core/jobs.ts`)
+## Company and business ladder (`core/empire.ts`, `core/names.ts`, `core/jobs.ts`)
 
-Workshops are bought in the Upgrades hub: the **Repair Shop** (Corner Store tier), then the **Computer
-Workshop** (Vintage Boutique) and the **Car Garage** (Grand Emporium), both needing the Repair Shop.
-Each day, `jobOffers` deals deterministic jobs per owned workshop (small repairs, PC rebuilds, engine
-swaps). They are taken at the market's **Repair Desk**; a job item goes through the workshop with a repair
-recipe (scrub, repair, optional polish) and is never sold: on the reveal the customer pays the fee
-(`jobFee`; engine swaps pay the most) plus a tip of up to 20% for great work (`completeJob`). Job items do
-not count against shop space.
+**Company name.** On first play (and once for older saves) `NameScene` asks for a company name: three
+word wheels from kid-safe lists (`src/data/names.json`) with a shuffle, or an in-game keyboard (Phaser
+buttons, no browser text box, so it behaves the same on YouTube and iOS). Typed names are tidied
+(`cleanName`, max 20 characters) and checked by `checkName` against `src/data/blocklist.json`: `word`
+entries must match a whole word (so "Classic" is fine), `part` entries are rejected anywhere after
+removing spaces, look-alike characters and stretched letters. A rejected name is never shown back. The
+name shows on the shop sign, the main menu, the business ladder and job cards. Rename from Settings
+(main menu only).
+
+**Business ladder** (data: `balance.json` → `empire.businesses`, typed in `core/types.ts`). Each entry
+has `capital` (savings needed), `spendPct` (share spent to open it), `income` (daily income once
+managers exist), `needs` (previous business, shop size) and `jobs` (what customers bring, how many a day,
+fee curve, optional item shapes). Today: Reselling Shop (the original game, whose 5 shop sizes are its
+levels) → Phone Repair → Computer Repair → Mechanic → Robotics Lab → Rocket Repair. Adding a rung is a
+JSON entry plus i18n keys (`biz.*`, `bizDesc.*`); categories that only come in as jobs set `business` in
+`categories.json` (robots, rockets) and are never at markets.
+
+- `businessStatus`: owned / locked (needs unmet) / saving (still saving the capital) / available.
+  `openBusiness` spends `openCost`. `nextBusinessGoal` feeds the goal banner once the shop is at its top
+  size. The Upgrades hub has a "Your businesses" row with the ladder.
+- **Where you work today:** the market's top-left button ("Work at", from the second business on) picks
+  the business for the day, before buying or taking jobs (`setCurrentBusiness`). At the Reselling Shop
+  the day is market → workshop → shop. At a repair business the market becomes a **job board**
+  (`businessOffers`): take jobs, fix them in the workshop, the customers pay on the reveal
+  (`completeJob`, fee plus a tip for great work), then straight to the summary.
+- Job ids are stable per day (ladder index × 10 + slot), so taking a job survives saves. Job items do not
+  count against shop space and are never sold.
 
 ## Growing the shop
 
 Every way to grow sits behind one **Upgrades** button (Main Menu, Market header, Day Summary), in
 `game/ui/upgradesHub.ts`: bigger shop (tiers), decorations, tools and skills. A goal banner shows the
-next shop tier with coin and reputation progress (`nextGoal` in `core/progression.ts`). Workshops
-(see below) are bought from the same hub.
+next shop tier with coin and reputation progress (`nextGoal` in `core/progression.ts`), then the next
+business. The business ladder (see below) is opened from the same hub.
 
 - **Bigger shops find better items:** `rarityWeights` in `core/market.ts` shifts the rarity odds up with
   the shop tier.
@@ -196,9 +216,10 @@ bright palette in `theme.ts` and the Nunito font.
   forces a write on day end, purchases and pause. It checks UTF-16 well-formedness and the 3 MiB / 500 KiB limits.
   A corrupt save is kept in memory and writing is blocked until the player sees a friendly message.
 
-Current version: **v3**. v2 added `dc` (owned decorations); v3 adds `ws` (owned workshops), `dy[15]`
-(today's taken jobs) and an optional job tuple `[fee, persona, kind]` at the end of an item. Older saves
-migrate to empty lists.
+Current version: **v4**. v2 added `dc` (owned decorations); v3 added `ws` (owned workshops), `dy[15]`
+(today's taken jobs) and an optional job tuple `[fee, persona, kind]` at the end of an item; v4 adds `cn`
+(company name), `bz` (`[owned businesses, today's business]`) and `fl.nm` (named), and drops `ws`: the
+Repair Shop becomes Phone Repair, the Computer Workshop Computer Repair and the Car Garage Mechanic.
 
 Saves happen at material progress: after each restoration and each sale (debounced), on purchases
 (forced), on day transitions (forced) and on platform pause (forced).

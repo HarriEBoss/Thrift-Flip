@@ -32,7 +32,8 @@ import {
 } from '../src/core/progression';
 import { catalogFoundCount } from '../src/core/catalog';
 import { DECOR, buyDecor } from '../src/core/decor';
-import { WORKSHOPS, acceptJob, buyWorkshop, completeJob, jobOffers } from '../src/core/jobs';
+import { acceptJob, businessOffers, completeJob } from '../src/core/jobs';
+import { BUSINESSES, businessStatus, openBusiness, openCost, setCurrentBusiness } from '../src/core/empire';
 import { isContentComplete } from '../src/core/complete';
 import { snapPrice } from '../src/core/economy';
 import { marketSlots, shelfCapacity } from '../src/core/perks';
@@ -64,6 +65,41 @@ interface BotResult {
   catalog: number[];
   completeDay: number;
   playSec: number[];
+  /** Day each business on the ladder was opened (-1 = never). */
+  bizDay: number[];
+}
+
+/** Restores everything in the queue; finished customer jobs are paid. */
+function workshop(g: GameState, rng: Rng, skill: number, spend: (sec: number) => void): void {
+  advancePhase(g, 'workshop');
+  for (const inst of workshopQueue(g)) {
+    const recipe = recipeFor(inst);
+    recipe.forEach((st, i) => {
+      if (!st.req && rng.chance(0.15)) {
+        recordStep(inst, i, null);
+        return;
+      }
+      const score = Math.max(0.3, Math.min(1, skill + rng.range(-0.12, 0.12)));
+      recordStep(inst, i, score);
+      spend(T.perStep);
+    });
+    finishRestoration(g, inst);
+    spend(T.reveal);
+    if (inst.job) {
+      // Big repairs (PC rebuilds, engine swaps, robots, rockets) take longer.
+      const cat = ITEMS[inst.a].cat;
+      spend(
+        inst.job.k === 'engine'
+          ? 45
+          : inst.job.k === 'pc'
+            ? 30
+            : cat === 'robots' || cat === 'rockets'
+              ? 30
+              : 10,
+      );
+      completeJob(g, inst);
+    }
+  }
 }
 
 function playDay(g: GameState, rng: Rng, skill: number): number {
@@ -81,17 +117,24 @@ function playDay(g: GameState, rng: Rng, skill: number): number {
   for (const d of DECOR) {
     if (g.coins - d.cost >= reserve * 0.7) buyDecor(g, d.id);
   }
-  for (const w of WORKSHOPS) {
-    if (g.coins - w.cost >= reserve * 0.7) buyWorkshop(g, w.id);
+  // Open the next business as soon as the savings allow (keeping a reserve for the shop).
+  for (const b of BUSINESSES) {
+    if (businessStatus(g, b) === 'available' && g.coins - openCost(b) >= reserve * 0.5) openBusiness(g, b.id);
   }
-  // Take the two best-paying customer jobs.
-  jobOffers(g)
-    .map((o, i) => ({ fee: o.fee, i }))
-    .sort((a, b) => b.fee - a.fee)
-    .slice(0, 2)
-    .forEach(({ i }) => {
-      if (acceptJob(g, i)) sec += T.perBuy;
-    });
+  // Work at the biggest business two days out of three, the Reselling Shop on the third.
+  const top = BUSINESSES.filter((b) => g.biz.own.includes(b.id)).pop()!;
+  setCurrentBusiness(g, g.biz.own.length > 1 && g.day.n % 3 !== 0 ? top.id : 'reselling');
+  if (g.biz.cur !== 'reselling') {
+    sec += T.marketBase;
+    for (const o of businessOffers(g, g.biz.cur)) if (acceptJob(g, o.id)) sec += T.perBuy;
+    workshop(g, rng, skill, (n) => (sec += n));
+    advancePhase(g, 'shop');
+    advancePhase(g, 'summary');
+    sec += T.summary;
+    while (canUpgradeTier(g)) upgradeTier(g);
+    advancePhase(g, 'market');
+    return sec;
+  }
   // Market choice: newest unlocked (auction sometimes)
   const ms = marketsForTier(g.tier);
   const choice = ms[Math.min(ms.length - 1, rng.int(Math.max(0, ms.length - 3), ms.length - 1))];
@@ -133,26 +176,7 @@ function playDay(g: GameState, rng: Rng, skill: number): number {
       }
     }
   }
-  advancePhase(g, 'workshop');
-  for (const inst of workshopQueue(g)) {
-    const recipe = recipeFor(inst);
-    recipe.forEach((st, i) => {
-      if (!st.req && rng.chance(0.15)) {
-        recordStep(inst, i, null);
-        return;
-      }
-      const score = Math.max(0.3, Math.min(1, skill + rng.range(-0.12, 0.12)));
-      recordStep(inst, i, score);
-      sec += T.perStep;
-    });
-    finishRestoration(g, inst);
-    sec += T.reveal;
-    if (inst.job) {
-      // PC rebuilds and engine swaps are long repairs.
-      sec += inst.job.k === 'engine' ? 45 : inst.job.k === 'pc' ? 30 : 0;
-      completeJob(g, inst);
-    }
-  }
+  workshop(g, rng, skill, (n) => (sec += n));
   advancePhase(g, 'shop');
   const visits = generateVisits(g);
   for (const v of visits) {
@@ -185,6 +209,7 @@ function runBot(seed: number): BotResult {
     catalog: [],
     completeDay: -1,
     playSec: [],
+    bizDay: BUSINESSES.map((b, i) => (i === 0 ? 1 : -1)),
   };
   let total = 0;
   for (let d = 1; d <= DAYS; d++) {
@@ -193,6 +218,9 @@ function runBot(seed: number): BotResult {
     res.coins.push(g.coins);
     res.catalog.push(catalogFoundCount(g));
     res.playSec.push(total);
+    BUSINESSES.forEach((b, i) => {
+      if (res.bizDay[i] < 0 && g.biz.own.includes(b.id)) res.bizDay[i] = d;
+    });
     if (process.env.TRACE && d % 5 === 0)
       console.error(`d${d} t${g.tier} c${g.coins} rep${g.rep} lvl${g.level} inv${g.inv.length}`);
     if (res.completeDay < 0 && isContentComplete(g)) res.completeDay = d;
@@ -228,6 +256,21 @@ BALANCE.tiers.forEach((t, i) => {
   const reached = days.filter((d) => d >= 0);
   out(
     `| ${i + 1} | ${t.name} | ${t.cost} | ${t.rep} | ${median(days)} | ${reached.length ? Math.min(...reached) : '-'} | ${reached.length ? Math.max(...reached) : '-'} | ${reached.length}/${BOTS} |`,
+  );
+});
+out();
+out('## Business ladder: day each business is opened (median over bots)');
+out();
+out('| Business | Capital | Opening cost | Median day | Play time (h) | Bots reaching |');
+out('|---|---|---|---|---|---|');
+BUSINESSES.forEach((b, i) => {
+  const days = results.map((r) => r.bizDay[i]);
+  const reached = days.filter((d) => d >= 0);
+  const md = median(days);
+  const hours =
+    md > 0 ? median(results.map((r) => (r.bizDay[i] > 0 ? r.playSec[r.bizDay[i] - 1] : -1))) / 3600 : -1;
+  out(
+    `| ${b.id} | ${b.capital} | ${openCost(b)} | ${md} | ${hours >= 0 ? hours.toFixed(1) : '-'} | ${reached.length}/${BOTS} |`,
   );
 });
 out();

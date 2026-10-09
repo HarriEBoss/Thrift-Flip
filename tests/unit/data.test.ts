@@ -18,10 +18,10 @@ import {
 import { CATEGORY_IDS } from '../../src/core/types';
 
 describe('content data', () => {
-  it('has 10 categories x 15 items = 150 catalog entries with unique ids', () => {
-    expect(CATEGORIES).toHaveLength(10);
-    expect(ITEMS).toHaveLength(150);
-    expect(new Set(ITEMS.map((i) => i.id)).size).toBe(150);
+  it('has 13 categories x 15 items = 195 catalog entries with unique ids', () => {
+    expect(CATEGORIES).toHaveLength(13);
+    expect(ITEMS).toHaveLength(195);
+    expect(new Set(ITEMS.map((i) => i.id)).size).toBe(195);
     for (const c of CATEGORY_IDS) expect(ITEMS.filter((i) => i.cat === c)).toHaveLength(15);
   });
   it('every item references a valid shape and palette colours', () => {
@@ -61,7 +61,10 @@ describe('content data', () => {
     expect(categoriesForTier(0)).toEqual(['kitchen', 'ceramics']);
     expect(categoriesForTier(3)).toContain('tech');
     expect(categoriesForTier(3)).not.toContain('vehicles');
-    expect(categoriesForTier(4)).toHaveLength(10);
+    // Robots and rockets only come in as business jobs, never at markets.
+    expect(categoriesForTier(4)).toHaveLength(11);
+    expect(categoriesForTier(4)).not.toContain('robots');
+    expect(categoriesForTier(2)).toContain('phones');
     expect(marketsForTier(0).map((m) => m.id)).toEqual(['flea']);
     expect(marketsForTier(4)).toHaveLength(5);
   });

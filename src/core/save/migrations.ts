@@ -11,6 +11,21 @@ export const MIGRATIONS: Migration[] = [
   (old) => ({ ...old, v: 2, dc: Array.isArray(old.dc) ? old.dc : [] }),
   // v2 -> v3: workshops (`ws`), today's accepted jobs (dy[15]) and job items (item tuple [11]).
   (old) => ({ ...old, v: 3, ws: Array.isArray(old.ws) ? old.ws : [] }),
+  // v3 -> v4: company name (`cn`) and the business ladder (`bz` = [owned ids, today's business]).
+  // The workshops became businesses: Repair Shop -> Phone Repair, Computer Workshop -> Computer
+  // Repair, Car Garage -> Mechanic. Today's taken jobs are cleared (job ids changed).
+  (old) => {
+    const ws = Array.isArray(old.ws) ? old.ws : [];
+    const own = ['reselling'];
+    if (ws.length) own.push('phone');
+    if (ws.includes('computer')) own.push('computer');
+    if (ws.includes('garage')) own.push('mechanic');
+    const dy = Array.isArray(old.dy) ? [...(old.dy as unknown[])] : old.dy;
+    if (Array.isArray(dy)) dy[15] = [];
+    const next: SaveObj = { ...old, v: 4, bz: [own, 'reselling'], dy };
+    delete next.ws;
+    return next;
+  },
 ];
 
 export const CURRENT_VERSION = MIGRATIONS.length + 1;

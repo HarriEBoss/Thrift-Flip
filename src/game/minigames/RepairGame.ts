@@ -4,6 +4,7 @@ import { makeWirePuzzle, type WirePuzzle } from '../../core/minigame';
 import {
   SCREW_SECONDS,
   TWIST_NEEDED,
+  HEAT_SECONDS,
   angleDelta,
   hoistLayout,
   panelGeom,
@@ -27,10 +28,17 @@ import {
 } from '../art/repairArt';
 import { colorsFor, releaseCanvas } from '../art/itemArt';
 import { session } from '../session';
-import { at, drawSlot, type BotAction, type RepairTask, type TaskHost } from './repair/host';
+import {
+  at,
+  drawGauge,
+  drawSlot,
+  type BotAction,
+  type RepairTask,
+  type TaskHost,
+} from './repair/host';
 import { makeTask } from './repair/tasks';
 
-type Phase = 'turn' | 'screws' | 'twist' | 'cover' | 'task' | 'test' | 'close' | 'done';
+type Phase = 'turn' | 'screws' | 'twist' | 'heat' | 'cover' | 'task' | 'test' | 'close' | 'done';
 
 const GLOW_TINT = {
   bulb: 0xffe08a,
@@ -87,6 +95,10 @@ export class RepairGame extends MiniGame {
   private tickT = 0;
   private twistTotal = 0;
   private twistLast: number | null = null;
+  /** Glued backs: heat gun time so far, where it points, and its drawing. */
+  private heatT = 0;
+  private heatAt: { u: number; v: number } | null = null;
+  private heatFx: Phaser.GameObjects.Graphics | null = null;
   private coverDrag: { u: number; v: number; ox: number; oy: number } | null = null;
   private ownTextures: string[] = [];
   private restored = false;
@@ -222,6 +234,10 @@ export class RepairGame extends MiniGame {
     }
     this.slots = sc.add.graphics();
     this.closeup.add(this.slots);
+    if (this.rig.lid === 'glued') {
+      this.heatFx = sc.add.graphics();
+      this.closeup.add(this.heatFx);
+    }
     this.driver = sc.add
       .image(0, 0, 'repair_driver')
       .setOrigin(0.5, 1)
@@ -231,7 +247,14 @@ export class RepairGame extends MiniGame {
     this.closeup.setAlpha(0);
     this.drawDetails();
     this.playTurn(false, () => {
-      this.phase = this.rig.lid === 'twist' ? 'twist' : this.screws.length ? 'screws' : 'cover';
+      this.phase =
+        this.rig.lid === 'twist'
+          ? 'twist'
+          : this.rig.lid === 'glued'
+            ? 'heat'
+            : this.screws.length
+              ? 'screws'
+              : 'cover';
     });
   }
 
@@ -369,8 +392,14 @@ export class RepairGame extends MiniGame {
         return 'mg.rep.screws';
       case 'twist':
         return 'mg.rep.twist';
+      case 'heat':
+        return 'mg.rep.heat';
       case 'cover':
-        return this.rig.lid === 'hood' ? 'mg.rep.hood' : 'mg.rep.cover';
+        return this.rig.lid === 'hood'
+          ? 'mg.rep.hood'
+          : this.rig.lid === 'glued'
+            ? 'mg.rep.lift'
+            : 'mg.rep.cover';
       case 'task':
         return this.tasks[this.cur]?.instruction() ?? 'mg.rep.turn';
       case 'test':
@@ -388,6 +417,8 @@ export class RepairGame extends MiniGame {
         return (0.25 * this.screws.filter((s) => s.out).length) / Math.max(1, this.screws.length);
       case 'twist':
         return 0.25 * Math.min(1, this.twistTotal / TWIST_NEEDED);
+      case 'heat':
+        return 0.25 * Math.min(1, this.heatT / HEAT_SECONDS);
       case 'cover':
         return 0.28;
       case 'task': {
@@ -442,6 +473,8 @@ export class RepairGame extends MiniGame {
           c: { u: this.geom.cx, v: this.geom.cy },
           r: Math.min(this.geom.rx, this.geom.ry) * 0.6,
         };
+      case 'heat':
+        return { a: 'hold', p: { u: this.geom.cx, v: this.geom.cy } };
       case 'cover':
         return { a: 'tap', p: { u: this.geom.cx, v: this.geom.cy } };
       case 'task':
@@ -485,6 +518,9 @@ export class RepairGame extends MiniGame {
       case 'twist':
         if (this.inPanel(u, v, 1.1)) this.twistLast = Math.atan2(v - this.geom.cy, u - this.geom.cx);
         break;
+      case 'heat':
+        if (this.inPanel(u, v, 1.1)) this.heatAt = { u, v };
+        break;
       case 'cover':
         if (this.inPanel(u, v, 1.05)) this.coverDrag = { u, v, ox: this.cover.x, oy: this.cover.y };
         break;
@@ -496,6 +532,7 @@ export class RepairGame extends MiniGame {
 
   override pointerMove(u: number, v: number, down: boolean): void {
     if (!down) return;
+    if (this.phase === 'heat' && this.heatAt) this.heatAt = { u, v };
     if (this.phase === 'screws' && this.holding !== null) {
       const s = this.screws[this.holding];
       if (Math.hypot(s.p.u - u, s.p.v - v) > 0.11) this.stopHolding();
@@ -526,6 +563,7 @@ export class RepairGame extends MiniGame {
   }
 
   override pointerUp(u: number, v: number): void {
+    this.heatAt = null;
     if (this.phase === 'screws') this.stopHolding();
     else if (this.phase === 'twist') this.twistLast = null;
     else if (this.phase === 'cover' && this.coverDrag) {
@@ -537,6 +575,52 @@ export class RepairGame extends MiniGame {
       const dir = len < 0.06 ? { x: 0.3, y: -1 } : { x: dx / len, y: dy / len };
       this.removeCover(dir);
     } else if (this.phase === 'task') this.tasks[this.cur]?.pointerUp(u, v);
+  }
+
+  /** Glued back: hold the heat gun on it until the glue is soft, then it can be lifted off. */
+  private updateHeat(dt: number): void {
+    const g = this.heatFx;
+    if (!g) return;
+    g.clear();
+    if (this.phase !== 'heat') return;
+    const k = Math.min(1, this.heatT / HEAT_SECONDS);
+    // The cover warms up (orange glow round the glued edge) and the gauge fills.
+    const cx = this.cover.x + this.geom.cx * STAGE;
+    const cy = this.cover.y + this.geom.cy * STAGE;
+    g.lineStyle(STAGE * 0.03, 0xff7a2a, 0.15 + k * 0.55);
+    g.strokeRoundedRect(
+      cx - this.geom.rx * STAGE * 0.97,
+      cy - this.geom.ry * STAGE * 0.97,
+      this.geom.rx * STAGE * 1.94,
+      this.geom.ry * STAGE * 1.94,
+      STAGE * 0.04,
+    );
+    const gauge = { u: this.geom.cx + this.geom.rx + 0.04, v: this.geom.cy };
+    drawGauge(g, gauge, k, 0xff7a2a, null);
+    const hp = this.heatAt;
+    if (!hp) return;
+    // Heat gun: a body and nozzle pointing at the finger, from below right.
+    const q = at(hp);
+    g.lineStyle(26, 0x15121b, 0.9);
+    g.lineBetween(q.x + 40, q.y + 40, q.x + 110, q.y + 110);
+    g.lineStyle(20, 0xf2603a, 1);
+    g.lineBetween(q.x + 40, q.y + 40, q.x + 110, q.y + 110);
+    g.lineStyle(12, 0x5b616b, 1);
+    g.lineBetween(q.x + 14, q.y + 14, q.x + 44, q.y + 44);
+    this.heatT += dt;
+    this.tickT += dt;
+    if (this.tickT > 0.15) {
+      this.tickT = 0;
+      this.sfx('spray', 0.4);
+      this.burst(hp.u, hp.v, 'p_dot', 2, [0xffb36b, 0xff7a2a], 60);
+    }
+    if (this.heatT >= HEAT_SECONDS) {
+      this.heatAt = null;
+      this.sfx('pop');
+      session.haptic('success');
+      this.phase = 'cover';
+      g.clear();
+    }
   }
 
   private inPanel(u: number, v: number, k: number): boolean {
@@ -553,6 +637,7 @@ export class RepairGame extends MiniGame {
     this.drawDetails();
     // Every task draws its turning bits; only the current one reacts to input.
     for (const t of this.tasks) t.update(dt);
+    this.updateHeat(dt);
     if (this.phase !== 'screws' || this.holding === null) return;
     const s = this.screws[this.holding];
     s.t += dt;

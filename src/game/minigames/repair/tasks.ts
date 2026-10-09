@@ -9,6 +9,7 @@ import {
   POUR_RATE,
   boltLayout,
   cableSet,
+  cableStyle,
   dustLayout,
   hoistLayout,
   pourLayout,
@@ -16,6 +17,7 @@ import {
   pourStep,
   swapLayout,
   type CableDef,
+  type CableSetId,
   type Fluid,
   type PartKind,
   type PourLayout,
@@ -54,7 +56,7 @@ import {
 const MAINS = [0x8b5a2b, 0x2f6fd0, 0x3fae49, 0x2a2a2e, 0x9a9aa2];
 const LOW = [0xe03c31, 0x2a2a2e, 0xf2c12e, 0xf4f4f4, 0x2fa14d];
 const SYMBOLS = ['●', '■', '▲', '◆', '★'];
-const FLUID_COL: Record<Fluid, number> = { oil: 0xffc23d, coolant: 0x4fb6ff };
+const FLUID_COL: Record<Fluid, number> = { oil: 0xffc23d, coolant: 0x4fb6ff, fuel: 0xff8a3c };
 
 function bezier(
   a: { x: number; y: number },
@@ -602,7 +604,7 @@ export class LevelTask extends RepairTask {
   instruction(): string {
     if (this.mode === 'drain') return 'mg.rep.drain';
     if (this.mode === 'paste') return 'mg.rep.paste';
-    return this.fluid === 'oil' ? 'mg.rep.pourOil' : 'mg.rep.pourCoolant';
+    return { oil: 'mg.rep.pourOil', coolant: 'mg.rep.pourCoolant', fuel: 'mg.rep.pourFuel' }[this.fluid];
   }
 
   progress(): number {
@@ -1025,7 +1027,7 @@ export class CablesTask extends RepairTask {
 
   constructor(
     h: TaskHost,
-    private set: 'pc' | 'hoses',
+    private set: CableSetId,
   ) {
     super(h);
     this.defs = cableSet(h.rig, set, hashSeed(h.inst.s, `cables_${set}`));
@@ -1042,10 +1044,10 @@ export class CablesTask extends RepairTask {
       const hh = d.h * STAGE;
       sockets.fillStyle(0x15121b, 0.95);
       sockets.fillRoundedRect(s.x - w / 2 - 6, s.y - hh / 2 - 6, w + 12, hh + 12, 6);
-      sockets.fillStyle(this.set === 'pc' ? 0xf4f1e8 : 0x8d939d, 1);
+      sockets.fillStyle(cableStyle(this.set) === 'pins' ? 0xf4f1e8 : 0x8d939d, 1);
       sockets.fillRoundedRect(s.x - w / 2 - 2, s.y - hh / 2 - 2, w + 4, hh + 4, 4);
       sockets.fillStyle(0x2a2630, 1);
-      if (this.set === 'pc') {
+      if (cableStyle(this.set) === 'pins') {
         // Pin holes.
         const cols = Math.max(2, Math.round(d.w / 0.012));
         for (let c = 0; c < cols; c++)
@@ -1086,7 +1088,7 @@ export class CablesTask extends RepairTask {
   }
 
   instruction(): string {
-    return this.set === 'pc' ? 'mg.rep.cables' : 'mg.rep.hoses';
+    return cableStyle(this.set) === 'pins' ? 'mg.rep.cables' : 'mg.rep.hoses';
   }
 
   progress(): number {
@@ -1158,7 +1160,7 @@ export class CablesTask extends RepairTask {
   private redraw(): void {
     const g = this.g;
     g.clear();
-    const hose = this.set === 'hoses';
+    const hose = cableStyle(this.set) === 'hose';
     this.defs.forEach((d, i) => {
       const p = at(this.plugAt(i));
       const a = at({ u: d.plug.u, v: this.bottom });

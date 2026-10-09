@@ -291,10 +291,10 @@ export class ShopScene extends GameScene {
     }
     aw.lineStyle(3, C.ink, 1);
     aw.strokeRect(-w / 2 + 20, -14, w - 40, 26);
-    const sign = makeText(this, 0, -2, t(`tier.${BALANCE.tiers[s.tier].id}`), FS.small, C.white, {
-      stroke: C.ink,
-      strokeW: 5,
-    });
+    // The company's name over the shop (the shop size until the player has named it).
+    const signText = s.flags.named ? s.company : t(`tier.${BALANCE.tiers[s.tier].id}`);
+    const sign = makeText(this, 0, -2, signText, FS.small, C.white, { stroke: C.ink, strokeW: 5 });
+    if (sign.width > w - 60) sign.setScale((w - 60) / sign.width);
     this.shelf.add([aw, sign]);
     const rows = 2;
     const cols = Math.ceil(cap / rows);

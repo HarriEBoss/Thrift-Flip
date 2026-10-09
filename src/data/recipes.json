@@ -263,5 +263,76 @@
    "req": false,
    "p": 0.6
   }
+ ],
+ "phones": [
+  {
+   "k": "sticker",
+   "req": false,
+   "p": 0.5
+  },
+  {
+   "k": "scrub",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "fix",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "polish",
+   "req": false,
+   "p": 0.6
+  }
+ ],
+ "robots": [
+  {
+   "k": "scrub",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "rust",
+   "req": false,
+   "p": 0.4
+  },
+  {
+   "k": "fix",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "paint",
+   "req": false,
+   "p": 0.4
+  },
+  {
+   "k": "polish",
+   "req": false,
+   "p": 0.5
+  }
+ ],
+ "rockets": [
+  {
+   "k": "scrub",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "fix",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "paint",
+   "req": false,
+   "p": 0.5
+  },
+  {
+   "k": "polish",
+   "req": false,
+   "p": 0.6
+  }
  ]
 }

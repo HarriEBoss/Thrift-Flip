@@ -255,12 +255,28 @@ Next: Phase 3, the playable core loop in Phaser.
   full PC rebuild job. Balance: the Grand Emporium now costs 4400 coins and 80 reputation (the new
   categories had pulled it to day 29; it is now day 37 again).
 
+## Business empire, phase 1: company name and business ladder ✅
+- **Name your company** on first play: spin three word wheels or type a name on an in-game keyboard; a
+  word filter keeps names kid-friendly. The name is on the shop sign, the main menu, the business ladder
+  and job cards, and can be changed from Settings.
+- **Business ladder** (data-driven): Reselling Shop → Phone Repair → Computer Repair → Mechanic →
+  Robotics Lab → Rocket Repair. Each is locked until the one before it (and a shop size) is reached,
+  then you save up its capital and open it. Progress to the next one shows in the goal banner.
+- **Work at a different business each day.** A repair business turns the market into a job board;
+  customers pay when their job is done.
+- **New content:** Phones & Gadgets (sold at markets too), Robots and Rockets & Spacecraft (jobs only),
+  45 items with their own detailed repairs: heat-gun glued phone backs, screens, batteries, cameras,
+  servos, controller chips, fuel pumps, fuel and oxidiser lines, phone flex cables and robot harnesses.
+- The earlier workshops became businesses (save v4 migrates them). Tests: ladder gating, the name filter,
+  jobs per business, v3 → v4 migration and fixtures, e2e for naming, opening Phone Repair and fixing a
+  customer's phone, and a PC rebuild at Computer Repair.
+
 ## Definition of done: status
 | Item | Status |
 |---|---|
 | `npm run check` (lint, typecheck, unit + coverage, YouTube build + bundle checks, e2e) | ✅ passes in this container (see the final run log in the commit message / PR) |
 | `thrift-flip-youtube.zip` meets every automatable MUST in §7 | ✅ automated; manual items listed in SUBMISSION_YOUTUBE.md |
 | iOS project builds in Xcode | ⏳ **human step**: no Xcode on Linux. `build:ios` + `cap sync` pass; IAP and ads are absent from the YouTube bundle (checked) |
-| Old-save migration tests | ✅ (v1, v2 and v3 fixtures; every migration tested) |
+| Old-save migration tests | ✅ (v1–v4 fixtures; every migration tested) |
 | Docs complete | ✅ ARCHITECTURE, BALANCE, PROGRESS, HUMAN_TODO, SUBMISSION_IOS, SUBMISSION_YOUTUBE, PRIVACY_POLICY, STORE_LISTING |
 | HUMAN_TODO lists every required human step | ✅ |

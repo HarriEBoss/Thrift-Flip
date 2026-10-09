@@ -184,6 +184,26 @@ export function openSettings(scene: BaseScene): void {
         }),
       ),
     );
+  // Renaming the company starts the naming screen, so only from the main menu (no work to lose).
+  if (scene.scene.key === 'MainMenu')
+    rows.push((y, m) =>
+      m.content.add(
+        scene.mark(
+          'rename',
+          new Button(scene, 0, y, {
+            w: 460,
+            h: 70,
+            label: t('settings.rename'),
+            color: C.teal,
+            fontSize: FS.body,
+            onClick: () => {
+              m.close();
+              scene.scene.start('Name', { next: 'MainMenu' });
+            },
+          }),
+        ),
+      ),
+    );
   rows.push((y, m) =>
     m.content.add(
       new Button(scene, 0, y, {

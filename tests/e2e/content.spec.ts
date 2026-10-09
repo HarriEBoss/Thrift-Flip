@@ -12,7 +12,7 @@ test('every catalog item can be generated, rendered, restored and sold', async (
   const n = await page.evaluate(() =>
     (window as unknown as { __tf: { itemCount(): number } }).__tf.itemCount(),
   );
-  expect(n).toBe(150);
+  expect(n).toBe(195);
   const kinds = new Set<string>();
   for (let a = 0; a < n; a++) {
     const r = await page.evaluate(
@@ -105,7 +105,50 @@ test('auction night, catalog, daily fix and completion screens are reachable', a
   );
 });
 
-test('workshop jobs: take a PC rebuild at the Repair Desk, fix it and get paid', async ({ page }) => {
+test('business ladder: open Phone Repair, work there, fix a customer phone and get paid', async ({
+  page,
+}) => {
+  test.setTimeout(300_000);
+  await page.setViewportSize({ width: 405, height: 720 });
+  await setupPage(page);
+  await page.goto('/');
+  await waitForScene(page, 'MainMenu');
+  type Tf = { setup(p: object): void; goto(k: string): void };
+  await page.evaluate(() => {
+    const tf = (window as unknown as { __tf: Tf }).__tf;
+    tf.setup({ tutorialDone: true, tier: 2, coins: 1200, day: 6, phase: 'market', named: true });
+    tf.goto('Market');
+  });
+  await waitForScene(page, 'Market');
+  // Open Phone Repair from the business ladder.
+  await press(page, 'mouse', 'upgrades');
+  await press(page, 'mouse', 'hub_empire');
+  await press(page, 'mouse', 'biz_phone');
+  await page.waitForTimeout(300);
+  const own = await tf(page, (t) => (t.state() as unknown as { biz: { own: string[] } }).biz.own);
+  expect(own).toEqual(['reselling', 'phone']);
+  await closeModals(page, 'mouse');
+  // Work at Phone Repair today: the market turns into the job board.
+  await press(page, 'mouse', 'workAt');
+  await press(page, 'mouse', 'work_phone');
+  await waitForScene(page, 'Market');
+  await page.waitForTimeout(500);
+  await press(page, 'mouse', 'job0');
+  await press(page, 'mouse', 'take');
+  await page.waitForTimeout(300);
+  expect(await tf(page, (t) => t.state().inv.length)).toBe(1);
+  const coins = await tf(page, (t) => t.state().coins);
+  await press(page, 'mouse', 'go');
+  await waitForScene(page, 'Workshop');
+  await playWorkshop(page, 'mouse');
+  // No shop floor at a repair business: straight to the day summary, paid.
+  await waitForScene(page, 'Summary');
+  const after = await tf(page, (t) => ({ coins: t.state().coins, inv: t.state().inv.length }));
+  expect(after.inv).toBe(0);
+  expect(after.coins).toBeGreaterThan(coins);
+});
+
+test('workshop jobs: take a PC rebuild at Computer Repair, fix it and get paid', async ({ page }) => {
   test.setTimeout(300_000);
   await page.setViewportSize({ width: 405, height: 720 });
   await setupPage(page);
@@ -120,16 +163,17 @@ test('workshop jobs: take a PC rebuild at the Repair Desk, fix it and get paid',
       coins: 0,
       day: 6,
       phase: 'market',
-      workshops: ['repair', 'computer'],
+      named: true,
+      businesses: ['phone', 'computer'],
+      business: 'computer',
     });
     tf.goto('Market');
   });
   await waitForScene(page, 'Market');
-  await press(page, 'mouse', 'desk');
-  // Offers: two repair-shop jobs, then the computer workshop's PC rebuild.
+  // Board: two small computer repairs, then the full PC rebuild.
   await press(page, 'mouse', 'job2');
+  await press(page, 'mouse', 'take');
   await page.waitForTimeout(400);
-  await closeModals(page, 'mouse');
   const jobs = await tf(page, (t) => t.state().inv.length);
   expect(jobs).toBe(1);
   await press(page, 'mouse', 'go');

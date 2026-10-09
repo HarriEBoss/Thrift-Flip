@@ -13,6 +13,7 @@ type Tf = {
   scene(): string;
   hasModal(): boolean;
   state(): {
+    company: string;
     day: { n: number; ph: string; bought: number[] };
     stats: { sold: number };
     coins: number;
@@ -353,4 +354,33 @@ export async function playDay(page: Page, mode: Mode, buy = 2): Promise<void> {
   if ((await scene(page)) === 'Workshop') await playWorkshop(page, mode);
   if ((await scene(page)) === 'Shop') await playShop(page, mode);
   if ((await scene(page)) === 'Summary') await playSummary(page, mode);
+}
+
+/**
+ * After "Play" on a new save: the company naming screen. `how` spins a word wheel, types a name on the
+ * in-game keyboard, or just keeps the suggestion. Waits until the day scene shows.
+ */
+export async function passNaming(
+  page: Page,
+  mode: Mode,
+  how: 'keep' | 'spin' | 'type' = 'keep',
+): Promise<void> {
+  const t0 = Date.now();
+  while (Date.now() - t0 < 15000) {
+    const sc = await scene(page);
+    if (sc === 'Name') break;
+    if (sc !== 'MainMenu' && sc !== 'Boot') return;
+    await page.waitForTimeout(100);
+  }
+  if ((await scene(page)) !== 'Name') return;
+  if (how === 'spin') await press(page, mode, 'wheel1next');
+  if (how === 'type') {
+    await press(page, mode, 'nameType');
+    for (const ch of 'ROBO') await press(page, mode, `key_${ch}`);
+    await press(page, mode, 'key_space');
+    for (const ch of 'FIX') await press(page, mode, `key_${ch}`);
+  }
+  await press(page, mode, 'nameOk');
+  const t1 = Date.now();
+  while (Date.now() - t1 < 15000 && (await scene(page)) === 'Name') await page.waitForTimeout(100);
 }

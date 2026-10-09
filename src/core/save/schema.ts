@@ -9,14 +9,16 @@ import {
 } from '../state';
 import type { CategoryId, Rarity } from '../types';
 import type { JobKind } from '../repair';
+import { RESELLING, business } from '../empire';
+import { cleanName } from '../names';
 import { CURRENT_VERSION, migrate } from './migrations';
 
 /**
  * Save format (compact JSON). Item instances and requests are tuples; no derived data is stored.
  * Language is never stored (YouTube requirement).
  *
- * Shape (see tests/fixtures/saves for real examples; v2 added `dc`, v3 added `ws`, dy[15] and
- * the optional job tuple [fee, persona, kind] at the end of an item):
+ * Shape (see tests/fixtures/saves for real examples; v2 added `dc`, v3 added dy[15] and the optional
+ * job tuple [fee, persona, kind] at the end of an item, v4 added `cn` and `bz` and dropped `ws`):
  * { v, sd, c, x, l, rp, t, nu, dy:[...], iv:[[...]], sk, up, pk, ow, ct, rq:[[t,p,day]], st:{...}, bs, se:{...}, dl:[...], fl:{...} }
  */
 export type SaveObject = Record<string, unknown> & { v: number };
@@ -147,7 +149,8 @@ export function serialize(state: GameState): string {
     pk: state.perks,
     ow: state.owned,
     dc: state.decor,
-    ws: state.workshops,
+    cn: state.company,
+    bz: [state.biz.own, state.biz.cur],
     ct: state.catalog,
     rq: state.requests.map((r) => [r.t, r.p, r.day]),
     st: { ...state.stats },
@@ -160,6 +163,7 @@ export function serialize(state: GameState): string {
       li: Math.round(state.flags.lastInterstitial),
       h: state.flags.hints,
       sa: state.flags.setsAnnounced,
+      nm: state.flags.named ? 1 : 0,
     },
   };
   return JSON.stringify(obj);
@@ -242,7 +246,13 @@ function fromObject(o: SaveObject): GameState {
   g.perks = strArr(o.pk);
   g.owned = strArr(o.ow);
   g.decor = strArr(o.dc);
-  g.workshops = strArr(o.ws);
+  const cn = cleanName(str(o.cn, '')).trim();
+  if (cn) g.company = cn;
+  const bz = Array.isArray(o.bz) ? (o.bz as unknown[]) : [];
+  const own = strArr(bz[0]).filter((id) => !!business(id));
+  g.biz.own = [RESELLING, ...own.filter((id) => id !== RESELLING)];
+  const cur = str(bz[1], RESELLING);
+  g.biz.cur = g.biz.own.includes(cur) ? cur : RESELLING;
   const ct = str(o.ct, '');
   g.catalog = /^[012]*$/.test(ct)
     ? ct.padEnd(ITEMS.length, '0').slice(0, ITEMS.length)
@@ -278,6 +288,7 @@ function fromObject(o: SaveObject): GameState {
     lastInterstitial: num(fl.li, -1e9),
     hints: strArr(fl.h),
     setsAnnounced: strArr(fl.sa) as CategoryId[],
+    named: bool(fl.nm, false),
   };
   return g;
 }

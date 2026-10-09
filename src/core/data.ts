@@ -54,9 +54,9 @@ export function persona(id: string): Persona {
   return p;
 }
 
-/** Categories available at a shop tier. */
+/** Categories found at markets (and sold in the shop) at a shop tier. */
 export function categoriesForTier(tier: number): CategoryId[] {
-  return CATEGORIES.filter((c) => c.unlockTier <= tier).map((c) => c.id);
+  return CATEGORIES.filter((c) => c.unlockTier <= tier && !c.business).map((c) => c.id);
 }
 
 export function marketsForTier(tier: number): MarketDef[] {

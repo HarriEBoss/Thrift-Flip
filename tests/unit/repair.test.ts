@@ -90,11 +90,14 @@ describe('big repairs (computers, cars, workshop jobs)', () => {
   };
 
   it('every computer and vehicle has a multi-step Repair rig', () => {
-    for (const it of ITEMS.filter((i) => i.cat === 'tech' || i.cat === 'vehicles')) {
+    for (const it of ITEMS.filter((i) =>
+      ['tech', 'vehicles', 'phones', 'robots', 'rockets'].includes(i.cat),
+    )) {
       const r = repairRig('fix', it.cat, it.shape);
       expect(r).toBe(fixRigFor(it.cat, it.shape));
       expect(r.tasks.length).toBeGreaterThanOrEqual(2);
       if (it.cat === 'vehicles') expect(r.glow).toBe('engine');
+      if (it.cat === 'phones') expect(r.inside).toBe('phone');
     }
   });
 
@@ -118,7 +121,9 @@ describe('big repairs (computers, cars, workshop jobs)', () => {
     const rigs = [
       pcRebuildRig(),
       engineSwapRig(),
-      ...[0, 1, 2, 3, 4].flatMap((s) => [fixRigFor('tech', s), fixRigFor('vehicles', s)]),
+      ...[0, 1, 2, 3, 4].flatMap((s) =>
+        (['tech', 'vehicles', 'phones', 'robots', 'rockets'] as const).map((c) => fixRigFor(c, s)),
+      ),
     ];
     for (const r of rigs) {
       for (const t of r.tasks) {
@@ -158,6 +163,14 @@ describe('big repairs (computers, cars, workshop jobs)', () => {
     }
     const h = hoistLayout(engineSwapRig());
     expect(h.seat.v - h.up.v).toBeGreaterThan(h.h);
+  });
+
+  it('smartphones and tablets have a glued back (heat gun first), rockets drain and refuel', () => {
+    expect(fixRigFor('phones', 2).lid).toBe('glued');
+    expect(screwLayout(fixRigFor('phones', 2))).toEqual([]);
+    const r = fixRigFor('rockets', 0);
+    expect(r.tasks.map((t) => t.k)).toEqual(['drain', 'bolts', 'swap', 'bolts', 'cables', 'pour', 'wires']);
+    expect(r.tasks.some((t) => t.k === 'pour' && t.fluid === 'fuel')).toBe(true);
   });
 
   it('pouring fills at a steady rate and scores the green band best', () => {

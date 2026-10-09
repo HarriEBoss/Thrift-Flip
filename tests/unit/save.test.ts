@@ -150,6 +150,39 @@ describe('migrations', () => {
       expect(JSON.parse(serialize(g)).v).toBe(CURRENT_VERSION);
     }
   });
+  it('v3 -> v4: workshops become businesses, the company gets a name, taken jobs are cleared', () => {
+    const v3 = JSON.parse(readFileSync(new URL('v3-midgame.json', FIXTURES), 'utf8'));
+    expect(v3.ws).toEqual(['repair', 'computer']);
+    const m = migrate(v3);
+    expect(m.v).toBe(CURRENT_VERSION);
+    expect(m.ws).toBeUndefined();
+    expect(m.bz).toEqual([['reselling', 'phone', 'computer'], 'reselling']);
+    expect((m.dy as unknown[])[15]).toEqual([]);
+    const g = deserialize(JSON.stringify(v3));
+    expect(g.biz).toEqual({ own: ['reselling', 'phone', 'computer'], cur: 'reselling' });
+    // Old saves get the suggested name and are offered a rename once.
+    expect(g.company).toBe(newGame(g.seed).company);
+    expect(g.flags.named).toBe(false);
+    // The customer's PC from the old Computer Workshop is still in the queue.
+    expect(g.inv.some((i) => i.job?.k === 'pc')).toBe(true);
+    const garage = migrate({ ...v3, ws: ['repair', 'garage'] });
+    expect(garage.bz).toEqual([['reselling', 'phone', 'mechanic'], 'reselling']);
+    expect(migrate({ ...v3, ws: [] }).bz).toEqual([['reselling'], 'reselling']);
+  });
+
+  it("v4 keeps the company name, businesses and today's business; bad values fall back safely", () => {
+    const g = deserialize(readFileSync(new URL('v4-midgame.json', FIXTURES), 'utf8'));
+    expect(g.company).toBe('Zippy Gizmo Labs');
+    expect(g.flags.named).toBe(true);
+    expect(g.biz).toEqual({ own: ['reselling', 'phone', 'computer'], cur: 'computer' });
+    const raw = JSON.parse(serialize(g));
+    raw.bz = [['phone', 'nope'], 'nope'];
+    raw.cn = 42;
+    const h = deserialize(JSON.stringify(raw));
+    expect(h.biz).toEqual({ own: ['reselling', 'phone'], cur: 'reselling' });
+    expect(h.company).toBe(newGame(h.seed).company);
+  });
+
   it('migrate is a no-op at the current version and validates chain', () => {
     const obj = { v: CURRENT_VERSION, a: 1 };
     expect(migrate(obj)).toBe(obj);

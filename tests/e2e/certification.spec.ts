@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { setupPage, waitForScene, ytLog } from './helpers';
-import { drag, press, scene, tap, where, ws, type Mode } from './play';
+import { drag, passNaming, press, scene, tap, where, ws, type Mode } from './play';
 
 type Audio = { context: string; master: number; platformEnabled: boolean; paused: boolean };
 type TfAny = {
@@ -184,6 +184,7 @@ test('resizing through all aspect ratios mid-mini-game keeps state', async ({ pa
   await boot(page);
   const mode: Mode = 'mouse';
   await press(page, mode, 'play');
+  await passNaming(page, mode);
   await waitForScene(page, 'Market');
   await press(page, mode, 'card0');
   await press(page, mode, 'buy');
@@ -255,6 +256,7 @@ test('menus are reachable with touch only; heap stays small', async ({ browser }
   await press(page, 'touch', 'back');
   await waitForScene(page, 'MainMenu');
   await tap(page, 'touch', await where(page, 'play'));
+  await passNaming(page, 'touch');
   await waitForScene(page, 'Market');
   const heap = await page.evaluate(
     () => (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize ?? 0,

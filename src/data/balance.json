@@ -473,5 +473,190 @@
         "price": 0.05
       }
     }
-  ]
+  ],
+  "empire": {
+    "businesses": [
+      {
+        "id": "reselling",
+        "capital": 0,
+        "spendPct": 0,
+        "income": 0,
+        "needs": {},
+        "jobs": []
+      },
+      {
+        "id": "phone",
+        "capital": 1000,
+        "spendPct": 0.6,
+        "income": 40,
+        "needs": {
+          "business": "reselling",
+          "shopTier": 2
+        },
+        "jobs": [
+          {
+            "k": "service",
+            "cats": [
+              "phones"
+            ],
+            "n": 2,
+            "fee": [
+              0.7,
+              30,
+              10
+            ]
+          },
+          {
+            "k": "service",
+            "cats": [
+              "lamps",
+              "clocks",
+              "radios",
+              "curios"
+            ],
+            "n": 2,
+            "fee": [
+              0.4,
+              20,
+              10
+            ]
+          }
+        ]
+      },
+      {
+        "id": "computer",
+        "capital": 3000,
+        "spendPct": 0.6,
+        "income": 90,
+        "needs": {
+          "business": "phone",
+          "shopTier": 3
+        },
+        "jobs": [
+          {
+            "k": "service",
+            "cats": [
+              "tech"
+            ],
+            "n": 2,
+            "fee": [
+              0.45,
+              40,
+              15
+            ]
+          },
+          {
+            "k": "pc",
+            "cats": [
+              "tech"
+            ],
+            "n": 1,
+            "fee": [
+              0.8,
+              150,
+              20
+            ],
+            "shapes": [
+              0
+            ]
+          }
+        ]
+      },
+      {
+        "id": "mechanic",
+        "capital": 7000,
+        "spendPct": 0.6,
+        "income": 180,
+        "needs": {
+          "business": "computer",
+          "shopTier": 4
+        },
+        "jobs": [
+          {
+            "k": "service",
+            "cats": [
+              "vehicles"
+            ],
+            "n": 2,
+            "fee": [
+              0.4,
+              60,
+              20
+            ]
+          },
+          {
+            "k": "engine",
+            "cats": [
+              "vehicles"
+            ],
+            "n": 1,
+            "fee": [
+              1.0,
+              400,
+              40
+            ],
+            "shapes": [
+              0,
+              1,
+              4
+            ]
+          }
+        ]
+      },
+      {
+        "id": "robotics",
+        "capital": 20000,
+        "spendPct": 0.6,
+        "income": 400,
+        "needs": {
+          "business": "mechanic"
+        },
+        "jobs": [
+          {
+            "k": "service",
+            "cats": [
+              "robots"
+            ],
+            "n": 3,
+            "fee": [
+              0.5,
+              250,
+              60
+            ]
+          }
+        ]
+      },
+      {
+        "id": "rocket",
+        "capital": 60000,
+        "spendPct": 0.6,
+        "income": 1000,
+        "needs": {
+          "business": "robotics"
+        },
+        "jobs": [
+          {
+            "k": "service",
+            "cats": [
+              "rockets"
+            ],
+            "n": 3,
+            "fee": [
+              0.45,
+              800,
+              150
+            ]
+          }
+        ]
+      }
+    ],
+    "jobTip": {
+      "from": 0.6,
+      "rate": 0.5
+    },
+    "jobRep": {
+      "done": 2,
+      "perfect": 3
+    }
+  }
 }

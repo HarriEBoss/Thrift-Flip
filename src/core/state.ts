@@ -1,5 +1,6 @@
 import type { JobKind } from './repair';
 import { BALANCE, ITEMS } from './data';
+import { suggestName } from './names';
 import type { CategoryId, Rarity, StepKind } from './types';
 
 export type DayPhase = 'market' | 'workshop' | 'shop' | 'summary';
@@ -78,7 +79,7 @@ export interface DayState {
   /** Ad counters (per in-game day). */
   gifts: number;
   tipsAds: number;
-  /** Indices of today's job offers already taken on. */
+  /** Ids of today's job offers already taken on. */
   jobs: number[];
 }
 
@@ -135,8 +136,10 @@ export interface GameState {
   owned: string[];
   /** Owned shop decorations (ids). */
   decor: string[];
-  /** Owned workshops (Repair Shop, Computer Workshop, Car Garage). */
-  workshops: string[];
+  /** Company name (shown on the shop sign, summaries and contracts). */
+  company: string;
+  /** Businesses owned (ladder ids, always including 'reselling') and the one worked at today. */
+  biz: { own: string[]; cur: string };
   /** One char per item: '0' unseen, '1' found, '2' perfectly restored. */
   catalog: string;
   requests: CustomerRequest[];
@@ -154,6 +157,8 @@ export interface GameState {
     hints: string[];
     /** Categories whose completion bonus was announced. */
     setsAnnounced: CategoryId[];
+    /** Whether the player has named (or kept the suggested name of) their company. */
+    named: boolean;
   };
 }
 
@@ -223,7 +228,8 @@ export function newGame(seed: number): GameState {
     perks: [],
     owned: [],
     decor: [],
-    workshops: [],
+    company: suggestName(seed >>> 0),
+    biz: { own: ['reselling'], cur: 'reselling' },
     catalog: '0'.repeat(ITEMS.length),
     requests: [],
     stats: {
@@ -241,7 +247,14 @@ export function newGame(seed: number): GameState {
     bestScore: 0,
     settings: defaultSettings(),
     daily: { date: '', best: 0, streak: 0, claimed: false },
-    flags: { tutorialDone: false, completeSeen: false, lastInterstitial: -1e9, hints: [], setsAnnounced: [] },
+    flags: {
+      tutorialDone: false,
+      completeSeen: false,
+      lastInterstitial: -1e9,
+      hints: [],
+      setsAnnounced: [],
+      named: false,
+    },
   };
 }
 

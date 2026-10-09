@@ -1498,5 +1498,455 @@
   "accent": "yellow",
   "base": 1050,
   "era": "60s"
+ },
+ {
+  "id": "phn_brick_phone",
+  "name": "Brick Phone",
+  "cat": "phones",
+  "shape": 0,
+  "body": "black",
+  "accent": "green",
+  "base": 70,
+  "era": "80s"
+ },
+ {
+  "id": "phn_big_talker",
+  "name": "Big Talker",
+  "cat": "phones",
+  "shape": 0,
+  "body": "silver",
+  "accent": "red",
+  "base": 90,
+  "era": "80s"
+ },
+ {
+  "id": "phn_clamshell_flip",
+  "name": "Clamshell Flip",
+  "cat": "phones",
+  "shape": 1,
+  "body": "silver",
+  "accent": "blue",
+  "base": 80,
+  "era": "90s"
+ },
+ {
+  "id": "phn_pocket_flip",
+  "name": "Pocket Flip",
+  "cat": "phones",
+  "shape": 1,
+  "body": "pink",
+  "accent": "purple",
+  "base": 100,
+  "era": "90s"
+ },
+ {
+  "id": "phn_slab_smartphone",
+  "name": "Slab Smartphone",
+  "cat": "phones",
+  "shape": 2,
+  "body": "black",
+  "accent": "teal",
+  "base": 150,
+  "era": "90s"
+ },
+ {
+  "id": "phn_candy_smartphone",
+  "name": "Candy Smartphone",
+  "cat": "phones",
+  "shape": 2,
+  "body": "mint",
+  "accent": "pink",
+  "base": 170,
+  "era": "90s"
+ },
+ {
+  "id": "phn_sketch_tablet",
+  "name": "Sketch Tablet",
+  "cat": "phones",
+  "shape": 3,
+  "body": "white",
+  "accent": "blue",
+  "base": 180,
+  "era": "90s"
+ },
+ {
+  "id": "phn_story_tablet",
+  "name": "Story Tablet",
+  "cat": "phones",
+  "shape": 3,
+  "body": "silver",
+  "accent": "orange",
+  "base": 200,
+  "era": "90s"
+ },
+ {
+  "id": "phn_step_watch",
+  "name": "Step Watch",
+  "cat": "phones",
+  "shape": 4,
+  "body": "black",
+  "accent": "green",
+  "base": 120,
+  "era": "90s"
+ },
+ {
+  "id": "phn_sunrise_watch",
+  "name": "Sunrise Watch",
+  "cat": "phones",
+  "shape": 4,
+  "body": "gold",
+  "accent": "red",
+  "base": 160,
+  "era": "90s"
+ },
+ {
+  "id": "phn_car_phone",
+  "name": "Car Phone",
+  "cat": "phones",
+  "shape": 0,
+  "body": "brown",
+  "accent": "cream",
+  "base": 110,
+  "era": "80s"
+ },
+ {
+  "id": "phn_glitter_flip",
+  "name": "Glitter Flip",
+  "cat": "phones",
+  "shape": 1,
+  "body": "purple",
+  "accent": "pink",
+  "base": 120,
+  "era": "90s"
+ },
+ {
+  "id": "phn_pixel_pro_phone",
+  "name": "Pixel Pro Phone",
+  "cat": "phones",
+  "shape": 2,
+  "body": "silver",
+  "accent": "blue",
+  "base": 190,
+  "era": "90s"
+ },
+ {
+  "id": "phn_kids_tablet",
+  "name": "Kids Tablet",
+  "cat": "phones",
+  "shape": 3,
+  "body": "orange",
+  "accent": "yellow",
+  "base": 140,
+  "era": "90s"
+ },
+ {
+  "id": "phn_ocean_watch",
+  "name": "Ocean Watch",
+  "cat": "phones",
+  "shape": 4,
+  "body": "blue",
+  "accent": "teal",
+  "base": 140,
+  "era": "90s"
+ },
+ {
+  "id": "rob_factory_arm",
+  "name": "Factory Arm",
+  "cat": "robots",
+  "shape": 0,
+  "body": "orange",
+  "accent": "black",
+  "base": 1400,
+  "era": "80s"
+ },
+ {
+  "id": "rob_paint_bot_arm",
+  "name": "Paint Bot Arm",
+  "cat": "robots",
+  "shape": 0,
+  "body": "yellow",
+  "accent": "teal",
+  "base": 1800,
+  "era": "90s"
+ },
+ {
+  "id": "rob_tin_pal_robot",
+  "name": "Tin Pal Robot",
+  "cat": "robots",
+  "shape": 1,
+  "body": "silver",
+  "accent": "red",
+  "base": 1200,
+  "era": "50s"
+ },
+ {
+  "id": "rob_buddy_bot",
+  "name": "Buddy Bot",
+  "cat": "robots",
+  "shape": 1,
+  "body": "blue",
+  "accent": "yellow",
+  "base": 1500,
+  "era": "80s"
+ },
+ {
+  "id": "rob_dust_puck",
+  "name": "Dust Puck",
+  "cat": "robots",
+  "shape": 2,
+  "body": "white",
+  "accent": "teal",
+  "base": 1300,
+  "era": "90s"
+ },
+ {
+  "id": "rob_mop_puck",
+  "name": "Mop Puck",
+  "cat": "robots",
+  "shape": 2,
+  "body": "black",
+  "accent": "green",
+  "base": 1600,
+  "era": "90s"
+ },
+ {
+  "id": "rob_sky_drone",
+  "name": "Sky Drone",
+  "cat": "robots",
+  "shape": 3,
+  "body": "white",
+  "accent": "red",
+  "base": 2000,
+  "era": "90s"
+ },
+ {
+  "id": "rob_racer_drone",
+  "name": "Racer Drone",
+  "cat": "robots",
+  "shape": 3,
+  "body": "black",
+  "accent": "orange",
+  "base": 2400,
+  "era": "90s"
+ },
+ {
+  "id": "rob_robo_pup",
+  "name": "Robo Pup",
+  "cat": "robots",
+  "shape": 4,
+  "body": "silver",
+  "accent": "blue",
+  "base": 2600,
+  "era": "90s"
+ },
+ {
+  "id": "rob_trail_dog_bot",
+  "name": "Trail Dog Bot",
+  "cat": "robots",
+  "shape": 4,
+  "body": "yellow",
+  "accent": "black",
+  "base": 3000,
+  "era": "90s"
+ },
+ {
+  "id": "rob_welder_arm",
+  "name": "Welder Arm",
+  "cat": "robots",
+  "shape": 0,
+  "body": "red",
+  "accent": "silver",
+  "base": 2200,
+  "era": "90s"
+ },
+ {
+  "id": "rob_space_pal_robot",
+  "name": "Space Pal Robot",
+  "cat": "robots",
+  "shape": 1,
+  "body": "white",
+  "accent": "blue",
+  "base": 1700,
+  "era": "60s"
+ },
+ {
+  "id": "rob_lawn_puck",
+  "name": "Lawn Puck",
+  "cat": "robots",
+  "shape": 2,
+  "body": "green",
+  "accent": "yellow",
+  "base": 1900,
+  "era": "90s"
+ },
+ {
+  "id": "rob_cargo_drone",
+  "name": "Cargo Drone",
+  "cat": "robots",
+  "shape": 3,
+  "body": "yellow",
+  "accent": "black",
+  "base": 2800,
+  "era": "90s"
+ },
+ {
+  "id": "rob_rescue_dog_bot",
+  "name": "Rescue Dog Bot",
+  "cat": "robots",
+  "shape": 4,
+  "body": "orange",
+  "accent": "white",
+  "base": 3300,
+  "era": "90s"
+ },
+ {
+  "id": "rkt_comet_rocket",
+  "name": "Comet Rocket",
+  "cat": "rockets",
+  "shape": 0,
+  "body": "white",
+  "accent": "red",
+  "base": 4000,
+  "era": "60s"
+ },
+ {
+  "id": "rkt_star_hopper",
+  "name": "Star Hopper",
+  "cat": "rockets",
+  "shape": 0,
+  "body": "silver",
+  "accent": "blue",
+  "base": 5500,
+  "era": "90s"
+ },
+ {
+  "id": "rkt_weather_satellite",
+  "name": "Weather Satellite",
+  "cat": "rockets",
+  "shape": 1,
+  "body": "gold",
+  "accent": "blue",
+  "base": 6000,
+  "era": "70s"
+ },
+ {
+  "id": "rkt_radio_satellite",
+  "name": "Radio Satellite",
+  "cat": "rockets",
+  "shape": 1,
+  "body": "silver",
+  "accent": "purple",
+  "base": 7000,
+  "era": "90s"
+ },
+ {
+  "id": "rkt_moon_lander",
+  "name": "Moon Lander",
+  "cat": "rockets",
+  "shape": 2,
+  "body": "gold",
+  "accent": "black",
+  "base": 8000,
+  "era": "60s"
+ },
+ {
+  "id": "rkt_crater_lander",
+  "name": "Crater Lander",
+  "cat": "rockets",
+  "shape": 2,
+  "body": "silver",
+  "accent": "orange",
+  "base": 9000,
+  "era": "70s"
+ },
+ {
+  "id": "rkt_splash_capsule",
+  "name": "Splash Capsule",
+  "cat": "rockets",
+  "shape": 3,
+  "body": "white",
+  "accent": "black",
+  "base": 8500,
+  "era": "60s"
+ },
+ {
+  "id": "rkt_orbit_capsule",
+  "name": "Orbit Capsule",
+  "cat": "rockets",
+  "shape": 3,
+  "body": "silver",
+  "accent": "teal",
+  "base": 10000,
+  "era": "90s"
+ },
+ {
+  "id": "rkt_red_dust_rover",
+  "name": "Red Dust Rover",
+  "cat": "rockets",
+  "shape": 4,
+  "body": "white",
+  "accent": "orange",
+  "base": 11000,
+  "era": "90s"
+ },
+ {
+  "id": "rkt_canyon_rover",
+  "name": "Canyon Rover",
+  "cat": "rockets",
+  "shape": 4,
+  "body": "silver",
+  "accent": "red",
+  "base": 13000,
+  "era": "90s"
+ },
+ {
+  "id": "rkt_sky_arrow",
+  "name": "Sky Arrow",
+  "cat": "rockets",
+  "shape": 0,
+  "body": "red",
+  "accent": "white",
+  "base": 6500,
+  "era": "70s"
+ },
+ {
+  "id": "rkt_map_satellite",
+  "name": "Map Satellite",
+  "cat": "rockets",
+  "shape": 1,
+  "body": "white",
+  "accent": "green",
+  "base": 8000,
+  "era": "90s"
+ },
+ {
+  "id": "rkt_ridge_lander",
+  "name": "Ridge Lander",
+  "cat": "rockets",
+  "shape": 2,
+  "body": "white",
+  "accent": "red",
+  "base": 10000,
+  "era": "90s"
+ },
+ {
+  "id": "rkt_twin_capsule",
+  "name": "Twin Capsule",
+  "cat": "rockets",
+  "shape": 3,
+  "body": "black",
+  "accent": "yellow",
+  "base": 11500,
+  "era": "70s"
+ },
+ {
+  "id": "rkt_ice_rover",
+  "name": "Ice Rover",
+  "cat": "rockets",
+  "shape": 4,
+  "body": "white",
+  "accent": "blue",
+  "base": 15000,
+  "era": "90s"
  }
 ]

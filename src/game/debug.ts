@@ -66,7 +66,10 @@ export function installDebugHooks(game: Phaser.Game): void {
       rep?: number;
       level?: number;
       phase?: string;
-      workshops?: string[];
+      businesses?: string[];
+      business?: string;
+      company?: string;
+      named?: boolean;
     }) => {
       const st = session.state;
       if (patch.tier !== undefined) st.tier = patch.tier;
@@ -76,7 +79,10 @@ export function installDebugHooks(game: Phaser.Game): void {
       if (patch.level !== undefined) st.level = patch.level;
       if (patch.tutorialDone !== undefined) st.flags.tutorialDone = patch.tutorialDone;
       if (patch.phase) st.day.ph = patch.phase as typeof st.day.ph;
-      if (patch.workshops) st.workshops = [...patch.workshops];
+      if (patch.businesses) st.biz.own = ['reselling', ...patch.businesses.filter((b) => b !== 'reselling')];
+      if (patch.business) st.biz.cur = patch.business;
+      if (patch.company !== undefined) st.company = patch.company;
+      if (patch.named !== undefined) st.flags.named = patch.named;
     },
     grant: (id: string) => grantProduct(session.state, id),
     advance: (ph: string) => advancePhase(session.state, ph as never),

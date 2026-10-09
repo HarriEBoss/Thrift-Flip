@@ -21,6 +21,7 @@ import { GlueGame } from '../minigames/GlueGame';
 import { PaintGame } from '../minigames/PaintGame';
 import { RepairGame } from '../minigames/RepairGame';
 import { completeJob, type JobResult } from '../../core/jobs';
+import { isReselling } from '../../core/empire';
 import { ITEMS, persona } from '../../core/data';
 import { instanceValue, qualityOf, recipeFor, type RecipeStep } from '../../core/items';
 import { dailyItem, recordDaily } from '../../core/daily';
@@ -734,7 +735,13 @@ export class WorkshopScene extends GameScene {
     const next = new Button(this, 0, 100, {
       w: 320,
       h: 80,
-      label: this.dailyKey ? t('common.done') : queueLeft ? t('reveal.next') : t('reveal.toShop'),
+      label: this.dailyKey
+        ? t('common.done')
+        : queueLeft
+          ? t('reveal.next')
+          : isReselling(session.state)
+            ? t('reveal.toShop')
+            : t('reveal.endDay'),
       color: C.terracotta,
       fontSize: FS.h3,
       icon: (g, sz) => iconArrow(g, sz),
@@ -790,6 +797,13 @@ export class WorkshopScene extends GameScene {
       return;
     }
     advancePhase(s, 'shop');
+    if (!isReselling(s)) {
+      // A repair business has no shop floor: the customers already paid, on to the summary.
+      advancePhase(s, 'summary');
+      void session.save(true);
+      this.scene.start('Summary');
+      return;
+    }
     void session.save(true);
     this.scene.start('Shop');
   }
