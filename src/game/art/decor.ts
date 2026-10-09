@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import { C } from '../theme';
-import { pixelDraw, type Pen } from './pixel';
 
 type G = Phaser.GameObjects.Graphics;
 const V = (x: number, y: number) => new Phaser.Math.Vector2(x, y);
@@ -9,7 +8,7 @@ const V = (x: number, y: number) => new Phaser.Math.Vector2(x, y);
  * Shop decorations, drawn in code (centred on 0,0, about `s` tall, standing on y = s/2).
  * Distinct silhouettes so each one reads at small sizes.
  */
-function vDecor(g: Pen, id: string, s: number): void {
+export function drawDecor(g: G, id: string, s: number): void {
   const k = s / 100;
   const ink = C.ink;
   g.lineStyle(4 * k, ink, 1);
@@ -171,9 +170,4 @@ function vDecor(g: Pen, id: string, s: number): void {
       g.fillEllipse(0, 32 * k, 70 * k, 12 * k);
       break;
   }
-}
-
-/** A decoration as pixel art (drawn into a Graphics), centred at (0,0), about `s` tall. */
-export function drawDecor(g: G, id: string, s: number): void {
-  pixelDraw(g, `decor|${id}`, { grid: 26, extent: 112, size: s * 1.12 }, (pen) => vDecor(pen, id, 100));
 }

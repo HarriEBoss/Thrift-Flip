@@ -31,7 +31,15 @@ export interface WsInfo {
   locked: boolean;
   path?: Array<{ x: number; y: number }>;
   sticker?: { corner: { u: number; v: number }; dir: number; w: number };
-  wire?: { left: Array<{ u: number; v: number }>; right: Array<{ u: number; v: number }>; order: number[] };
+  wire?: {
+    phase: string;
+    screws: Array<{ u: number; v: number }>;
+    center: { u: number; v: number };
+    radius: number;
+    left: Array<{ u: number; v: number }>;
+    right: Array<{ u: number; v: number }>;
+    order: number[];
+  };
 }
 
 const cdp = new WeakMap<Page, CDPSession>();
@@ -176,16 +184,49 @@ export async function solveStep(page: Page, mode: Mode): Promise<void> {
     for (let i = 0; i + 1 < path.length; i++) pts.push(...lerpPath(path[i], path[i + 1], 6));
     await drag(page, mode, pts, 6);
   } else if (kind === 'wire' && info.wire) {
-    const w = info.wire;
-    for (let l = 0; l < w.left.length; l++) {
-      const r = w.order.indexOf(l);
-      await drag(
-        page,
-        mode,
-        lerpPath(unit(info, w.left[l].u, w.left[l].v), unit(info, w.right[r].u, w.right[r].v), 12),
-        10,
-      );
-      await page.waitForTimeout(80);
+    // The repair: turn over, unscrew (hold) or twist off the cover, lift it, connect wires, wait.
+    for (let guard = 0; guard < 60 && (await stillHere()); guard++) {
+      const now = await ws(page);
+      const w = now?.wire;
+      if (!now || !w) break;
+      if (w.phase === 'screws' && w.screws.length) {
+        const p = unit(now, w.screws[0].u, w.screws[0].v);
+        await drag(
+          page,
+          mode,
+          Array.from({ length: 12 }, () => p),
+          100,
+        );
+        await page.waitForTimeout(500);
+      } else if (w.phase === 'twist') {
+        const pts: Pt[] = [];
+        for (let i = 0; i <= 72; i++) {
+          const a = (i / 24) * Math.PI * 2;
+          pts.push(
+            unit(now, w.center.u + Math.cos(a) * w.radius * 0.6, w.center.v + Math.sin(a) * w.radius * 0.6),
+          );
+        }
+        await drag(page, mode, pts, 15);
+        await page.waitForTimeout(300);
+      } else if (w.phase === 'cover') {
+        const c = unit(now, w.center.u, w.center.v);
+        await drag(page, mode, [c, c], 40);
+        await page.waitForTimeout(700);
+      } else if (w.phase === 'wires') {
+        for (let l = 0; l < w.left.length; l++) {
+          const r = w.order.indexOf(l);
+          await drag(
+            page,
+            mode,
+            lerpPath(unit(now, w.left[l].u, w.left[l].v), unit(now, w.right[r].u, w.right[r].v), 12),
+            10,
+          );
+          await page.waitForTimeout(80);
+        }
+        await page.waitForTimeout(400);
+      } else {
+        await page.waitForTimeout(300);
+      }
     }
   }
   // Fall back to "Done" if auto-complete did not trigger.

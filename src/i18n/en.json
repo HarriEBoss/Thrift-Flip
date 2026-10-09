@@ -129,7 +129,7 @@
   "mg.glue": "Trace the crack with glue, start at the green dot.",
   "mg.paint": "Paint inside the lines!",
   "mg.paintPick": "Pick a paint colour!",
-  "mg.wire": "Drag each wire to the socket with the same colour and shape.",
+  "mg.wire": "Connect each wire to the terminal with the same colour and shape.",
   "mg.done": "Done!",
   "mg.golden": "Golden tools",
   "mg.goldenOn": "Golden tools ON for this item!",
@@ -349,5 +349,11 @@
   "decor.fx.rare": "Rarer finds",
   "decor.fx.gem": "More hidden gems",
   "decor.fx.rareSale": "Rare items sell +{n}%",
-  "decor.locked": "Locked"
+  "decor.locked": "Locked",
+  "mg.rep.turn": "Turning it over…",
+  "mg.rep.screws": "Hold the screwdriver on each screw to take it out.",
+  "mg.rep.twist": "Twist the back round and round to unscrew it.",
+  "mg.rep.cover": "Lift the cover off! (tap or drag it away)",
+  "mg.rep.test": "Testing… it works!",
+  "mg.rep.close": "Putting it back together…"
 }

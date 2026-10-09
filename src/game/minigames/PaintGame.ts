@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import { MiniGame, STAGE } from './MiniGame';
-import { addPixelCanvas, crispenAlpha } from '../art/pixel';
 import { gridFromLayer } from '../art/damage';
 import { ctx2d, displayHex, makeCanvas, PAINT_COLORS } from '../art/itemArt';
 import { CoverageGrid, DONE_AT, paintScore } from '../../core/minigame';
@@ -34,7 +33,7 @@ export class PaintGame extends MiniGame {
       [`${this.ctx.key}_paintOut`, this.outC, 0.45],
     ] as const) {
       if (sc.textures.exists(key)) sc.textures.remove(key);
-      const tex = addPixelCanvas(sc.textures, key, canvas);
+      const tex = sc.textures.addCanvas(key, canvas)!;
       if (canvas === this.inC) this.inTex = tex;
       else this.outTex = tex;
       const img = this.add(sc.add.image(0, 0, key).setOrigin(0, 0).setAlpha(alpha));
@@ -145,15 +144,6 @@ export class PaintGame extends MiniGame {
     xo.globalCompositeOperation = 'destination-out';
     xo.drawImage(sil, 0, 0, this.outC.width, this.outC.height);
     xo.restore();
-    // Hard pixel edges for the paint.
-    for (const [c, x] of [
-      [this.inC, xi],
-      [this.outC, xo],
-    ] as const) {
-      const img = x.getImageData(0, 0, c.width, c.height);
-      crispenAlpha(img.data, [0, 255]);
-      x.putImageData(img, 0, 0);
-    }
     this.inTex.refresh();
     this.outTex.refresh();
   }

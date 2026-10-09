@@ -231,6 +231,17 @@ Next: Phase 3, the playable core loop in Phaser.
   "lags out and goes back to the main screen"). Fix: the sweep tween is stopped when the item is cleaned up,
   and the slider never touches destroyed objects. A new e2e test reproduces the exact error on the old code.
 
+## Realistic objects + real wiring repair (owner request) ✅
+- **Objects are smooth and realistic again** (the owner asked for "a bit more realistic and smooth on the
+  objects"): items are drawn at full resolution with soft top-left lighting, shaded bottoms, specular
+  spots on glass and metal, thin natural edges and soft contact shadows. The workshop uses smooth,
+  high-resolution grime and brush erasing again. Characters, icons and UI keep the pixel look.
+- **New wiring repair** (`RepairGame`), different per object: the item turns to its base or back, the
+  player unscrews the cover with a screwdriver (or twists off a watch back), lifts it off, reconnects the
+  wires inside (lamp socket block, circuit board, valve chassis, clock movement or battery box) to brass
+  terminals, sees it light up as a test, and the item goes back together. Unit tests for the rigs and
+  layouts; the e2e bot plays the new flow.
+
 ## Definition of done: status
 | Item | Status |
 |---|---|

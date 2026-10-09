@@ -5,19 +5,19 @@
  */
 import { BALANCE, ITEMS, category, paletteHex } from '../../core/data';
 import type { ColorToken, ItemArchetype, Part } from '../../core/types';
-import { addOutline, addRims, bitmapCanvas, modeDownsample } from './pixel';
 
 export const FIXED: Record<Exclude<ColorToken, 'B' | 'A' | 'S' | 'H'>, string> = {
   K: '#2a1f3d',
   M: '#c0cbdc',
-  W: '#be6f3a',
+  W: '#b8723f',
   G: '#c8f4ff',
   L: '#fffbea',
   Y: '#fee761',
   R: '#e43b44',
 };
 
-const OUTLINE = '#2a1f3d';
+/** Outline width (in 100-unit part space): thin, like a real edge rather than a cartoon line. */
+const EDGE = 1.7;
 
 /** Hand-made art overrides loaded from assets/manifest.json (item id -> image). */
 const overrides = new Map<string, CanvasImageSource>();
@@ -163,95 +163,12 @@ function roundRect(
   ctx.closePath();
 }
 
-/** Item sprites are this many pixels across (the 100x100 part space maps onto it). */
-export const SPRITE = 56;
-
-const sprites = new Map<string, HTMLCanvasElement>();
-
-/** The item as pixel art: SPRITE x SPRITE canvas (cached). */
-function itemSprite(
-  arch: ItemArchetype,
-  mode: 'color' | 'mask',
-  paint: string | undefined,
-  shadow: boolean,
-): HTMLCanvasElement {
-  const key = `${arch.id}|${mode}|${paint ?? ''}|${shadow ? 1 : 0}|${cbMode ? 1 : 0}|${overrides.has(arch.id) ? 1 : 0}`;
-  const hit = sprites.get(key);
-  if (hit) {
-    sprites.delete(key);
-    sprites.set(key, hit);
-    return hit;
-  }
-  let out: HTMLCanvasElement;
-  if (mode === 'mask') {
-    // The mask is exactly the coloured sprite's footprint, so masks and art always line up.
-    out = makeCanvas(SPRITE);
-    const x = ctx2d(out);
-    x.drawImage(itemSprite(arch, 'color', paint, false), 0, 0);
-    x.globalCompositeOperation = 'source-in';
-    x.fillStyle = '#ffffff';
-    x.fillRect(0, 0, SPRITE, SPRITE);
-  } else {
-    const big = makeCanvas(SPRITE * 4);
-    const bx = big.getContext('2d', { willReadFrequently: true })!;
-    drawItemVector(bx, arch, { x: 0, y: 0, size: SPRITE * 4 }, { paint, shadow: false });
-    const bmp = modeDownsample(bx.getImageData(0, 0, big.width, big.height), SPRITE, SPRITE, 4);
-    releaseCanvas(big);
-    addRims(bmp);
-    addOutline(bmp);
-    if (shadow) {
-      // Hard-edged pixel shadow under the item (only where the item is not).
-      const cx = SPRITE * 0.5;
-      const cy = SPRITE * 0.95;
-      const rx = SPRITE * 0.34;
-      const ry = Math.max(1.5, SPRITE * 0.045);
-      for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
-        for (let x = Math.floor(cx - rx); x <= Math.ceil(cx + rx); x++) {
-          if (x < 0 || y < 0 || x >= SPRITE || y >= SPRITE) continue;
-          const dx = (x + 0.5 - cx) / rx;
-          const dy = (y + 0.5 - cy) / ry;
-          if (dx * dx + dy * dy > 1) continue;
-          const i = (y * SPRITE + x) * 4;
-          if (bmp.data[i + 3] > 0) continue;
-          bmp.data[i] = 42;
-          bmp.data[i + 1] = 31;
-          bmp.data[i + 2] = 61;
-          bmp.data[i + 3] = 56;
-        }
-      }
-    }
-    out = bitmapCanvas(bmp);
-  }
-  sprites.set(key, out);
-  if (sprites.size > 400) {
-    const old = sprites.keys().next().value as string;
-    releaseCanvas(sprites.get(old));
-    sprites.delete(old);
-  }
-  return out;
-}
-
 /**
- * Draws an item as pixel art, scaled with hard pixel edges into `box`. `mode`:
- *  - 'color': full art with outlines, light/shadow rims and a pixel drop shadow
+ * Draws an item. `mode`:
+ *  - 'color': full art with ink outlines and a soft drop shadow
  *  - 'mask':  solid white silhouette (for compositing / coverage masks)
  */
 export function drawItem(
-  ctx: CanvasRenderingContext2D,
-  arch: ItemArchetype,
-  box: ArtBox,
-  opts: { mode?: 'color' | 'mask'; paint?: string; shadow?: boolean } = {},
-): void {
-  const mode = opts.mode ?? 'color';
-  const sprite = itemSprite(arch, mode, opts.paint, mode === 'color' && opts.shadow !== false);
-  ctx.save();
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(sprite, box.x, box.y, box.size, box.size);
-  ctx.restore();
-}
-
-/** The vector source art (rendered large, then turned into pixels by {@link itemSprite}). */
-function drawItemVector(
   ctx: CanvasRenderingContext2D,
   arch: ItemArchetype,
   box: ArtBox,
@@ -286,25 +203,44 @@ function drawItemVector(
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
   if (mode === 'color' && opts.shadow !== false) {
-    ctx.fillStyle = 'rgba(42,31,61,0.18)';
+    // Soft contact shadow: a radial gradient squashed into an ellipse.
+    ctx.save();
+    ctx.translate(ox + 50 * k, oy + 95 * k);
+    ctx.scale(1, 0.16);
+    const sh = ctx.createRadialGradient(0, 0, 0, 0, 0, 38 * k);
+    sh.addColorStop(0, 'rgba(42,31,61,0.34)');
+    sh.addColorStop(0.6, 'rgba(42,31,61,0.16)');
+    sh.addColorStop(1, 'rgba(42,31,61,0)');
+    ctx.fillStyle = sh;
     ctx.beginPath();
-    ctx.ellipse(ox + 50 * k, oy + 95 * k, 34 * k, 4.5 * k, 0, 0, Math.PI * 2);
+    ctx.arc(0, 0, 38 * k, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
   }
   for (const p of parts) {
     tracePart(ctx, p, k, ox, oy);
     if (p.t === 'l' || p.t === 'a') {
+      const w = (p.w + EDGE) * k;
       if (mode === 'mask') {
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = (p.w + 3) * k;
+        ctx.lineWidth = w;
         ctx.stroke();
       } else {
-        ctx.strokeStyle = OUTLINE;
-        ctx.lineWidth = (p.w + 3) * k;
+        // Tube look: dark edge, colour, then a thin highlight along the top.
+        const col = resolve(p.c, cols);
+        ctx.strokeStyle = shade(col, -0.55);
+        ctx.lineWidth = w;
         ctx.stroke();
-        ctx.strokeStyle = resolve(p.c, cols);
+        ctx.strokeStyle = col;
         ctx.lineWidth = p.w * k;
         ctx.stroke();
+        ctx.save();
+        ctx.translate(-0.18 * p.w * k, -0.22 * p.w * k);
+        tracePart(ctx, p, k, ox, oy);
+        ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+        ctx.lineWidth = Math.max(0.6, p.w * k * 0.3);
+        ctx.stroke();
+        ctx.restore();
       }
       continue;
     }
@@ -312,14 +248,17 @@ function drawItemVector(
       ctx.fillStyle = '#ffffff';
       ctx.fill();
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2.6 * k;
+      ctx.lineWidth = EDGE * k;
       ctx.stroke();
     } else {
-      ctx.fillStyle = resolve(p.c, cols);
+      const col = resolve(p.c, cols);
+      ctx.fillStyle = col;
       ctx.fill();
+      shadePart(ctx, p, k, ox, oy, p.c === 'G' || p.c === 'M');
       if (p.o !== 0) {
-        ctx.strokeStyle = OUTLINE;
-        ctx.lineWidth = 2.6 * k;
+        tracePart(ctx, p, k, ox, oy);
+        ctx.strokeStyle = shade(col, -0.6);
+        ctx.lineWidth = EDGE * k;
         ctx.stroke();
       }
     }
@@ -327,9 +266,85 @@ function drawItemVector(
   ctx.restore();
 }
 
-/** Standard square art box inside a canvas of `size` px (7% margin, whole pixels). */
+/** Bounding box of a filled part in canvas pixels. */
+function partBox(p: Part, k: number, ox: number, oy: number): { x: number; y: number; w: number; h: number } {
+  switch (p.t) {
+    case 'r':
+      return { x: ox + p.x * k, y: oy + p.y * k, w: p.w * k, h: p.h * k };
+    case 'e':
+      return { x: ox + (p.x - p.rx) * k, y: oy + (p.y - p.ry) * k, w: 2 * p.rx * k, h: 2 * p.ry * k };
+    case 'p': {
+      let x0 = Infinity;
+      let y0 = Infinity;
+      let x1 = -Infinity;
+      let y1 = -Infinity;
+      for (let i = 0; i < p.pts.length; i += 2) {
+        x0 = Math.min(x0, p.pts[i]);
+        x1 = Math.max(x1, p.pts[i]);
+        y0 = Math.min(y0, p.pts[i + 1]);
+        y1 = Math.max(y1, p.pts[i + 1]);
+      }
+      return { x: ox + x0 * k, y: oy + y0 * k, w: (x1 - x0) * k, h: (y1 - y0) * k };
+    }
+    default:
+      return { x: ox, y: oy, w: 0, h: 0 };
+  }
+}
+
+/**
+ * Soft lighting on a filled part (clipped to its shape): light from the top-left gives it volume,
+ * the bottom falls into shade, and glossy parts (glass, metal) get a bright specular spot.
+ */
+function shadePart(
+  ctx: CanvasRenderingContext2D,
+  p: Part,
+  k: number,
+  ox: number,
+  oy: number,
+  glossy: boolean,
+): void {
+  const b = partBox(p, k, ox, oy);
+  if (b.w < 1 || b.h < 1) return;
+  ctx.save();
+  tracePart(ctx, p, k, ox, oy);
+  ctx.clip();
+  const r = Math.max(b.w, b.h);
+  const light = ctx.createRadialGradient(
+    b.x + b.w * 0.3,
+    b.y + b.h * 0.22,
+    0,
+    b.x + b.w * 0.45,
+    b.y + b.h * 0.45,
+    r * 0.85,
+  );
+  light.addColorStop(0, 'rgba(255,255,255,0.32)');
+  light.addColorStop(0.45, 'rgba(255,255,255,0.04)');
+  light.addColorStop(0.8, 'rgba(20,10,40,0.12)');
+  light.addColorStop(1, 'rgba(20,10,40,0.26)');
+  ctx.fillStyle = light;
+  ctx.fillRect(b.x, b.y, b.w, b.h);
+  const fall = ctx.createLinearGradient(0, b.y, 0, b.y + b.h);
+  fall.addColorStop(0, 'rgba(255,255,255,0.10)');
+  fall.addColorStop(0.55, 'rgba(0,0,0,0)');
+  fall.addColorStop(1, 'rgba(20,10,40,0.18)');
+  ctx.fillStyle = fall;
+  ctx.fillRect(b.x, b.y, b.w, b.h);
+  if ((glossy || p.t === 'e') && b.w > 6 * k && b.h > 6 * k) {
+    const hx = b.x + b.w * 0.3;
+    const hy = b.y + b.h * 0.24;
+    const hr = Math.min(b.w, b.h) * (glossy ? 0.22 : 0.16);
+    const spec = ctx.createRadialGradient(hx, hy, 0, hx, hy, hr);
+    spec.addColorStop(0, `rgba(255,255,255,${glossy ? 0.8 : 0.45})`);
+    spec.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = spec;
+    ctx.fillRect(hx - hr, hy - hr, hr * 2, hr * 2);
+  }
+  ctx.restore();
+}
+
+/** Standard square art box inside a canvas of `size` px (7% margin). */
 export function boxFor(size: number): ArtBox {
-  const m = Math.round(size * 0.07);
+  const m = size * 0.07;
   return { x: m, y: m, size: size - 2 * m };
 }
 

@@ -76,15 +76,35 @@ Erase-style games follow the brief's rule: **no per-frame GPU reads.**
    pointer events, update the grid, and erase the canvas (`destination-out`) by stamping one
    pre-rendered soft brush image. The texture is uploaded once per frame and particles come from one
    cached emitter (throttled), which keeps phones smooth.
-4. Damage layers live in the 64×64 pixel world, so each texture upload is tiny on any phone.
+4. Damage layers are capped at 512 px (`MAX_LAYER` in `game/art/damage.ts`) whatever the stage size, so
+   each upload stays small on high-DPR phones.
 5. Completion and score are computed from the grid in `src/core/minigame.ts`. Polish finishes at 85%
    coverage (`POLISH_DONE`), and circles add a bonus rather than being required.
 
 Cracks follow a path chosen **inside the item silhouette** (`crackPathInMask`) and are also clipped to the
 silhouette when drawn (`crackCanvas`), so they never spill past the item's edge.
 
-Sticker peel uses speed-based tearing, glue uses path following, wires use a matching puzzle, and polish
-weights coverage by gesture circularity. All of these are pure and unit-tested.
+Sticker peel uses speed-based tearing, glue uses path following and polish weights coverage by gesture
+circularity. All of these are pure and unit-tested.
+
+### The wiring repair (`minigames/RepairGame.ts`, `core/repair.ts`, `art/repairArt.ts`)
+
+The wire step is done "for real", and differs per object. `rigFor(category, shape)` says how each item
+turns and what is inside:
+
+- **Lamps, globes, trophies, snow globes, record players, typewriters** tip over to show their **base**;
+  **radios, TVs, clocks and cameras** spin round to show their **back**; pocket watches and wall clocks have
+  a **twist-off case back**.
+- Inside is a lamp socket block, a circuit board, a valve chassis (tube radio / TV), a clock movement or a
+  battery box, with mains colours (brown / blue / green-yellow) or low-voltage colours.
+
+The flow: turn animation → hold the screwdriver on each screw (or twist the back round) → tap or drag the
+cover away → drag each loose wire (stripped copper end) to the brass terminal with the same colour and
+symbol (the terminal screw tightens) → the light/valves/screen glow as a test → the cover and screws go
+back on and the item turns back. Scoring is the same pure wire puzzle (`makeWirePuzzle`, mistakes cost a
+little). Positions are pure (`screwLayout`, `wireLayout`, unit-tested); screw slots and the case back's
+grip marks are drawn as lines rather than rotating images (rotated textured quads rendered with a missing
+triangle in the workshop stage).
 
 ## Growing the shop
 
@@ -100,14 +120,17 @@ next shop tier with coin and reputation progress (`nextGoal` in `core/progressio
 
 ## Asset pipeline
 
-**Art style: pixel art.** Everything is still _authored_ as simple vector shapes (easy to change, tiny
-to ship) and _shown_ as pixel art by one pipeline in `game/art/pixel.ts`:
+**Art style.** Objects (items, the workshop, thumbnails) are drawn smooth and lit: soft light from the
+top-left, a shaded bottom, specular spots on glass and metal, thin natural edges and a soft contact
+shadow (`shadePart` in `game/art/itemArt.ts`). Characters, icons and UI chrome use a pixel look.
+
+Characters, icons, coins and stars are _authored_ as simple vector shapes and _shown_
+as pixel art by one pipeline in `game/art/pixel.ts`:
 
 1. the shapes are drawn into a canvas at 4× the target pixel grid;
 2. each 4×4 block becomes one pixel with its most common colour (no muddy blends);
 3. a 1-pixel ink outline (only where none exists) and light/shadow rims are added;
-4. the bitmap is either blitted with nearest-neighbour scaling (items, thumbnails, the workshop) or
-   emitted as solid rectangles into a Phaser Graphics object (`pixelDraw`: characters, decorations,
+4. the bitmap is emitted as solid rectangles into a Phaser Graphics object (`pixelDraw`: characters,
    icons, coins, stars), so every call site that draws into a Graphics stays unchanged.
 
 Bitmaps are cached. Other pieces of the look: stepped pixel corners for every rounded rectangle
@@ -116,12 +139,8 @@ bright palette in `theme.ts` and the Nunito font.
 
 - **Items:** 40 vector shapes in `src/data/categories.json` (rects, ellipses, polygons, lines and arcs in a
   100×100 box, with colour tokens). The 120 items in `src/data/items.json` pick a shape plus body and accent colours.
-  `game/art/itemArt.ts` turns them into 56×56 pixel sprites. The same sprites produce the silhouette masks.
-- **The workshop is a 64×64 pixel world** (`PIXEL_WORLD` in `game/art/damage.ts`): the item, every damage
-  layer, cracks, stickers and paint live at 64×64 and are shown with nearest-neighbour filtering. Damage
-  layers are pixel-generated or dithered (ordered Bayer dither). Erasing reads the 64×64 coverage grid
-  directly, so grime disappears pixel by pixel in chunky steps (full, 70%, 40%, gone).
-- **Thumbnails** are built at 64×64 and upscaled by whole numbers (256 or 192).
+  `game/art/itemArt.ts` renders them with Canvas 2D at the needed resolution, with soft lighting. The same
+  data produces the silhouette masks.
 - **Swapping in hand-made art:** put a square transparent PNG or WebP in `src/assets/items/` and map the
   item id to it in `src/assets/manifest.json` (`"items": { "kit_polka_dot_mug": "mug.png" }`).
   `game/art/manifest.ts` loads overrides after `gameReady` (lazy). Silhouettes and paint recolouring
