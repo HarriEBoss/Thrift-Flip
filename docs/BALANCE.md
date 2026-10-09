@@ -10,20 +10,20 @@ Targets from the brief: tier 2 around day 3, tier 5 around days 35–45, and abo
 |---|---|---|---|---|---|---|---|
 | 1 | Flea Stall | 0 | 0 | 1 | 1 | 1 | 20/20 |
 | 2 | Garage Shop | 100 | 4 | 3 | 2 | 4 | 20/20 |
-| 3 | Corner Store | 480 | 15 | 9 | 6 | 13 | 20/20 |
-| 4 | Vintage Boutique | 1500 | 36 | 15 | 10 | 21 | 20/20 |
-| 5 | Grand Emporium | 4400 | 80 | 39 | 21 | 49 | 20/20 |
+| 3 | Corner Store | 480 | 15 | 9 | 6 | 12 | 20/20 |
+| 4 | Vintage Boutique | 1500 | 36 | 16 | 10 | 22 | 20/20 |
+| 5 | Grand Emporium | 4400 | 80 | 32 | 26 | 43 | 20/20 |
 
 ## Business ladder: day each business is opened (median over bots)
 
 | Business | Capital | Opening cost | Median day | Play time (h) | Bots reaching |
 |---|---|---|---|---|---|
 | reselling | 0 | 0 | 1 | 0.0 | 20/20 |
-| phone | 1000 | 600 | 23 | 1.6 | 20/20 |
-| computer | 3000 | 1800 | 45 | 3.2 | 20/20 |
-| mechanic | 7000 | 4200 | 64 | 4.7 | 20/20 |
-| robotics | 20000 | 12000 | 74 | 5.4 | 20/20 |
-| rocket | 60000 | 36000 | 89 | 6.5 | 20/20 |
+| phone | 1000 | 600 | 24 | 1.7 | 20/20 |
+| computer | 3000 | 1800 | 42 | 3.9 | 20/20 |
+| mechanic | 7000 | 4200 | 47 | 4.6 | 20/20 |
+| robotics | 20000 | 12000 | 50 | 5.0 | 20/20 |
+| rocket | 60000 | 36000 | 56 | 5.6 | 20/20 |
 
 ## Coin curve and catalog (median)
 
@@ -33,27 +33,27 @@ Targets from the brief: tier 2 around day 3, tier 5 around days 35–45, and abo
 | 2 | 72 | 4/195 (2%) | 5 |
 | 3 | 66 | 7/195 (4%) | 8 |
 | 5 | 277 | 12/195 (6%) | 15 |
-| 7 | 391 | 17/195 (9%) | 22 |
-| 10 | 412 | 25/195 (13%) | 34 |
-| 15 | 1334 | 44/195 (23%) | 61 |
-| 20 | 2651 | 59/195 (30%) | 84 |
-| 25 | 3272 | 70/195 (36%) | 105 |
-| 30 | 3378 | 82/195 (42%) | 129 |
-| 35 | 3669 | 90/195 (46%) | 151 |
-| 40 | 3195 | 97/195 (50%) | 174 |
-| 45 | 2959 | 104/195 (53%) | 195 |
-| 50 | 2748 | 109/195 (56%) | 214 |
-| 60 | 5305 | 123/195 (63%) | 261 |
-| 70 | 17173 | 137/195 (70%) | 306 |
-| 80 | 37410 | 153/195 (78%) | 350 |
-| 90 | 56520 | 166/195 (85%) | 396 |
-| 100 | 161297 | 180/195 (92%) | 441 |
+| 7 | 387 | 17/195 (9%) | 22 |
+| 10 | 363 | 26/195 (13%) | 34 |
+| 15 | 1078 | 43/195 (22%) | 58 |
+| 20 | 2394 | 59/195 (30%) | 81 |
+| 25 | 3692 | 75/195 (38%) | 110 |
+| 30 | 3176 | 87/195 (45%) | 142 |
+| 35 | 1869 | 96/195 (49%) | 179 |
+| 40 | 2692 | 105/195 (54%) | 214 |
+| 45 | 6076 | 117/195 (60%) | 246 |
+| 50 | 27177 | 130/195 (67%) | 293 |
+| 60 | 307634 | 159/195 (82%) | 371 |
+| 70 | 695842 | 170/195 (87%) | 454 |
+| 80 | 1159142 | 178/195 (91%) | 544 |
+| 90 | 1473479 | 185/195 (95%) | 628 |
+| 100 | 1883896 | 189/195 (97%) | 711 |
 
 ## Content completion (top tier + full catalog)
 
-- Bots completing within 100 days: 1/20
+- Bots completing within 100 days: 6/20
 - Median completion day: 99
-- Median play time to completion: 7.6 h
-- Average real minutes per in-game day: 4.4 (target 3–6)
+- Median play time to completion: 11.6 h
+- Average real minutes per in-game day: 7.1 (target 3–6)
 
 Purchases are not needed: these bots never buy anything or watch ads.
