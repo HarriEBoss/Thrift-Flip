@@ -199,6 +199,19 @@ describe('migrations', () => {
     expect(v5.inv.some((i) => i.job?.k === 'design' && i.job.t === 1 && !!i.job.c)).toBe(true);
   });
 
+  it('v5 -> v6: no managers or branches yet; v6 keeps them', () => {
+    const v5 = JSON.parse(readFileSync(new URL('v5-midgame.json', FIXTURES), 'utf8'));
+    expect(migrate(v5)).toMatchObject({ mg: {}, bn: {} });
+    const g = deserialize(JSON.stringify(v5));
+    expect(g.managers).toEqual({});
+    expect(g.branches).toEqual({});
+    expect(g.day.stats.passive).toBe(0);
+    const v6 = deserialize(readFileSync(new URL('v6-midgame.json', FIXTURES), 'utf8'));
+    expect(v6.managers).toEqual({ phone: 3, computer: 1 });
+    expect(v6.branches).toEqual({ phone: 2 });
+    expect(v6.day.stats.passive).toBe(845);
+  });
+
   it('migrate is a no-op at the current version and validates chain', () => {
     const obj = { v: CURRENT_VERSION, a: 1 };
     expect(migrate(obj)).toBe(obj);

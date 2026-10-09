@@ -118,5 +118,19 @@
       "Deep Space Agency",
       "Comet Tours"
     ]
-  }
+  },
+  "managers": [
+    "Mia",
+    "Leo",
+    "Ava",
+    "Max",
+    "Zara",
+    "Finn",
+    "Ivy",
+    "Omar",
+    "Luna",
+    "Theo",
+    "Nora",
+    "Kai"
+  ]
 }

@@ -21,7 +21,8 @@ describe('marketing', () => {
     const steps = [0, 50, 100, 150, 200].map(brandFlow);
     for (let i = 1; i < steps.length; i++) expect(steps[i]).toBeGreaterThan(steps[i - 1]);
     // Each extra 50 points adds less than the 50 before.
-    for (let i = 2; i < steps.length; i++) expect(steps[i] - steps[i - 1]).toBeLessThan(steps[i - 1] - steps[i - 2]);
+    for (let i = 2; i < steps.length; i++)
+      expect(steps[i] - steps[i - 1]).toBeLessThan(steps[i - 1] - steps[i - 2]);
     expect(brandFlow(1e9)).toBeLessThanOrEqual(1 + M.flowMax);
   });
 

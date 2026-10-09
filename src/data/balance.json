@@ -480,7 +480,7 @@
         "id": "reselling",
         "capital": 0,
         "spendPct": 0,
-        "income": 0,
+        "income": 150,
         "needs": {},
         "jobs": []
       },
@@ -488,7 +488,7 @@
         "id": "phone",
         "capital": 1000,
         "spendPct": 0.6,
-        "income": 40,
+        "income": 300,
         "needs": {
           "business": "reselling",
           "shopTier": 2
@@ -539,7 +539,7 @@
         "id": "computer",
         "capital": 3000,
         "spendPct": 0.6,
-        "income": 90,
+        "income": 700,
         "needs": {
           "business": "phone",
           "shopTier": 3
@@ -590,7 +590,7 @@
         "id": "mechanic",
         "capital": 7000,
         "spendPct": 0.6,
-        "income": 180,
+        "income": 1500,
         "needs": {
           "business": "computer",
           "shopTier": 4
@@ -643,7 +643,7 @@
         "id": "robotics",
         "capital": 20000,
         "spendPct": 0.6,
-        "income": 400,
+        "income": 4000,
         "needs": {
           "business": "mechanic"
         },
@@ -678,7 +678,7 @@
         "id": "rocket",
         "capital": 60000,
         "spendPct": 0.6,
-        "income": 1000,
+        "income": 10000,
         "needs": {
           "business": "robotics"
         },
@@ -769,6 +769,21 @@
         2.2,
         300
       ]
+    },
+    "managers": {
+      "unlock": "rocket",
+      "hireCost": 2.0,
+      "upgradeGrowth": 1.5,
+      "efficiency": [
+        0.5,
+        0.65,
+        0.8,
+        0.95,
+        1.1
+      ],
+      "wagePct": 0.1,
+      "branchCost": 1.5,
+      "branchGrowth": 1.6
     }
   }
 }

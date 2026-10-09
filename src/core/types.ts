@@ -251,7 +251,7 @@ export interface BusinessDef {
   capital: number;
   /** Share of the capital spent to open it. */
   spendPct: number;
-  /** Daily income when a manager runs it (used from the delegation phase on). */
+  /** Daily income per shop when a manager runs it at 100% efficiency. */
   income: number;
   needs: { business?: string; shopTier?: number };
   jobs: JobDef[];
@@ -282,6 +282,22 @@ export interface CampaignDef {
 
 export interface EmpireBalance {
   businesses: BusinessDef[];
+  /** Delegation: managers run businesses for you; branches multiply a business. */
+  managers: {
+    /** Business that must be owned before managers and branches are available. */
+    unlock: string;
+    /** Hiring a manager costs the business capital x this. */
+    hireCost: number;
+    /** Training to the next level costs the hire cost x upgradeGrowth^level. */
+    upgradeGrowth: number;
+    /** Share of the business income a manager makes, per level (1..n). */
+    efficiency: number[];
+    /** Daily wage, as a share of what the manager makes. */
+    wagePct: number;
+    /** First extra branch costs the capital x branchCost; each next one x branchGrowth more. */
+    branchCost: number;
+    branchGrowth: number;
+  };
   /** Brand flow = 1 + flowMax x (1 - e^(-brand / flowK)); brand fades by `decay` a day. */
   marketing: { flowMax: number; flowK: number; decay: number; campaigns: CampaignDef[] };
   contracts: {

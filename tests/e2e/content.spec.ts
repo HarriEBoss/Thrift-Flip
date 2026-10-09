@@ -251,3 +251,53 @@ test('marketing and a custom design contract: run ads, design to the spec, build
   expect(after.inv).toHaveLength(0);
   expect(after.coins - before).toBeGreaterThan(400);
 });
+
+test('managers and branches: hire a manager, open a branch, and they earn while you work elsewhere', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  await page.setViewportSize({ width: 405, height: 720 });
+  await setupPage(page);
+  await page.goto('/');
+  await waitForScene(page, 'MainMenu');
+  type Tf = { setup(p: object): void; goto(k: string): void };
+  await page.evaluate(() => {
+    const tf = (window as unknown as { __tf: Tf }).__tf;
+    tf.setup({
+      tutorialDone: true,
+      tier: 4,
+      coins: 200_000,
+      day: 30,
+      phase: 'market',
+      named: true,
+      businesses: ['phone', 'computer', 'mechanic', 'robotics', 'rocket'],
+      business: 'rocket',
+    });
+    tf.goto('Market');
+  });
+  await waitForScene(page, 'Market');
+  await press(page, 'mouse', 'upgrades');
+  await press(page, 'mouse', 'hub_managers');
+  await press(page, 'mouse', 'hire_phone');
+  await press(page, 'mouse', 'hire_phone');
+  await press(page, 'mouse', 'branch_phone');
+  await page.waitForTimeout(300);
+  const st = () =>
+    tf(
+      page,
+      (t) =>
+        t.state() as unknown as {
+          managers: Record<string, number>;
+          branches: Record<string, number>;
+          day: { stats: { passive: number } };
+        },
+    );
+  const s1 = await st();
+  expect(s1.managers).toEqual({ phone: 2 });
+  expect(s1.branches).toEqual({ phone: 1 });
+  await closeModals(page, 'mouse');
+  // End the day without taking any work: the managers still bring in the takings.
+  await press(page, 'mouse', 'go');
+  await waitForScene(page, 'Summary');
+  expect((await st()).day.stats.passive).toBeGreaterThan(0);
+});

@@ -153,6 +153,7 @@ export class SummaryScene extends GameScene {
       [t('summary.spent'), `-${st.spent}`],
     ];
     if (st.bonus > 0) rows.push([t('summary.bonus'), `+${st.bonus}`]);
+    if (st.passive > 0) rows.push([t('summary.managers'), `+${st.passive}`, C.leafDark]);
     rows.push([
       t('summary.profit'),
       `${dayProfit(s) >= 0 ? '+' : ''}${dayProfit(s)}`,
@@ -161,8 +162,9 @@ export class SummaryScene extends GameScene {
     rows.push([t('summary.xp'), `+${st.xp}`]);
     rows.push([t('summary.rep'), `${st.rep >= 0 ? '+' : ''}${st.rep}`]);
     if (st.gems) rows.push([t('summary.gems'), String(st.gems), C.purple]);
+    const step = rows.length > 8 ? 37 : 42;
     rows.forEach(([a, b, col], i) => {
-      const y = -h / 2 + 110 + i * 42;
+      const y = -h / 2 + 110 + i * step;
       this.card.add(makeText(this, -w / 2 + 50, y, a, FS.body, C.inkSoft, { align: 'left' }));
       this.card.add(makeText(this, w / 2 - 50, y, b, FS.body, col ?? C.ink, { align: 'right' }));
     });

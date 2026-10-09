@@ -501,5 +501,22 @@
   "jobs.kindShort.design": "Custom design",
   "jobs.kindShort.fleet": "Fleet order",
   "jobs.missed": "They wanted {stars}, so they paid less.",
-  "contract.signed": "Signed by {company}! It's in the workshop queue."
+  "contract.signed": "Signed by {company}! It's in the workshop queue.",
+  "summary.managers": "Managers earned",
+  "hub.managers": "Managers & branches",
+  "hub.managersSub": "+{n} coins a day while you work elsewhere",
+  "hub.managersLocked": "Open {biz} to unlock",
+  "mgr.title": "Managers & branches",
+  "mgr.intro": "Managers run your businesses while you work elsewhere: today they would make +{n}. Branches multiply what a business makes.",
+  "mgr.locked": "Reach the top of the ladder ({biz}) to hire managers and open more branches.",
+  "mgr.who": "Manager {name} · level {lvl} ({pct}%)",
+  "mgr.none": "No manager yet",
+  "mgr.earns": "+{n} a day",
+  "mgr.couldEarn": "Could make up to {n} a day",
+  "mgr.shops": "{n} shops",
+  "mgr.hire": "Hire",
+  "mgr.train": "Train",
+  "mgr.max": "Top level",
+  "mgr.branch": "+ Branch {n}",
+  "mgr.shop": "1 shop"
 }

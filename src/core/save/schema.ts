@@ -11,6 +11,7 @@ import type { CategoryId, Rarity } from '../types';
 import type { JobKind } from '../repair';
 import { RESELLING, business } from '../empire';
 import { cleanName } from '../names';
+import { maxManagerLevel } from '../managers';
 import { CURRENT_VERSION, migrate } from './migrations';
 
 /**
@@ -19,7 +20,7 @@ import { CURRENT_VERSION, migrate } from './migrations';
  *
  * Shape (see tests/fixtures/saves for real examples; v2 added `dc`, v3 added dy[15] and the optional
  * job tuple [fee, persona, kind] at the end of an item, v4 added `cn` and `bz` and dropped `ws`, v5 added `br`, dy[16] and the job tuple's target and
- * client):
+ * client), v6 added `mg` (managers), `bn` (branches) and today's manager takings in dy[10][12]):
  * { v, sd, c, x, l, rp, t, nu, dy:[...], iv:[[...]], sk, up, pk, ow, ct, rq:[[t,p,day]], st:{...}, bs, se:{...}, dl:[...], fl:{...} }
  */
 export type SaveObject = Record<string, unknown> & { v: number };
@@ -92,6 +93,15 @@ function decodeItem(t: unknown): ItemInstance | null {
   };
 }
 
+/** { businessId: level } with known businesses and whole numbers in 1..max only. */
+function levels(v: unknown, max: number): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return out;
+  for (const [k, x] of Object.entries(v as Record<string, unknown>))
+    if (business(k) && typeof x === 'number' && x >= 1) out[k] = Math.min(max, Math.floor(x));
+  return out;
+}
+
 function num(v: unknown, def: number): number {
   return typeof v === 'number' && isFinite(v) ? v : def;
 }
@@ -144,6 +154,7 @@ export function serialize(state: GameState): string {
         s.levelUps,
         s.requestsDone,
         s.bonus,
+        s.passive,
       ],
       s.bestName,
       d.doubled ? 1 : 0,
@@ -161,6 +172,8 @@ export function serialize(state: GameState): string {
     cn: state.company,
     bz: [state.biz.own, state.biz.cur],
     br: Math.round(state.brand * 10) / 10,
+    mg: { ...state.managers },
+    bn: { ...state.branches },
     ct: state.catalog,
     rq: state.requests.map((r) => [r.t, r.p, r.day]),
     st: { ...state.stats },
@@ -225,7 +238,8 @@ function fromObject(o: SaveObject): GameState {
       stats.levelUps,
       stats.requestsDone,
       stats.bonus,
-    ] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((i) => st[i] ?? 0);
+      stats.passive,
+    ] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((i) => st[i] ?? 0);
     stats.bestName = str(dy[11], '');
     const hag = numArr(dy[5]);
     const haggled: Record<number, number> = {};
@@ -265,6 +279,8 @@ function fromObject(o: SaveObject): GameState {
   const cur = str(bz[1], RESELLING);
   g.biz.cur = g.biz.own.includes(cur) ? cur : RESELLING;
   g.brand = Math.max(0, num(o.br, 0));
+  g.managers = levels(o.mg, maxManagerLevel());
+  g.branches = levels(o.bn, 999);
   const ct = str(o.ct, '');
   g.catalog = /^[012]*$/.test(ct)
     ? ct.padEnd(ITEMS.length, '0').slice(0, ITEMS.length)

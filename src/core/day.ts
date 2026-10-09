@@ -6,6 +6,7 @@ import { instanceValue, isRestored, qualityOf, recipeFor, requiredDone } from '.
 import { addXp } from './progression';
 import { decorFx } from './decor';
 import { fadeBrand } from './marketing';
+import { payManagers } from './managers';
 import { matchesRequest, requestTemplate, type SaleResult } from './customers';
 import { newDay, type DayPhase, type GameState, type ItemInstance } from './state';
 import type { CategoryId } from './types';
@@ -29,6 +30,8 @@ export function advancePhase(state: GameState, to: DayPhase): void {
     return;
   }
   if (to === 'summary') {
+    // Managers bring in the day's takings from the businesses they run.
+    payManagers(state);
     // Decorations like plants and the fountain make the shop more popular every day.
     const rep = decorFx(state).repPerDay;
     if (rep > 0) {
@@ -162,7 +165,7 @@ export function grantBonus(state: GameState, coins: number): number {
 
 export function dayProfit(state: GameState): number {
   const s = state.day.stats;
-  return s.revenue - s.spent + s.bonus;
+  return s.revenue - s.spent + s.bonus + s.passive;
 }
 
 /** Double Day Earnings (rewarded ad, once per day): doubles today's positive sales profit. */

@@ -34,6 +34,17 @@ import { catalogFoundCount } from '../src/core/catalog';
 import { DECOR, buyDecor } from '../src/core/decor';
 import { acceptJob, businessOffers, completeJob } from '../src/core/jobs';
 import { CAMPAIGNS, campaignStatus, runCampaign } from '../src/core/marketing';
+import {
+  branchCost,
+  branchCount,
+  branchStatus,
+  delegationUnlocked,
+  hireOrTrain,
+  managerCost,
+  managerLevel,
+  managerStatus,
+  openBranch,
+} from '../src/core/managers';
 import { BUSINESSES, businessStatus, openBusiness, openCost, setCurrentBusiness } from '../src/core/empire';
 import { isContentComplete } from '../src/core/complete';
 import { snapPrice } from '../src/core/economy';
@@ -121,6 +132,22 @@ function playDay(g: GameState, rng: Rng, skill: number): number {
   // Open the next business as soon as the savings allow (keeping a reserve for the shop).
   for (const b of BUSINESSES) {
     if (businessStatus(g, b) === 'available' && g.coins - openCost(b) >= reserve * 0.5) openBusiness(g, b.id);
+  }
+  // Delegation: hire and train managers, open branches, keeping half the coins in hand.
+  if (delegationUnlocked(g)) {
+    for (let k = 0; k < 6; k++) {
+      const opts = BUSINESSES.flatMap((b) => {
+        const mc = managerCost(b, managerLevel(g, b.id));
+        const out: Array<{ cost: number; run: () => boolean }> = [];
+        if (mc !== null && managerStatus(g, b) === 'available')
+          out.push({ cost: mc, run: () => hireOrTrain(g, b.id) });
+        if (managerLevel(g, b.id) > 0 && branchStatus(g, b) === 'available')
+          out.push({ cost: branchCost(b, branchCount(g, b.id)), run: () => openBranch(g, b.id) });
+        return out;
+      }).filter((o) => o.cost <= g.coins * 0.5);
+      if (!opts.length) break;
+      opts.sort((a, b) => a.cost - b.cost)[0].run();
+    }
   }
   // Marketing: every few days, the best campaign it can comfortably afford.
   if (g.day.n % 3 === 1) {

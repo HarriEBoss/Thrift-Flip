@@ -372,6 +372,23 @@ function v_iconWorkshop(g: Pen, id: string, s: number): void {
     g.fillPoints([V(-4 * k, 15 * k), V(4 * k, 15 * k), V(0, 21 * k)], true);
     return;
   }
+  if (id === 'manager') {
+    // A manager with a clipboard.
+    g.fillStyle(0xf1c7a3, 1);
+    g.fillCircle(-4 * k, -10 * k, 7 * k);
+    g.strokeCircle(-4 * k, -10 * k, 7 * k);
+    g.fillStyle(C.purple, 1);
+    g.fillRoundedRect(-15 * k, -2 * k, 22 * k, 20 * k, 5 * k);
+    g.strokeRoundedRect(-15 * k, -2 * k, 22 * k, 20 * k, 5 * k);
+    g.fillStyle(C.terracotta, 1);
+    g.fillPoints([V(-6 * k, -2 * k), V(-2 * k, -2 * k), V(-3 * k, 10 * k), V(-5 * k, 10 * k)], true);
+    g.fillStyle(C.cream, 1);
+    g.fillRect(5 * k, -4 * k, 13 * k, 17 * k);
+    g.strokeRect(5 * k, -4 * k, 13 * k, 17 * k);
+    g.lineStyle(1.5 * k, C.inkSoft, 1);
+    for (let i = 0; i < 3; i++) g.lineBetween(8 * k, (1 + i * 4) * k, 15 * k, (1 + i * 4) * k);
+    return;
+  }
   if (id === 'marketing') {
     // Megaphone.
     g.fillStyle(C.terracotta, 1);

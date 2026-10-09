@@ -192,6 +192,17 @@ business. The business ladder (see below) is opened from the same hub.
   coins. Each one has a small passive effect (price bonus, extra customer, daily reputation, rarer finds,
   hidden gems, better rare-item prices) and is drawn on the shop counter (`game/art/decor.ts`).
 
+### Managers and branches (`core/managers.ts`, `empire.managers`)
+
+Once you own the top of the ladder (`managers.unlock`, Rocket Repair), Upgrades → Managers & branches lets
+you hire a manager for any business you own and train them through efficiency levels (50% → 110%), and
+open extra branches of any business. Each day you are not working at a managed business, it pays
+`income × shops × efficiency × brand flow`, minus a wage (`wagePct`), when the day ends (`payManagers`
+in `advancePhase(…, 'summary')`); the summary shows "Managers earned". Hiring costs the business capital ×
+`hireCost`, each training level × `upgradeGrowth` more; each branch costs `branchCost × branchGrowth^n`
+of the capital. Income grows linearly with branches while their cost grows exponentially: a repeatable
+loop that keeps scaling without ever running out.
+
 ## Asset pipeline
 
 **Art style.** Objects (items, the workshop, thumbnails) are drawn smooth and lit: soft light from the
@@ -238,8 +249,8 @@ bright palette in `theme.ts` and the Nunito font.
   forces a write on day end, purchases and pause. It checks UTF-16 well-formedness and the 3 MiB / 500 KiB limits.
   A corrupt save is kept in memory and writing is blocked until the player sees a friendly message.
 
-Current version: **v5** (v5 adds `br`, the brand, `dy[16]`, today's campaigns, and the job tuple's
-quality target and client company). v2 added `dc` (owned decorations); v3 added `ws` (owned workshops), `dy[15]`
+Current version: **v6** (v5 added `br`, the brand, `dy[16]`, today's campaigns, and the job tuple's
+quality target and client company; v6 adds `mg` managers, `bn` branches and today's manager takings). v2 added `dc` (owned decorations); v3 added `ws` (owned workshops), `dy[15]`
 (today's taken jobs) and an optional job tuple `[fee, persona, kind]` at the end of an item; v4 adds `cn`
 (company name), `bz` (`[owned businesses, today's business]`) and `fl.nm` (named), and drops `ws`: the
 Repair Shop becomes Phone Repair, the Computer Workshop Computer Repair and the Car Garage Mechanic.

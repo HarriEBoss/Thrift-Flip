@@ -61,6 +61,8 @@ export interface DayStats {
   requestsDone: number;
   /** Bonus coins from ads/perks (double earnings, tips, gifts). */
   bonus: number;
+  /** Coins your managers made today (net of wages). */
+  passive: number;
 }
 
 export interface DayState {
@@ -152,6 +154,10 @@ export interface GameState {
   biz: { own: string[]; cur: string };
   /** Brand points from marketing (fade a little every day). */
   brand: number;
+  /** Manager level per business id (missing = no manager). */
+  managers: Record<string, number>;
+  /** Extra branches per business id (missing = just the first shop). */
+  branches: Record<string, number>;
   /** One char per item: '0' unseen, '1' found, '2' perfectly restored. */
   catalog: string;
   requests: CustomerRequest[];
@@ -201,6 +207,7 @@ export function emptyDayStats(): DayStats {
     levelUps: 0,
     requestsDone: 0,
     bonus: 0,
+    passive: 0,
   };
 }
 
@@ -244,6 +251,8 @@ export function newGame(seed: number): GameState {
     company: suggestName(seed >>> 0),
     biz: { own: ['reselling'], cur: 'reselling' },
     brand: 0,
+    managers: {},
+    branches: {},
     catalog: '0'.repeat(ITEMS.length),
     requests: [],
     stats: {

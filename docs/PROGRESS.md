@@ -286,12 +286,22 @@ Next: Phase 3, the playable core loop in Phaser.
   contract scaling, fleet orders, quality targets, design specs always solvable, migration, and e2e for
   running ads and completing a design contract.
 
+## Business empire, phase 3: managers and branches ✅
+- **Managers** (from Rocket Repair on): hire a manager for any of your businesses; they run it while you
+  work somewhere else and pay its takings at the end of each day (minus a small wage). Train them through
+  five levels, from 50% to 110% efficiency.
+- **Branches:** open more shops of any business (Phone Repair #2, #3…). Each one multiplies what that
+  business makes, and each costs more than the last, so there is always a next goal.
+- The day summary shows "Managers earned". Marketing (brand) boosts managed businesses too.
+- Save v6. Tests: unlock gating, hire/train costs and efficiency, branch cost growth and income, daily
+  payout (not at the business you work at), migration; e2e: hire, train, open a branch, earn.
+
 ## Definition of done: status
 | Item | Status |
 |---|---|
 | `npm run check` (lint, typecheck, unit + coverage, YouTube build + bundle checks, e2e) | ✅ passes in this container (see the final run log in the commit message / PR) |
 | `thrift-flip-youtube.zip` meets every automatable MUST in §7 | ✅ automated; manual items listed in SUBMISSION_YOUTUBE.md |
 | iOS project builds in Xcode | ⏳ **human step**: no Xcode on Linux. `build:ios` + `cap sync` pass; IAP and ads are absent from the YouTube bundle (checked) |
-| Old-save migration tests | ✅ (v1–v5 fixtures; every migration tested) |
+| Old-save migration tests | ✅ (v1–v6 fixtures; every migration tested) |
 | Docs complete | ✅ ARCHITECTURE, BALANCE, PROGRESS, HUMAN_TODO, SUBMISSION_IOS, SUBMISSION_YOUTUBE, PRIVACY_POLICY, STORE_LISTING |
 | HUMAN_TODO lists every required human step | ✅ |

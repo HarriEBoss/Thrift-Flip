@@ -12,6 +12,22 @@ import { openSkills, openTierUpgrade, openUpgrades } from './menus';
 import type { DecorFx } from '../../core/types';
 import { CAMPAIGNS, brandFlow, campaignStatus, runCampaign } from '../../core/marketing';
 import {
+  branchCost,
+  branchStatus,
+  dailyIncome,
+  delegationActions,
+  delegationUnlocked,
+  efficiency,
+  hireOrTrain,
+  managerCost,
+  managerLevel,
+  managerName,
+  managerStatus,
+  openBranch,
+  passiveIncome,
+  shops,
+} from '../../core/managers';
+import {
   BUSINESSES,
   businessStatus,
   nextBusinessGoal,
@@ -29,13 +45,20 @@ function refresh(scene: BaseScene): void {
 export function upgradesAvailable(): number {
   const s = session.state;
   const tools = BALANCE.upgrades.filter((u) => upgradeStatus(s, u) === 'available').length;
-  return (canUpgradeTier(s) ? 1 : 0) + tools + affordableDecor(s) + skillPoints(s) + openableBusinesses(s);
+  return (
+    (canUpgradeTier(s) ? 1 : 0) +
+    tools +
+    affordableDecor(s) +
+    skillPoints(s) +
+    openableBusinesses(s) +
+    delegationActions(s)
+  );
 }
 
 /** One place for every way to grow: bigger shop, decorations, tools and skills. */
 export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
   const s = session.state;
-  const m = scene.openModal({ title: t('hub.title'), w: 620, h: 980 });
+  const m = scene.openModal({ title: t('hub.title'), w: 620, h: 1080 });
   const goal = nextGoal(s);
   const rows: Array<{
     id: string;
@@ -78,6 +101,16 @@ export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
       open: () => openMarketing(scene, after),
     },
     {
+      id: 'hub_managers',
+      label: t('hub.managers'),
+      sub: delegationUnlocked(s)
+        ? t('hub.managersSub', { n: passiveIncome(s) })
+        : t('hub.managersLocked', { biz: t(`biz.${BALANCE.empire.managers.unlock}`) }),
+      color: C.purple,
+      badge: delegationActions(s) ? '!' : null,
+      open: () => openManagers(scene, after),
+    },
+    {
       id: 'hub_tools',
       label: t('hub.tools'),
       sub: t('hub.toolsSub'),
@@ -99,9 +132,9 @@ export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
     onChange?.();
   }
   rows.forEach((r, i) => {
-    const b = new Button(scene, 0, -372 + i * 100, {
+    const b = new Button(scene, 0, -422 + i * 96, {
       w: 520,
-      h: 88,
+      h: 84,
       label: r.label,
       sub: r.sub,
       color: r.color,
@@ -115,7 +148,7 @@ export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
     scene.mark(r.id, b);
     m.content.add(b);
   });
-  if (goal || nextBusinessGoal(s)) m.content.add(goalBanner(scene, 520).setPosition(0, 286));
+  if (goal || nextBusinessGoal(s)) m.content.add(goalBanner(scene, 520).setPosition(0, 330));
 }
 
 /** "Next shop: Garage Shop" tracker with coins / reputation progress. */
@@ -415,6 +448,101 @@ export function openMarketing(scene: BaseScene, onChange?: () => void): void {
     b.setEnabled(st === 'available');
     scene.mark(`mkt_${c.id}`, b);
     row.add(b);
+    m.content.add(row);
+  });
+}
+
+/** Managers run your other businesses for you; branches multiply what a business makes. */
+export function openManagers(scene: BaseScene, onChange?: () => void): void {
+  const s = session.state;
+  const own = BUSINESSES.filter((b) => s.biz.own.includes(b.id));
+  const rowH = 136;
+  const unlocked = delegationUnlocked(s);
+  const m = scene.openModal({
+    title: t('mgr.title'),
+    w: 680,
+    h: Math.min(1240, 300 + (unlocked ? own.length : 0) * rowH + (unlocked ? 0 : 120)),
+  });
+  const intro = unlocked
+    ? t('mgr.intro', { n: passiveIncome(s) })
+    : t('mgr.locked', { biz: t(`biz.${BALANCE.empire.managers.unlock}`) });
+  m.content.add(makeText(scene, 0, -m.ph / 2 + 100, intro, FS.small, C.inkSoft, { wrap: 600, bold: false }));
+  if (!unlocked) return;
+  const top = -m.ph / 2 + 250;
+  const after = () => {
+    session.audio.play('register');
+    session.haptic('success');
+    void session.save(true);
+    refresh(scene);
+    m.close();
+    onChange?.();
+    openManagers(scene, onChange);
+  };
+  own.forEach((b, i) => {
+    const row = scene.add.container(0, top + i * rowH);
+    const lvl = managerLevel(s, b.id);
+    const g = scene.add.graphics();
+    drawCard(g, -320, -60, 640, 120, lvl > 0 ? 0xdff2d5 : C.white, {
+      radius: 18,
+      stroke: C.ink,
+      strokeW: 3,
+      shadow: 3,
+    });
+    const art = scene.add.graphics();
+    iconWorkshop(art, b.id, 54);
+    art.setPosition(-280, -14);
+    const n = shops(s, b.id);
+    const who =
+      lvl > 0
+        ? t('mgr.who', { name: managerName(s, b.id), lvl, pct: Math.round(efficiency(lvl) * 100) })
+        : t('mgr.none');
+    const earn =
+      lvl > 0 ? t('mgr.earns', { n: dailyIncome(s, b).net }) : t('mgr.couldEarn', { n: b.income * n });
+    row.add([
+      g,
+      art,
+      makeText(
+        scene,
+        -240,
+        -36,
+        `${t(`biz.${b.id}`)} · ${t(n === 1 ? 'mgr.shop' : 'mgr.shops', { n })}`,
+        FS.small,
+        C.ink,
+        {
+          align: 'left',
+        },
+      ),
+      makeText(scene, -240, -2, who, FS.tiny, C.inkSoft, { align: 'left', bold: false }),
+      makeText(scene, -240, 30, earn, FS.tiny, lvl > 0 ? C.leafDark : C.inkSoft, { align: 'left' }),
+    ]);
+    const ms = managerStatus(s, b);
+    const mc = managerCost(b, lvl);
+    const hire = new Button(scene, 230, -27, {
+      w: 160,
+      h: 50,
+      label: ms === 'max' ? t('mgr.max') : `${lvl > 0 ? t('mgr.train') : t('mgr.hire')} ${mc}`,
+      color: ms === 'available' ? C.leaf : C.inkSoft,
+      fontSize: FS.tiny,
+      onClick: () => {
+        if (hireOrTrain(s, b.id)) after();
+      },
+    });
+    hire.setEnabled(ms === 'available');
+    const bs = branchStatus(s, b);
+    const branch = new Button(scene, 230, 31, {
+      w: 160,
+      h: 50,
+      label: t('mgr.branch', { n: branchCost(b, n - 1) }),
+      color: bs === 'available' ? C.sky : C.inkSoft,
+      fontSize: FS.tiny,
+      onClick: () => {
+        if (openBranch(s, b.id)) after();
+      },
+    });
+    branch.setEnabled(bs === 'available');
+    scene.mark(`hire_${b.id}`, hire);
+    scene.mark(`branch_${b.id}`, branch);
+    row.add([hire, branch]);
     m.content.add(row);
   });
 }

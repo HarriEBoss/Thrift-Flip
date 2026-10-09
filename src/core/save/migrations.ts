@@ -29,6 +29,8 @@ export const MIGRATIONS: Migration[] = [
   // v4 -> v5: marketing (`br` brand points, dy[16] campaigns run today). Job tuples may now carry a
   // quality target and a client company (older ones simply have none).
   (old) => ({ ...old, v: 5, br: typeof old.br === 'number' ? old.br : 0 }),
+  // v5 -> v6: managers (`mg`) and branches (`bn`), none yet.
+  (old) => ({ ...old, v: 6, mg: {}, bn: {} }),
 ];
 
 export const CURRENT_VERSION = MIGRATIONS.length + 1;
