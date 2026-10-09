@@ -214,5 +214,54 @@
    "req": false,
    "p": 0.6
   }
+ ],
+ "tech": [
+  {
+   "k": "sticker",
+   "req": false,
+   "p": 0.5
+  },
+  {
+   "k": "scrub",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "fix",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "polish",
+   "req": false,
+   "p": 0.5
+  }
+ ],
+ "vehicles": [
+  {
+   "k": "scrub",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "rust",
+   "req": false,
+   "p": 0.6
+  },
+  {
+   "k": "fix",
+   "req": true,
+   "p": 1
+  },
+  {
+   "k": "paint",
+   "req": false,
+   "p": 0.55
+  },
+  {
+   "k": "polish",
+   "req": false,
+   "p": 0.6
+  }
  ]
 }

@@ -97,6 +97,20 @@ function v_drawStepIcon(g: Pen, kind: StepKind, s: number): void {
       g.lineTo(10 * k, 16 * k);
       g.strokePath();
       break;
+    case 'fix': // spanner over a gear
+      g.fillStyle(C.mustard, 1);
+      g.fillCircle(6 * k, 6 * k, 9 * k);
+      g.strokeCircle(6 * k, 6 * k, 9 * k);
+      g.fillStyle(C.cream, 1);
+      g.fillCircle(6 * k, 6 * k, 3.5 * k);
+      g.fillStyle(0xc0cbdc, 1);
+      g.fillPoints([V(-16 * k, 12 * k), V(-12 * k, 16 * k), V(6 * k, -2 * k), V(2 * k, -6 * k)], true);
+      g.strokePoints([V(-16 * k, 12 * k), V(-12 * k, 16 * k), V(6 * k, -2 * k), V(2 * k, -6 * k)], true);
+      g.fillCircle(6 * k, -8 * k, 7 * k);
+      g.strokeCircle(6 * k, -8 * k, 7 * k);
+      g.fillStyle(C.cream, 1);
+      g.fillRect(4 * k, -16 * k, 5 * k, 8 * k);
+      break;
   }
 }
 

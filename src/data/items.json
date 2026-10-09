@@ -1198,5 +1198,305 @@
   "accent": "gold",
   "base": 90,
   "era": "70s"
+ },
+ {
+  "id": "tec_beige_box_pc",
+  "name": "Beige Box PC",
+  "cat": "tech",
+  "shape": 0,
+  "body": "cream",
+  "accent": "blue",
+  "base": 220,
+  "era": "90s"
+ },
+ {
+  "id": "tec_home_office_pc",
+  "name": "Home Office PC",
+  "cat": "tech",
+  "shape": 0,
+  "body": "silver",
+  "accent": "teal",
+  "base": 260,
+  "era": "90s"
+ },
+ {
+  "id": "tec_gamer_tower_pc",
+  "name": "Gamer Tower PC",
+  "cat": "tech",
+  "shape": 0,
+  "body": "black",
+  "accent": "green",
+  "base": 340,
+  "era": "90s"
+ },
+ {
+  "id": "tec_chunky_laptop",
+  "name": "Chunky Laptop",
+  "cat": "tech",
+  "shape": 1,
+  "body": "black",
+  "accent": "blue",
+  "base": 240,
+  "era": "90s"
+ },
+ {
+  "id": "tec_clamshell_laptop",
+  "name": "Clamshell Laptop",
+  "cat": "tech",
+  "shape": 1,
+  "body": "orange",
+  "accent": "white",
+  "base": 300,
+  "era": "90s"
+ },
+ {
+  "id": "tec_silver_notebook",
+  "name": "Silver Notebook",
+  "cat": "tech",
+  "shape": 1,
+  "body": "silver",
+  "accent": "teal",
+  "base": 380,
+  "era": "90s"
+ },
+ {
+  "id": "tec_retro_console",
+  "name": "Retro Console",
+  "cat": "tech",
+  "shape": 2,
+  "body": "silver",
+  "accent": "red",
+  "base": 180,
+  "era": "80s"
+ },
+ {
+  "id": "tec_purple_cube_console",
+  "name": "Purple Cube Console",
+  "cat": "tech",
+  "shape": 2,
+  "body": "purple",
+  "accent": "black",
+  "base": 230,
+  "era": "90s"
+ },
+ {
+  "id": "tec_black_box_console",
+  "name": "Black Box Console",
+  "cat": "tech",
+  "shape": 2,
+  "body": "black",
+  "accent": "blue",
+  "base": 280,
+  "era": "90s"
+ },
+ {
+  "id": "tec_space_blaster_arcade",
+  "name": "Space Blaster Arcade",
+  "cat": "tech",
+  "shape": 3,
+  "body": "black",
+  "accent": "purple",
+  "base": 420,
+  "era": "80s"
+ },
+ {
+  "id": "tec_snack_chomp_arcade",
+  "name": "Snack Chomp Arcade",
+  "cat": "tech",
+  "shape": 3,
+  "body": "yellow",
+  "accent": "blue",
+  "base": 460,
+  "era": "80s"
+ },
+ {
+  "id": "tec_racing_arcade",
+  "name": "Racing Arcade",
+  "cat": "tech",
+  "shape": 3,
+  "body": "red",
+  "accent": "yellow",
+  "base": 520,
+  "era": "90s"
+ },
+ {
+  "id": "tec_pocket_gamer",
+  "name": "Pocket Gamer",
+  "cat": "tech",
+  "shape": 4,
+  "body": "silver",
+  "accent": "purple",
+  "base": 160,
+  "era": "90s"
+ },
+ {
+  "id": "tec_colour_pocket",
+  "name": "Colour Pocket",
+  "cat": "tech",
+  "shape": 4,
+  "body": "teal",
+  "accent": "pink",
+  "base": 190,
+  "era": "90s"
+ },
+ {
+  "id": "tec_brick_handheld",
+  "name": "Brick Handheld",
+  "cat": "tech",
+  "shape": 4,
+  "body": "cream",
+  "accent": "red",
+  "base": 210,
+  "era": "80s"
+ },
+ {
+  "id": "veh_cherry_cruiser",
+  "name": "Cherry Cruiser",
+  "cat": "vehicles",
+  "shape": 0,
+  "body": "red",
+  "accent": "cream",
+  "base": 900,
+  "era": "50s"
+ },
+ {
+  "id": "veh_mint_coupe",
+  "name": "Mint Coupe",
+  "cat": "vehicles",
+  "shape": 0,
+  "body": "mint",
+  "accent": "white",
+  "base": 820,
+  "era": "50s"
+ },
+ {
+  "id": "veh_midnight_cruiser",
+  "name": "Midnight Cruiser",
+  "cat": "vehicles",
+  "shape": 0,
+  "body": "black",
+  "accent": "silver",
+  "base": 1100,
+  "era": "50s"
+ },
+ {
+  "id": "veh_farm_pickup",
+  "name": "Farm Pickup",
+  "cat": "vehicles",
+  "shape": 1,
+  "body": "blue",
+  "accent": "white",
+  "base": 700,
+  "era": "60s"
+ },
+ {
+  "id": "veh_rusty_hauler",
+  "name": "Rusty Hauler",
+  "cat": "vehicles",
+  "shape": 1,
+  "body": "orange",
+  "accent": "black",
+  "base": 640,
+  "era": "70s"
+ },
+ {
+  "id": "veh_ranch_truck",
+  "name": "Ranch Truck",
+  "cat": "vehicles",
+  "shape": 1,
+  "body": "green",
+  "accent": "cream",
+  "base": 780,
+  "era": "60s"
+ },
+ {
+  "id": "veh_riviera_scooter",
+  "name": "Riviera Scooter",
+  "cat": "vehicles",
+  "shape": 2,
+  "body": "mint",
+  "accent": "cream",
+  "base": 380,
+  "era": "60s"
+ },
+ {
+  "id": "veh_sunny_scooter",
+  "name": "Sunny Scooter",
+  "cat": "vehicles",
+  "shape": 2,
+  "body": "yellow",
+  "accent": "white",
+  "base": 340,
+  "era": "60s"
+ },
+ {
+  "id": "veh_rosa_scooter",
+  "name": "Rosa Scooter",
+  "cat": "vehicles",
+  "shape": 2,
+  "body": "pink",
+  "accent": "white",
+  "base": 420,
+  "era": "60s"
+ },
+ {
+  "id": "veh_cafe_racer",
+  "name": "Cafe Racer",
+  "cat": "vehicles",
+  "shape": 3,
+  "body": "black",
+  "accent": "silver",
+  "base": 620,
+  "era": "70s"
+ },
+ {
+  "id": "veh_desert_dirt_bike",
+  "name": "Desert Dirt Bike",
+  "cat": "vehicles",
+  "shape": 3,
+  "body": "orange",
+  "accent": "black",
+  "base": 540,
+  "era": "80s"
+ },
+ {
+  "id": "veh_chrome_chopper",
+  "name": "Chrome Chopper",
+  "cat": "vehicles",
+  "shape": 3,
+  "body": "silver",
+  "accent": "red",
+  "base": 760,
+  "era": "70s"
+ },
+ {
+  "id": "veh_surf_camper_van",
+  "name": "Surf Camper Van",
+  "cat": "vehicles",
+  "shape": 4,
+  "body": "teal",
+  "accent": "white",
+  "base": 980,
+  "era": "60s"
+ },
+ {
+  "id": "veh_sunset_camper",
+  "name": "Sunset Camper",
+  "cat": "vehicles",
+  "shape": 4,
+  "body": "orange",
+  "accent": "cream",
+  "base": 920,
+  "era": "70s"
+ },
+ {
+  "id": "veh_flower_power_van",
+  "name": "Flower Power Van",
+  "cat": "vehicles",
+  "shape": 4,
+  "body": "purple",
+  "accent": "yellow",
+  "base": 1050,
+  "era": "60s"
  }
 ]

@@ -40,7 +40,7 @@ export class CatalogScene extends GameScene {
     this.root.add([this.total, this.bar, this.header, this.grid]);
     for (const c of CATEGORIES) {
       const b = new Button(this, 0, 0, {
-        w: 158,
+        w: 132,
         h: 60,
         label: t(`cat.${c.id}`),
         color: c.unlockTier <= session.state.tier ? C.teal : C.inkSoft,
@@ -81,8 +81,8 @@ export class CatalogScene extends GameScene {
     this.layoutHud();
     this.total.setPosition(f.w / 2, 125);
     this.bar.setPosition(f.w / 2, 160);
-    const cols = f.portrait ? 4 : 8;
-    const tw = f.portrait ? 166 : 152;
+    const cols = 5;
+    const tw = f.portrait ? 138 : 150;
     this.tabs.forEach((b, i) => {
       const r = Math.floor(i / cols);
       const c = i % cols;

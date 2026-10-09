@@ -18,10 +18,10 @@ import {
 import { CATEGORY_IDS } from '../../src/core/types';
 
 describe('content data', () => {
-  it('has 8 categories x 15 items = 120 catalog entries with unique ids', () => {
-    expect(CATEGORIES).toHaveLength(8);
-    expect(ITEMS).toHaveLength(120);
-    expect(new Set(ITEMS.map((i) => i.id)).size).toBe(120);
+  it('has 10 categories x 15 items = 150 catalog entries with unique ids', () => {
+    expect(CATEGORIES).toHaveLength(10);
+    expect(ITEMS).toHaveLength(150);
+    expect(new Set(ITEMS.map((i) => i.id)).size).toBe(150);
     for (const c of CATEGORY_IDS) expect(ITEMS.filter((i) => i.cat === c)).toHaveLength(15);
   });
   it('every item references a valid shape and palette colours', () => {
@@ -39,10 +39,10 @@ describe('content data', () => {
       expect(RECIPES[c].some((s) => s.req)).toBe(true);
     }
   });
-  it('has 5 markets, 5 tiers, ~12 personas, ~25 request templates, 12 skills', () => {
+  it('has 5 markets, 5 tiers, 14 personas, ~25 request templates, 12 skills', () => {
     expect(MARKETS).toHaveLength(5);
     expect(BALANCE.tiers).toHaveLength(5);
-    expect(PERSONAS).toHaveLength(12);
+    expect(PERSONAS).toHaveLength(14);
     expect(REQUESTS).toHaveLength(25);
     expect(BALANCE.skills).toHaveLength(12);
   });
@@ -59,7 +59,9 @@ describe('content data', () => {
   });
   it('unlocks categories and markets by tier', () => {
     expect(categoriesForTier(0)).toEqual(['kitchen', 'ceramics']);
-    expect(categoriesForTier(4)).toHaveLength(8);
+    expect(categoriesForTier(3)).toContain('tech');
+    expect(categoriesForTier(3)).not.toContain('vehicles');
+    expect(categoriesForTier(4)).toHaveLength(10);
     expect(marketsForTier(0).map((m) => m.id)).toEqual(['flea']);
     expect(marketsForTier(4)).toHaveLength(5);
   });

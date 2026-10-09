@@ -1,7 +1,16 @@
 /** Data schemas for src/data/*.json and runtime game state. Pure types; no Phaser, no DOM. */
 
 export type CategoryId =
-  'kitchen' | 'lamps' | 'chairs' | 'radios' | 'clocks' | 'ceramics' | 'bikes' | 'curios';
+  | 'kitchen'
+  | 'lamps'
+  | 'chairs'
+  | 'radios'
+  | 'clocks'
+  | 'ceramics'
+  | 'bikes'
+  | 'curios'
+  | 'tech'
+  | 'vehicles';
 export const CATEGORY_IDS: readonly CategoryId[] = [
   'kitchen',
   'ceramics',
@@ -11,9 +20,11 @@ export const CATEGORY_IDS: readonly CategoryId[] = [
   'chairs',
   'bikes',
   'curios',
+  'tech',
+  'vehicles',
 ];
 
-export type StepKind = 'sticker' | 'scrub' | 'rust' | 'sand' | 'glue' | 'wire' | 'paint' | 'polish';
+export type StepKind = 'sticker' | 'scrub' | 'rust' | 'sand' | 'glue' | 'wire' | 'fix' | 'paint' | 'polish';
 /** Canonical order steps are performed in. */
 export const STEP_ORDER: readonly StepKind[] = [
   'sticker',
@@ -22,6 +33,7 @@ export const STEP_ORDER: readonly StepKind[] = [
   'sand',
   'glue',
   'wire',
+  'fix',
   'paint',
   'polish',
 ];

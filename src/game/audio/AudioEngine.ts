@@ -30,7 +30,9 @@ export type SfxKind =
   | 'bid'
   | 'gem'
   | 'snap'
-  | 'stamp';
+  | 'stamp'
+  | 'glug'
+  | 'engine';
 
 export type MusicTrack = 'menu' | 'work' | 'shop';
 
@@ -262,6 +264,15 @@ export class AudioEngine {
       case 'stamp':
         this.tone('sine', 180, 90, t, 0.18, 0.45);
         this.noiseBurst(t, 0.06, 'lowpass', 1200, 0.3, 1);
+        break;
+      case 'glug':
+        this.tone('sine', 320 + Math.random() * 60, 160, t, 0.09, 0.22);
+        break;
+      case 'engine':
+        // Starter whirr, then the engine catches and rumbles.
+        this.tone('sawtooth', 70, 110, t, 0.35, 0.12);
+        this.tone('sawtooth', 48, 62, t + 0.3, 0.9, 0.2);
+        this.noiseBurst(t + 0.3, 0.9, 'lowpass', 260, 0.35, 0.8);
         break;
     }
   }

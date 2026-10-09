@@ -498,7 +498,10 @@ export class WorkshopScene extends GameScene {
         this.mini = new PaintGame(ctx);
         break;
       case 'wire':
-        this.mini = new RepairGame(ctx);
+        this.mini = new RepairGame(ctx, 'wire');
+        break;
+      case 'fix':
+        this.mini = new RepairGame(ctx, 'fix');
         break;
     }
     this.mini!.start();

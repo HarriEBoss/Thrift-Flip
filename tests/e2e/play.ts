@@ -39,6 +39,13 @@ export interface WsInfo {
     left: Array<{ u: number; v: number }>;
     right: Array<{ u: number; v: number }>;
     order: number[];
+    swap: {
+      broken: { u: number; v: number };
+      fresh: { u: number; v: number };
+      slot: { u: number; v: number };
+      bin: { u: number; v: number };
+    } | null;
+    pour: { cap: { u: number; v: number }; level: number; lo: number; hi: number } | null;
   };
 }
 
@@ -108,6 +115,24 @@ export async function drag(page: Page, mode: Mode, pts: Pt[], delay = 8): Promis
       await s.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: p.x, y: p.y }] });
       if (delay) await page.waitForTimeout(delay);
     }
+    await s.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  }
+}
+
+/** Press and hold at `p` until `done()` says so (or 20 s pass), then release. */
+export async function holdUntil(page: Page, mode: Mode, p: Pt, done: () => Promise<boolean>): Promise<void> {
+  if (mode === 'mouse') {
+    await page.mouse.move(p.x, p.y);
+    await page.mouse.down();
+  } else {
+    const s = await session(page);
+    await s.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: p.x, y: p.y }] });
+  }
+  const t0 = Date.now();
+  while (Date.now() - t0 < 20000 && !(await done())) await page.waitForTimeout(60);
+  if (mode === 'mouse') await page.mouse.up();
+  else {
+    const s = await session(page);
     await s.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
   }
 }
@@ -183,7 +208,7 @@ export async function solveStep(page: Page, mode: Mode): Promise<void> {
     const path = info.path.map((p) => unit(info!, p.x, p.y));
     for (let i = 0; i + 1 < path.length; i++) pts.push(...lerpPath(path[i], path[i + 1], 6));
     await drag(page, mode, pts, 6);
-  } else if (kind === 'wire' && info.wire) {
+  } else if ((kind === 'wire' || kind === 'fix') && info.wire) {
     // The repair: turn over, unscrew (hold) or twist off the cover, lift it, connect wires, wait.
     for (let guard = 0; guard < 60 && (await stillHere()); guard++) {
       const now = await ws(page);
@@ -212,6 +237,17 @@ export async function solveStep(page: Page, mode: Mode): Promise<void> {
         const c = unit(now, w.center.u, w.center.v);
         await drag(page, mode, [c, c], 40);
         await page.waitForTimeout(700);
+      } else if ((w.phase === 'swapOut' || w.phase === 'swapIn') && w.swap) {
+        const from = w.phase === 'swapOut' ? w.swap.broken : w.swap.fresh;
+        const to = w.phase === 'swapOut' ? w.swap.bin : w.swap.slot;
+        await drag(page, mode, lerpPath(unit(now, from.u, from.v), unit(now, to.u, to.v), 10), 12);
+        await page.waitForTimeout(500);
+      } else if (w.phase === 'pour' && w.pour) {
+        await holdUntil(page, mode, unit(now, w.pour.cap.u, w.pour.cap.v), async () => {
+          const i = await ws(page);
+          return !i?.wire?.pour || i.wire.pour.level >= w.pour!.lo + 0.04;
+        });
+        await page.waitForTimeout(600);
       } else if (w.phase === 'wires') {
         for (let l = 0; l < w.left.length; l++) {
           const r = w.order.indexOf(l);

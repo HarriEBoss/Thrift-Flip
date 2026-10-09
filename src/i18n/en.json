@@ -355,5 +355,17 @@
   "mg.rep.twist": "Twist the back round and round to unscrew it.",
   "mg.rep.cover": "Lift the cover off! (tap or drag it away)",
   "mg.rep.test": "Testing… it works!",
-  "mg.rep.close": "Putting it back together…"
+  "mg.rep.close": "Putting it back together…",
+  "cat.tech": "Computers & Games",
+  "cat.vehicles": "Cars & Bikes",
+  "step.fix": "Repair",
+  "hint.fix": "Broken inside",
+  "mg.rep.hood": "Lift the hood! (tap or drag it up)",
+  "mg.rep.swapOut": "Pull out the broken part (marked !) and drop it in the bin.",
+  "mg.rep.swapIn": "Put the new part into its place.",
+  "mg.rep.pourOil": "Hold on the cap to pour in oil. Let go in the green!",
+  "mg.rep.pourCoolant": "Hold on the cap to pour in coolant. Let go in the green!",
+  "catOne.tech": "computer or game",
+  "catOne.vehicles": "car or bike",
+  "mg.fix": "Open it up and fix what's broken inside."
 }

@@ -5,7 +5,15 @@
  * `size` pixels, so it lines up with the positions from core/repair.ts.
  */
 import { Rng } from '../../core/prng';
-import { panelGeom, type Rig, type WireLayout } from '../../core/repair';
+import {
+  panelGeom,
+  partSize,
+  pourLayout,
+  swapLayout,
+  type PartKind,
+  type Rig,
+  type WireLayout,
+} from '../../core/repair';
 import { ctx2d, makeCanvas, shade } from './itemArt';
 
 type X = CanvasRenderingContext2D;
@@ -81,6 +89,59 @@ export function drawCover(
       x.stroke();
     }
     // (Grip ridges and the opening notch are drawn on top so they can turn.)
+    return c;
+  }
+  if (rig.lid === 'hood') {
+    // A car hood in the body colour: glossy, with two crease lines and a little badge.
+    const hg = x.createLinearGradient(0, (g.cy - g.ry) * s, 0, (g.cy + g.ry) * s);
+    hg.addColorStop(0, shade(body, 0.3));
+    hg.addColorStop(0.45, body);
+    hg.addColorStop(1, shade(body, -0.3));
+    panelPath(x, rig, s);
+    x.fillStyle = hg;
+    x.fill();
+    x.save();
+    panelPath(x, rig, s);
+    x.clip();
+    x.strokeStyle = 'rgba(255,255,255,0.35)';
+    x.lineWidth = s * 0.006;
+    for (const k of [-1, 1]) {
+      x.beginPath();
+      x.moveTo(cx + k * g.rx * s * 0.25, (g.cy - g.ry) * s);
+      x.lineTo(cx + k * g.rx * s * 0.12, (g.cy + g.ry) * s);
+      x.stroke();
+    }
+    const sp = x.createRadialGradient(
+      cx - g.rx * s * 0.4,
+      cy - g.ry * s * 0.5,
+      0,
+      cx - g.rx * s * 0.4,
+      cy - g.ry * s * 0.5,
+      g.rx * s * 0.6,
+    );
+    sp.addColorStop(0, 'rgba(255,255,255,0.45)');
+    sp.addColorStop(1, 'rgba(255,255,255,0)');
+    x.fillStyle = sp;
+    x.fillRect((g.cx - g.rx) * s, (g.cy - g.ry) * s, g.rx * 2 * s, g.ry * 2 * s);
+    x.restore();
+    x.lineWidth = s * 0.004;
+    x.strokeStyle = 'rgba(15,10,30,0.6)';
+    panelPath(x, rig, s);
+    x.stroke();
+    const bg = x.createRadialGradient(
+      cx - s * 0.008,
+      cy + g.ry * s * 0.62,
+      0,
+      cx,
+      cy + g.ry * s * 0.65,
+      s * 0.03,
+    );
+    bg.addColorStop(0, '#ffffff');
+    bg.addColorStop(1, '#8e96a3');
+    x.fillStyle = bg;
+    x.beginPath();
+    x.arc(cx, cy + g.ry * s * 0.65, s * 0.028, 0, Math.PI * 2);
+    x.fill();
     return c;
   }
   const base = rig.view === 'base' ? '#3b3742' : shade(body, -0.35);
@@ -159,7 +220,13 @@ export function drawCover(
 }
 
 /** What is inside the compartment (static parts; wires and terminal screws are drawn on top). */
-export function drawCompartment(rig: Rig, size: number, lay: WireLayout, seed: number): HTMLCanvasElement {
+export function drawCompartment(
+  rig: Rig,
+  size: number,
+  lay: WireLayout,
+  seed: number,
+  withWires = true,
+): HTMLCanvasElement {
   const c = makeCanvas(size);
   const x = ctx2d(c);
   const s = size;
@@ -187,6 +254,98 @@ export function drawCompartment(rig: Rig, size: number, lay: WireLayout, seed: n
   const bw = (t1.u - t0.u + 0.12) * s;
   const by = t0.v * s;
   switch (rig.inside) {
+    case 'pc': {
+      // Computer insides: motherboard, CPU cooler, memory slots and a drive cage.
+      const pw = g.rx * s * 1.7;
+      const ph = g.ry * s * 1.6;
+      const px = g.cx * s - pw / 2;
+      const py = g.cy * s - ph / 2;
+      const mb = x.createLinearGradient(0, py, 0, py + ph);
+      mb.addColorStop(0, '#2a7a52');
+      mb.addColorStop(1, '#16492f');
+      x.fillStyle = mb;
+      roundRectPath(x, px, py, pw, ph, s * 0.012);
+      x.fill();
+      x.strokeStyle = 'rgba(232,196,90,0.6)';
+      x.lineWidth = s * 0.003;
+      for (let i = 0; i < 18; i++) {
+        const sx = px + rng.next() * pw;
+        const sy = py + rng.next() * ph;
+        x.beginPath();
+        x.moveTo(sx, sy);
+        x.lineTo(sx + rng.range(-0.1, 0.1) * s, sy);
+        x.stroke();
+      }
+      // CPU cooler fins.
+      const hx = px + pw * 0.08;
+      const hy = py + ph * 0.08;
+      const fin = x.createLinearGradient(hx, 0, hx + s * 0.16, 0);
+      fin.addColorStop(0, '#e7eaf0');
+      fin.addColorStop(1, '#8d94a1');
+      x.fillStyle = fin;
+      for (let i = 0; i < 7; i++) x.fillRect(hx, hy + i * s * 0.018, s * 0.16, s * 0.01);
+      // Memory slots.
+      x.fillStyle = '#121216';
+      for (let i = 0; i < 3; i++)
+        x.fillRect(px + pw * 0.36, py + ph * (0.12 + i * 0.08), pw * 0.3, s * 0.014);
+      for (let i = 0; i < 3; i++) chip(x, px + pw * (0.2 + i * 0.25), py + ph * 0.86, s * 0.07, s * 0.045);
+      break;
+    }
+    case 'engine': {
+      // Engine bay: engine block with valve cover, air filter, hoses.
+      const ew = g.rx * s * 1.05;
+      const eh = g.ry * s * 0.95;
+      const ex = g.cx * s - ew * 0.62;
+      const ey = g.cy * s - eh * 0.45;
+      const blk = x.createLinearGradient(0, ey, 0, ey + eh);
+      blk.addColorStop(0, '#8b919c');
+      blk.addColorStop(1, '#3f434b');
+      x.fillStyle = blk;
+      roundRectPath(x, ex, ey, ew, eh, s * 0.03);
+      x.fill();
+      const vc = x.createLinearGradient(0, ey, 0, ey + eh * 0.3);
+      vc.addColorStop(0, '#e05a4e');
+      vc.addColorStop(1, '#8c2a22');
+      x.fillStyle = vc;
+      roundRectPath(x, ex + ew * 0.06, ey + eh * 0.05, ew * 0.88, eh * 0.28, s * 0.02);
+      x.fill();
+      for (let i = 0; i < 4; i++) {
+        x.fillStyle = '#1b1b20';
+        x.beginPath();
+        x.arc(ex + ew * (0.18 + i * 0.21), ey + eh * 0.19, s * 0.014, 0, Math.PI * 2);
+        x.fill();
+      }
+      // Air filter.
+      const af = x.createRadialGradient(
+        ex + ew * 0.3,
+        ey + eh * 0.62,
+        0,
+        ex + ew * 0.3,
+        ey + eh * 0.62,
+        s * 0.08,
+      );
+      af.addColorStop(0, '#d9dde4');
+      af.addColorStop(1, '#5b616b');
+      x.fillStyle = af;
+      x.beginPath();
+      x.arc(ex + ew * 0.3, ey + eh * 0.62, s * 0.075, 0, Math.PI * 2);
+      x.fill();
+      // Radiator hose.
+      x.strokeStyle = '#141418';
+      x.lineWidth = s * 0.025;
+      x.beginPath();
+      x.moveTo(ex + ew, ey + eh * 0.5);
+      x.bezierCurveTo(
+        ex + ew + s * 0.08,
+        ey + eh * 0.5,
+        ex + ew + s * 0.04,
+        ey + eh * 1.05,
+        ex + ew + s * 0.12,
+        ey + eh * 1.05,
+      );
+      x.stroke();
+      break;
+    }
     case 'board': {
       // Green circuit board with gold traces and parts.
       const pw = g.rx * s * 1.6;
@@ -292,6 +451,54 @@ export function drawCompartment(rig: Rig, size: number, lay: WireLayout, seed: n
       x.fill();
       break;
     }
+  }
+  if (rig.tasks.includes('swap')) {
+    // The tray / socket the part sits in.
+    const sl = swapLayout(rig);
+    x.strokeStyle = 'rgba(255,255,255,0.35)';
+    x.setLineDash([s * 0.012, s * 0.008]);
+    x.lineWidth = s * 0.004;
+    roundRectPath(
+      x,
+      (sl.slot.u - sl.w / 2 - 0.01) * s,
+      (sl.slot.v - sl.h / 2 - 0.01) * s,
+      (sl.w + 0.02) * s,
+      (sl.h + 0.02) * s,
+      s * 0.01,
+    );
+    x.stroke();
+    x.setLineDash([]);
+  }
+  if (rig.tasks.includes('pour')) {
+    // Filler neck and cap (yellow for oil, blue for coolant) and the dipstick gauge housing.
+    const pl = pourLayout(rig);
+    const col = rig.fluid === 'oil' ? ['#ffe27a', '#c79a14'] : ['#9fd8ff', '#2f6fd0'];
+    const cg = x.createRadialGradient(
+      pl.cap.u * s - s * 0.01,
+      pl.cap.v * s - s * 0.01,
+      0,
+      pl.cap.u * s,
+      pl.cap.v * s,
+      s * 0.045,
+    );
+    cg.addColorStop(0, col[0]);
+    cg.addColorStop(1, col[1]);
+    x.fillStyle = '#1b1b20';
+    x.beginPath();
+    x.arc(pl.cap.u * s, pl.cap.v * s, s * 0.052, 0, Math.PI * 2);
+    x.fill();
+    x.fillStyle = cg;
+    x.beginPath();
+    x.arc(pl.cap.u * s, pl.cap.v * s, s * 0.042, 0, Math.PI * 2);
+    x.fill();
+  }
+  if (!withWires) {
+    x.restore();
+    x.lineWidth = s * 0.008;
+    x.strokeStyle = '#15121b';
+    panelPath(x, rig, s);
+    x.stroke();
+    return c;
   }
   // Terminal block (white plastic) under the terminals.
   const tb = x.createLinearGradient(0, by - s * 0.05, 0, by + s * 0.05);
@@ -469,5 +676,162 @@ export function drawGlow(size: number): HTMLCanvasElement {
   g.addColorStop(1, 'rgba(255,255,255,0)');
   x.fillStyle = g;
   x.fillRect(0, 0, size, size);
+  return c;
+}
+
+/** A replaceable part (canvas sized to its shape); broken parts are scorched and grimy. */
+export function drawPart(kind: PartKind, broken: boolean, px = 400): HTMLCanvasElement {
+  const ps = partSize(kind);
+  const w = Math.round(px * ps.w);
+  const h = Math.round(px * ps.h);
+  const c = makeCanvas(w, h);
+  const x = ctx2d(c);
+  const lin = (c0: string, c1: string, vertical = true) => {
+    const g = vertical ? x.createLinearGradient(0, 0, 0, h) : x.createLinearGradient(0, 0, w, 0);
+    g.addColorStop(0, c0);
+    g.addColorStop(1, c1);
+    return g;
+  };
+  switch (kind) {
+    case 'battery':
+      x.fillStyle = lin('#4a4d55', '#1c1d22');
+      roundRectPath(x, 0, h * 0.18, w, h * 0.82, w * 0.06);
+      x.fill();
+      x.fillStyle = '#d23b2b';
+      x.fillRect(w * 0.12, 0, w * 0.16, h * 0.22);
+      x.fillStyle = '#2a2a2e';
+      x.fillRect(w * 0.72, 0, w * 0.16, h * 0.22);
+      x.fillStyle = '#ffd34d';
+      x.fillRect(w * 0.08, h * 0.5, w * 0.84, h * 0.16);
+      x.fillStyle = '#ffffff';
+      x.font = `bold ${Math.round(h * 0.2)}px sans-serif`;
+      x.fillText('+', w * 0.15, h * 0.42);
+      x.fillText('−', w * 0.75, h * 0.42);
+      break;
+    case 'fan': {
+      x.fillStyle = lin('#3a3d45', '#1d1f24');
+      roundRectPath(x, 0, 0, w, h, w * 0.1);
+      x.fill();
+      x.fillStyle = '#0d0e11';
+      x.beginPath();
+      x.arc(w / 2, h / 2, w * 0.42, 0, Math.PI * 2);
+      x.fill();
+      x.fillStyle = '#7d8592';
+      for (let i = 0; i < 7; i++) {
+        const a = (i / 7) * Math.PI * 2;
+        x.beginPath();
+        x.ellipse(
+          w / 2 + Math.cos(a) * w * 0.22,
+          h / 2 + Math.sin(a) * h * 0.22,
+          w * 0.18,
+          w * 0.07,
+          a + 0.6,
+          0,
+          Math.PI * 2,
+        );
+        x.fill();
+      }
+      x.fillStyle = '#c9ccd3';
+      x.beginPath();
+      x.arc(w / 2, h / 2, w * 0.11, 0, Math.PI * 2);
+      x.fill();
+      break;
+    }
+    case 'ram':
+      x.fillStyle = lin('#2f8a4c', '#1d5e33');
+      x.fillRect(0, 0, w, h * 0.82);
+      x.fillStyle = '#d9a63a';
+      for (let i = 0; i < 18; i++) x.fillRect(w * (0.04 + i * 0.053), h * 0.82, w * 0.03, h * 0.18);
+      x.fillStyle = '#16161b';
+      for (let i = 0; i < 4; i++) x.fillRect(w * (0.06 + i * 0.235), h * 0.15, w * 0.18, h * 0.5);
+      break;
+    case 'drive':
+      x.fillStyle = lin('#e9ecf1', '#9097a3');
+      roundRectPath(x, 0, 0, w, h, w * 0.04);
+      x.fill();
+      x.fillStyle = '#f7f2e3';
+      x.fillRect(w * 0.12, h * 0.2, w * 0.5, h * 0.45);
+      x.fillStyle = '#8a8070';
+      for (let i = 0; i < 3; i++) x.fillRect(w * 0.16, h * (0.28 + i * 0.12), w * 0.4, h * 0.05);
+      x.fillStyle = '#2a2a2e';
+      x.fillRect(w * 0.72, h * 0.75, w * 0.24, h * 0.18);
+      break;
+    case 'cell':
+      x.fillStyle = lin('#5c5f66', '#17181b');
+      roundRectPath(x, 0, 0, w * 0.94, h, h * 0.3);
+      x.fill();
+      x.fillStyle = '#d9a63a';
+      x.fillRect(w * 0.7, 0, w * 0.08, h);
+      x.fillStyle = '#c9ccd3';
+      x.fillRect(w * 0.94, h * 0.3, w * 0.06, h * 0.4);
+      break;
+    case 'plug':
+      x.fillStyle = '#f4f2ec';
+      roundRectPath(x, w * 0.22, 0, w * 0.56, h * 0.5, w * 0.2);
+      x.fill();
+      x.fillStyle = lin('#e7eaf0', '#7b828f', false);
+      x.fillRect(w * 0.08, h * 0.5, w * 0.84, h * 0.16);
+      x.fillStyle = lin('#c9ccd3', '#7b828f', false);
+      x.fillRect(w * 0.3, h * 0.66, w * 0.4, h * 0.26);
+      x.fillRect(w * 0.42, h * 0.92, w * 0.16, h * 0.08);
+      break;
+  }
+  if (broken) {
+    // Scorch marks, grime and a crack.
+    x.globalCompositeOperation = 'source-atop';
+    x.fillStyle = 'rgba(40,25,10,0.45)';
+    x.fillRect(0, 0, w, h);
+    for (let i = 0; i < 5; i++) {
+      const g = x.createRadialGradient(
+        w * (0.2 + i * 0.15),
+        h * (0.3 + (i % 2) * 0.35),
+        0,
+        w * (0.2 + i * 0.15),
+        h * (0.3 + (i % 2) * 0.35),
+        Math.max(w, h) * 0.18,
+      );
+      g.addColorStop(0, 'rgba(0,0,0,0.75)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g;
+      x.fillRect(0, 0, w, h);
+    }
+    x.globalCompositeOperation = 'source-over';
+  }
+  return c;
+}
+
+/** An oil (or coolant) can, already tipped so the spout points down-left. */
+export function drawCan(fluid: 'oil' | 'coolant', w: number, h: number): HTMLCanvasElement {
+  const c = makeCanvas(w, h);
+  const x = ctx2d(c);
+  const body = fluid === 'oil' ? ['#ffd34d', '#c78d14'] : ['#8fd0ff', '#2f6fd0'];
+  const g = x.createLinearGradient(w * 0.3, 0, w, 0);
+  g.addColorStop(0, body[0]);
+  g.addColorStop(1, body[1]);
+  // Spout.
+  x.fillStyle = '#2a2a2e';
+  x.beginPath();
+  x.moveTo(w * 0.36, h * 0.55);
+  x.lineTo(w * 0.02, h * 0.95);
+  x.lineTo(w * 0.1, h * 0.99);
+  x.lineTo(w * 0.44, h * 0.66);
+  x.closePath();
+  x.fill();
+  x.fillStyle = g;
+  roundRectPath(x, w * 0.32, h * 0.08, w * 0.62, h * 0.66, w * 0.08);
+  x.fill();
+  x.fillStyle = 'rgba(255,255,255,0.85)';
+  roundRectPath(x, w * 0.42, h * 0.3, w * 0.42, h * 0.2, w * 0.04);
+  x.fill();
+  x.fillStyle = fluid === 'oil' ? '#c78d14' : '#2f6fd0';
+  x.font = `bold ${Math.round(h * 0.13)}px sans-serif`;
+  x.textAlign = 'center';
+  x.textBaseline = 'middle';
+  x.fillText(fluid === 'oil' ? 'OIL' : 'COOL', w * 0.63, h * 0.41);
+  x.strokeStyle = '#2a2a2e';
+  x.lineWidth = w * 0.05;
+  x.beginPath();
+  x.arc(w * 0.72, h * 0.08, w * 0.14, Math.PI, 0);
+  x.stroke();
   return c;
 }
