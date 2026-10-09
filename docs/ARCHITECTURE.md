@@ -106,11 +106,43 @@ little). Positions are pure (`screwLayout`, `wireLayout`, unit-tested); screw sl
 grip marks are drawn as lines rather than rotating images (rotated textured quads rendered with a missing
 triangle in the workshop stage).
 
+### Big repairs: task modules (`minigames/repair/`)
+
+A rig has a list of **tasks** (`TaskSpec` in `core/repair.ts`). `RepairGame` only orchestrates: turn → open
+→ each task in order → test → close. Each task is a module in `minigames/repair/tasks.ts` built on
+`RepairTask` (`repair/host.ts`): `init()` places what is there when the cover comes off (a broken part,
+bolts, dust), `start()` makes it the current job, plus pointer handlers, `progress()`, `score()` and
+`bot()` (the next action for the e2e bot: wait, tap, hold, hold-to-level, drag or circle).
+
+- **wires**: the wire puzzle above. **swap**: drag the broken part (marked !) to the bin, then the new part
+  into its slot; a CPU cooler swap adds a thermal-paste stage (hold, stop in the green).
+- **pour / drain / paste**: hold on a cap; fill to the green band, or let the old oil run out.
+- **bolts**: hold the ratchet on each bolt to undo or tighten it. **hoist**: drag the engine up out of the
+  bay on the chain hoist, or lower the new one in. **cables**: plug each motherboard cable or engine hose
+  into the socket with the same label and shape (wrong sockets cost a little). **dust**: hold the air can
+  over each dust bunny.
+
+Computers and vehicles have a **Repair** (`fix`) step with their own rig (`fixRigFor`). Customer jobs add
+two long rigs: a **PC rebuild** (dust, cooler + paste, memory, graphics card, card bolts, five motherboard
+cables) and an **engine swap** (drain, 4 bolts out, hoist out, hoist in, 4 bolts in, 4 hoses, oil, coolant,
+battery, ignition wiring). All layouts are pure and unit-tested; the score is the product of the task scores.
+
+## Workshops and customer jobs (`core/jobs.ts`)
+
+Workshops are bought in the Upgrades hub: the **Repair Shop** (Corner Store tier), then the **Computer
+Workshop** (Vintage Boutique) and the **Car Garage** (Grand Emporium), both needing the Repair Shop.
+Each day, `jobOffers` deals deterministic jobs per owned workshop (small repairs, PC rebuilds, engine
+swaps). They are taken at the market's **Repair Desk**; a job item goes through the workshop with a repair
+recipe (scrub, repair, optional polish) and is never sold: on the reveal the customer pays the fee
+(`jobFee`; engine swaps pay the most) plus a tip of up to 20% for great work (`completeJob`). Job items do
+not count against shop space.
+
 ## Growing the shop
 
 Every way to grow sits behind one **Upgrades** button (Main Menu, Market header, Day Summary), in
 `game/ui/upgradesHub.ts`: bigger shop (tiers), decorations, tools and skills. A goal banner shows the
-next shop tier with coin and reputation progress (`nextGoal` in `core/progression.ts`).
+next shop tier with coin and reputation progress (`nextGoal` in `core/progression.ts`). Workshops
+(see below) are bought from the same hub.
 
 - **Bigger shops find better items:** `rarityWeights` in `core/market.ts` shifts the rarity odds up with
   the shop tier.
@@ -164,7 +196,9 @@ bright palette in `theme.ts` and the Nunito font.
   forces a write on day end, purchases and pause. It checks UTF-16 well-formedness and the 3 MiB / 500 KiB limits.
   A corrupt save is kept in memory and writing is blocked until the player sees a friendly message.
 
-Current version: **v2** (adds `dc`, the owned decorations; v1 saves migrate to an empty list).
+Current version: **v3**. v2 added `dc` (owned decorations); v3 adds `ws` (owned workshops), `dy[15]`
+(today's taken jobs) and an optional job tuple `[fee, persona, kind]` at the end of an item. Older saves
+migrate to empty lists.
 
 Saves happen at material progress: after each restoration and each sale (debounced), on purchases
 (forced), on day transitions (forced) and on platform pause (forced).

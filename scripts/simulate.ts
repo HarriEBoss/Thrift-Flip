@@ -32,6 +32,7 @@ import {
 } from '../src/core/progression';
 import { catalogFoundCount } from '../src/core/catalog';
 import { DECOR, buyDecor } from '../src/core/decor';
+import { WORKSHOPS, acceptJob, buyWorkshop, completeJob, jobOffers } from '../src/core/jobs';
 import { isContentComplete } from '../src/core/complete';
 import { snapPrice } from '../src/core/economy';
 import { marketSlots, shelfCapacity } from '../src/core/perks';
@@ -80,6 +81,17 @@ function playDay(g: GameState, rng: Rng, skill: number): number {
   for (const d of DECOR) {
     if (g.coins - d.cost >= reserve * 0.7) buyDecor(g, d.id);
   }
+  for (const w of WORKSHOPS) {
+    if (g.coins - w.cost >= reserve * 0.7) buyWorkshop(g, w.id);
+  }
+  // Take the two best-paying customer jobs.
+  jobOffers(g)
+    .map((o, i) => ({ fee: o.fee, i }))
+    .sort((a, b) => b.fee - a.fee)
+    .slice(0, 2)
+    .forEach(({ i }) => {
+      if (acceptJob(g, i)) sec += T.perBuy;
+    });
   // Market choice: newest unlocked (auction sometimes)
   const ms = marketsForTier(g.tier);
   const choice = ms[Math.min(ms.length - 1, rng.int(Math.max(0, ms.length - 3), ms.length - 1))];
@@ -135,6 +147,11 @@ function playDay(g: GameState, rng: Rng, skill: number): number {
     });
     finishRestoration(g, inst);
     sec += T.reveal;
+    if (inst.job) {
+      // PC rebuilds and engine swaps are long repairs.
+      sec += inst.job.k === 'engine' ? 45 : inst.job.k === 'pc' ? 30 : 0;
+      completeJob(g, inst);
+    }
   }
   advancePhase(g, 'shop');
   const visits = generateVisits(g);

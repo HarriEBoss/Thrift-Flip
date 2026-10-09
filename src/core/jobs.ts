@@ -28,9 +28,9 @@ export interface WorkshopDef {
 }
 
 export const WORKSHOPS: WorkshopDef[] = [
-  { id: 'repair', tier: 2, cost: 600, kind: 'service', offers: 2 },
-  { id: 'computer', tier: 3, cost: 1800, needs: 'repair', kind: 'pc', offers: 1 },
-  { id: 'garage', tier: 4, cost: 3500, needs: 'repair', kind: 'engine', offers: 1 },
+  { id: 'repair', tier: 2, cost: 900, kind: 'service', offers: 2 },
+  { id: 'computer', tier: 3, cost: 2400, needs: 'repair', kind: 'pc', offers: 1 },
+  { id: 'garage', tier: 4, cost: 4000, needs: 'repair', kind: 'engine', offers: 1 },
 ];
 
 export type WorkshopStatus = 'owned' | 'available' | 'poor' | 'locked' | 'needs';

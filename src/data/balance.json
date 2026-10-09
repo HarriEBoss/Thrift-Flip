@@ -48,8 +48,8 @@
     {
       "id": "emporium",
       "name": "Grand Emporium",
-      "cost": 3300,
-      "rep": 70,
+      "cost": 4400,
+      "rep": 80,
       "shelves": 12,
       "customers": 7
     }

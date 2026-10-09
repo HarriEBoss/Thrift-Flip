@@ -242,12 +242,25 @@ Next: Phase 3, the playable core loop in Phaser.
   terminals, sees it light up as a test, and the item goes back together. Unit tests for the rigs and
   layouts; the e2e bot plays the new flow.
 
+## Computers, cars, detailed repairs and workshops (owner request) ✅
+- **New late-game categories:** Computers & Games (tier 3) and Cars & Bikes (tier 4), 30 items worth far
+  more than flea-market finds, with two new customers (Gamer Gabe, Racer Rita).
+- **Repair step, done for real and in detail:** repairs are now a list of hands-on tasks, each its own
+  mini-game: blow out dust, swap broken parts (fans, memory, drives, batteries, spark plugs, graphics cards,
+  CPU coolers with thermal paste), drain and pour oil and coolant, undo and tighten bolts with a ratchet,
+  hoist engines out and in, and plug in motherboard cables and engine hoses.
+- **Workshops:** Repair Shop, Computer Workshop and Car Garage. Customers bring jobs to the Repair Desk:
+  small repairs, full PC rebuilds and full engine swaps (lots to do, big pay, tips for great work).
+- **Save v3** with migration and fixtures; unit tests for rigs, layouts, jobs and saves; e2e tests for a
+  full PC rebuild job. Balance: the Grand Emporium now costs 4400 coins and 80 reputation (the new
+  categories had pulled it to day 29; it is now day 37 again).
+
 ## Definition of done: status
 | Item | Status |
 |---|---|
 | `npm run check` (lint, typecheck, unit + coverage, YouTube build + bundle checks, e2e) | ✅ passes in this container (see the final run log in the commit message / PR) |
 | `thrift-flip-youtube.zip` meets every automatable MUST in §7 | ✅ automated; manual items listed in SUBMISSION_YOUTUBE.md |
 | iOS project builds in Xcode | ⏳ **human step**: no Xcode on Linux. `build:ios` + `cap sync` pass; IAP and ads are absent from the YouTube bundle (checked) |
-| Old-save migration tests | ✅ (v1 and v2 fixtures; v1 → v2 migration tested) |
+| Old-save migration tests | ✅ (v1, v2 and v3 fixtures; every migration tested) |
 | Docs complete | ✅ ARCHITECTURE, BALANCE, PROGRESS, HUMAN_TODO, SUBMISSION_IOS, SUBMISSION_YOUTUBE, PRIVACY_POLICY, STORE_LISTING |
 | HUMAN_TODO lists every required human step | ✅ |
