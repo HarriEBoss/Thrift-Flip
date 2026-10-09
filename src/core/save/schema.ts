@@ -8,23 +8,40 @@ import {
   type ItemInstance,
 } from '../state';
 import type { CategoryId, Rarity } from '../types';
+import type { JobKind } from '../repair';
 import { CURRENT_VERSION, migrate } from './migrations';
 
 /**
  * Save format (compact JSON). Item instances and requests are tuples; no derived data is stored.
  * Language is never stored (YouTube requirement).
  *
- * v1 shape (see tests/fixtures/saves for real examples):
+ * Shape (see tests/fixtures/saves for real examples; v2 added `dc`, v3 added `ws`, dy[15] and
+ * the optional job tuple [fee, persona, kind] at the end of an item):
  * { v, sd, c, x, l, rp, t, nu, dy:[...], iv:[[...]], sk, up, pk, ow, ct, rq:[[t,p,day]], st:{...}, bs, se:{...}, dl:[...], fl:{...} }
  */
 export type SaveObject = Record<string, unknown> & { v: number };
 
 const PHASES: DayPhase[] = ['market', 'workshop', 'shop', 'summary'];
 
-type ItemTuple = [number, number, number, number, number, number, number, number, number[], string, number];
+type JobTuple = [number, string, string];
+type ItemTuple = [
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number[],
+  string,
+  number,
+  JobTuple?,
+];
+const JOB_KINDS: JobKind[] = ['service', 'pc', 'engine'];
 
 function encodeItem(i: ItemInstance): ItemTuple {
-  return [
+  const t: ItemTuple = [
     i.uid,
     i.a,
     i.r,
@@ -37,13 +54,20 @@ function encodeItem(i: ItemInstance): ItemTuple {
     i.col,
     i.day,
   ];
+  if (i.job) t.push([i.job.fee, i.job.p, i.job.k]);
+  return t;
 }
 
 function decodeItem(t: unknown): ItemInstance | null {
   if (!Array.isArray(t) || t.length < 11) return null;
-  const [uid, a, r, rev, s, d, paid, q, sc, col, day] = t as ItemTuple;
+  const [uid, a, r, rev, s, d, paid, q, sc, col, day, jb] = t as ItemTuple;
   if (typeof a !== 'number' || a < 0 || a >= ITEMS.length) return null;
+  const job =
+    Array.isArray(jb) && JOB_KINDS.includes(jb[2] as JobKind)
+      ? { fee: Math.max(0, num(jb[0], 0)), p: str(jb[1], 'student'), k: jb[2] as JobKind }
+      : undefined;
   return {
+    ...(job ? { job } : {}),
     uid: num(uid, 0),
     a,
     r: Math.max(0, Math.min(3, num(r, 0))) as Rarity,
@@ -115,6 +139,7 @@ export function serialize(state: GameState): string {
       d.doubled ? 1 : 0,
       d.gifts,
       d.tipsAds,
+      d.jobs,
     ],
     iv: state.inv.map(encodeItem),
     sk: state.skills,
@@ -122,6 +147,7 @@ export function serialize(state: GameState): string {
     pk: state.perks,
     ow: state.owned,
     dc: state.decor,
+    ws: state.workshops,
     ct: state.catalog,
     rq: state.requests.map((r) => [r.t, r.p, r.day]),
     st: { ...state.stats },
@@ -205,6 +231,7 @@ function fromObject(o: SaveObject): GameState {
       doubled: dy[12] === 1,
       gifts: num(dy[13], 0),
       tipsAds: num(dy[14], 0),
+      jobs: numArr(dy[15]),
     };
   }
   g.inv = Array.isArray(o.iv)
@@ -215,6 +242,7 @@ function fromObject(o: SaveObject): GameState {
   g.perks = strArr(o.pk);
   g.owned = strArr(o.ow);
   g.decor = strArr(o.dc);
+  g.workshops = strArr(o.ws);
   const ct = str(o.ct, '');
   g.catalog = /^[012]*$/.test(ct)
     ? ct.padEnd(ITEMS.length, '0').slice(0, ITEMS.length)

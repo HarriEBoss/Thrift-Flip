@@ -123,7 +123,7 @@ export function slotsLeft(state: GameState): number {
 }
 
 export function inventoryFull(state: GameState): boolean {
-  return state.inv.length >= shelfCapacity(state) + marketSlots(state);
+  return state.inv.filter((i) => !i.job).length >= shelfCapacity(state) + marketSlots(state);
 }
 
 export type BuyResult = 'ok' | 'no_slots' | 'no_coins' | 'already' | 'full';

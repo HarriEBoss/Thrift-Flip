@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { setupPage, waitForScene } from './helpers';
-import { press, tap, where } from './play';
+import { closeModals, playWorkshop, press, tap, tf, where } from './play';
 
 type Smoke = { name: string; steps: string[]; q: number; value: number; sold: number; inv: number };
 
@@ -12,7 +12,7 @@ test('every catalog item can be generated, rendered, restored and sold', async (
   const n = await page.evaluate(() =>
     (window as unknown as { __tf: { itemCount(): number } }).__tf.itemCount(),
   );
-  expect(n).toBe(120);
+  expect(n).toBe(150);
   const kinds = new Set<string>();
   for (let a = 0; a < n; a++) {
     const r = await page.evaluate(
@@ -25,8 +25,18 @@ test('every catalog item can be generated, rendered, restored and sold', async (
     expect(r.steps.length, r.name).toBeGreaterThanOrEqual(2);
     r.steps.forEach((k) => kinds.add(k));
   }
-  // All 8 restoration mini-games occur in the content.
-  expect([...kinds].sort()).toEqual(['glue', 'paint', 'polish', 'rust', 'sand', 'scrub', 'sticker', 'wire']);
+  // All 9 restoration mini-games occur in the content.
+  expect([...kinds].sort()).toEqual([
+    'fix',
+    'glue',
+    'paint',
+    'polish',
+    'rust',
+    'sand',
+    'scrub',
+    'sticker',
+    'wire',
+  ]);
 });
 
 test('auction night, catalog, daily fix and completion screens are reachable', async ({ page }) => {
@@ -93,4 +103,44 @@ test('auction night, catalog, daily fix and completion screens are reachable', a
   expect(await page.evaluate(() => (window as unknown as { __tf: Tf }).__tf.state().flags.completeSeen)).toBe(
     true,
   );
+});
+
+test('workshop jobs: take a PC rebuild at the Repair Desk, fix it and get paid', async ({ page }) => {
+  test.setTimeout(300_000);
+  await page.setViewportSize({ width: 405, height: 720 });
+  await setupPage(page);
+  await page.goto('/');
+  await waitForScene(page, 'MainMenu');
+  type Tf = { setup(p: object): void; goto(k: string): void };
+  await page.evaluate(() => {
+    const tf = (window as unknown as { __tf: Tf }).__tf;
+    tf.setup({
+      tutorialDone: true,
+      tier: 4,
+      coins: 0,
+      day: 6,
+      phase: 'market',
+      workshops: ['repair', 'computer'],
+    });
+    tf.goto('Market');
+  });
+  await waitForScene(page, 'Market');
+  await press(page, 'mouse', 'desk');
+  // Offers: two repair-shop jobs, then the computer workshop's PC rebuild.
+  await press(page, 'mouse', 'job2');
+  await page.waitForTimeout(400);
+  await closeModals(page, 'mouse');
+  const jobs = await tf(page, (t) => t.state().inv.length);
+  expect(jobs).toBe(1);
+  await press(page, 'mouse', 'go');
+  await waitForScene(page, 'Workshop');
+  const steps = await page.evaluate(
+    () => (window as unknown as { __tf: { ws(): { steps: string[] } } }).__tf.ws().steps,
+  );
+  expect(steps).toContain('fix');
+  await playWorkshop(page, 'mouse');
+  const after = await tf(page, (t) => ({ coins: t.state().coins, inv: t.state().inv.length }));
+  // The customer took the PC home and paid well for the rebuild.
+  expect(after.inv).toBe(0);
+  expect(after.coins).toBeGreaterThan(300);
 });

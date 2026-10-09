@@ -20,7 +20,8 @@ import { StickerGame } from '../minigames/StickerGame';
 import { GlueGame } from '../minigames/GlueGame';
 import { PaintGame } from '../minigames/PaintGame';
 import { RepairGame } from '../minigames/RepairGame';
-import { ITEMS } from '../../core/data';
+import { completeJob, type JobResult } from '../../core/jobs';
+import { ITEMS, persona } from '../../core/data';
 import { instanceValue, qualityOf, recipeFor, type RecipeStep } from '../../core/items';
 import { dailyItem, recordDaily } from '../../core/daily';
 import {
@@ -360,7 +361,7 @@ export class WorkshopScene extends GameScene {
       // The sticker game draws its own sticker image; nothing to add up-front besides it.
     }
     this.counter.setText(
-      `${ITEMS[inst.a].name} · ${t('mg.itemOf', { n: this.itemNo, total: this.itemTotal })}`,
+      `${inst.job ? `${t('jobs.badge')}: ` : ''}${ITEMS[inst.a].name} · ${t('mg.itemOf', { n: this.itemNo, total: this.itemTotal })}`,
     );
     this.renderChips();
     const canGold =
@@ -606,13 +607,16 @@ export class WorkshopScene extends GameScene {
     }
     const res = finishRestoration(s, inst, this.paintChoice ?? undefined);
     s.day.premiumOnce = false;
+    // A customer's job: they collect it and pay (it never goes on our shelves).
+    const job = inst.job ? completeJob(s, inst) : null;
+    if (job) res.levelUps += job.levelUps;
     void session.save();
-    this.showReveal(res);
+    this.showReveal(res, job);
   }
 
   // ---------------- reveal ----------------
 
-  private showReveal(res: RestoreResult): void {
+  private showReveal(res: RestoreResult, job: JobResult | null = null): void {
     const inst = this.inst!;
     this.view = 'reveal';
     this.doneBtn.setVisible(false);
@@ -701,14 +705,17 @@ export class WorkshopScene extends GameScene {
       -30,
       this.dailyKey
         ? t('daily.result', { stars: res.stars })
-        : t('reveal.flip', { paid: inst.paid, value: res.value }),
+        : job && inst.job
+          ? t('jobs.paid', { name: persona(inst.job.p).name, n: job.fee })
+          : t('reveal.flip', { paid: inst.paid, value: res.value }),
       FS.h3,
       C.ink,
       { wrap: 560 },
     );
     card.add(line);
     let extra = '';
-    if (res.gemRevealed) extra = t('reveal.gem');
+    if (job) extra = job.tip > 0 ? t('jobs.tip', { n: job.tip }) : '';
+    else if (res.gemRevealed) extra = t('reveal.gem');
     else if (res.newPerfect) extra = t('reveal.perfect');
     else if (inst.r > 0) extra = `${'★'.repeat(inst.r)} ${rarityLabel(inst.r)}`;
     if (extra)
@@ -719,7 +726,7 @@ export class WorkshopScene extends GameScene {
           30,
           extra,
           FS.body,
-          res.gemRevealed ? C.purple : RARITY_COLORS[Math.max(1, inst.r)],
+          job ? C.leafDark : res.gemRevealed ? C.purple : RARITY_COLORS[Math.max(1, inst.r)],
           { stroke: C.white, strokeW: 4 },
         ),
       );

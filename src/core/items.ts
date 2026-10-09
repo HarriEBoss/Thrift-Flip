@@ -7,6 +7,7 @@ import { STEP_ORDER } from './types';
 import { trendFor } from './trends';
 import { catalogBonusFor } from './catalog';
 import { decorFx } from './decor';
+import type { JobKind } from './repair';
 
 export interface RecipeStep {
   k: StepKind;
@@ -21,8 +22,9 @@ export function archetype(inst: { a: number }): ItemArchetype {
  * Restoration recipe: ordered list of 2-5 steps derived from the category template and the
  * instance seed. Heavier damage makes optional damage more likely. Deterministic.
  */
-export function recipeFor(inst: { a: number; s: number; d: number }): RecipeStep[] {
+export function recipeFor(inst: { a: number; s: number; d: number; job?: { k: JobKind } }): RecipeStep[] {
   const arch = ITEMS[inst.a];
+  if (inst.job) return jobRecipe(arch.cat, inst.job.k);
   // Tutorial mug: always scrub -> polish.
   if (inst.s === TUTORIAL_SEED)
     return [
@@ -58,6 +60,19 @@ export function recipeFor(inst: { a: number; s: number; d: number }): RecipeStep
 }
 
 export const TUTORIAL_SEED = 777;
+
+/**
+ * A customer's job is about the repair: clean it, do the repair (wiring, or the full Repair step
+ * for computers, cars and the big jobs), and an optional polish.
+ */
+function jobRecipe(cat: CategoryId, k: JobKind): RecipeStep[] {
+  const fix = k !== 'service' || RECIPES[cat].some((s) => s.k === 'fix');
+  return [
+    { k: 'scrub', req: true },
+    { k: fix ? 'fix' : 'wire', req: true },
+    { k: 'polish', req: false },
+  ];
+}
 
 export function qualityOf(inst: ItemInstance): number {
   const recipe = recipeFor(inst);

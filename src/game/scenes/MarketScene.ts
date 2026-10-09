@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { GameScene } from './GameScene';
 import { Button, Slider, drawCard, makeText } from '../ui/widgets';
-import { drawStepIcon, iconAd, iconArrow, iconCoin, iconGift, iconTool } from '../ui/icons';
+import { drawStepIcon, iconAd, iconArrow, iconCoin, iconGift, iconTool, iconWorkshop } from '../ui/icons';
 import { Coach } from '../ui/coach';
 import { C, FS, RARITY_COLORS } from '../theme';
 import { session } from '../session';
@@ -32,6 +32,8 @@ import type { ItemInstance } from '../../core/state';
 import { REWARD_IDS } from '../../platform/Platform';
 import { t } from '../../i18n';
 import type { StepKind } from '../../core/types';
+import { acceptJob, hasWorkshop, jobOffers, type JobOffer } from '../../core/jobs';
+import { persona } from '../../core/data';
 
 export const HINT_KEYS: Record<StepKind, string> = {
   sticker: 'hint.sticker',
@@ -54,6 +56,8 @@ export function rarityLabel(r: number): string {
 }
 
 export class MarketScene extends GameScene {
+  private deskBtn!: Button;
+  private deskIcon!: Button;
   private offers: Offer[] = [];
   private cards: Phaser.GameObjects.Container[] = [];
   private header!: Phaser.GameObjects.Container;
@@ -162,7 +166,26 @@ export class MarketScene extends GameScene {
       icon: (g, sz) => iconTool(g, sz),
       onClick: () => openUpgradesHub(this, () => this.layout()),
     });
+    this.deskBtn = new Button(this, 0, 0, {
+      w: 190,
+      h: 64,
+      label: t('jobs.desk'),
+      color: C.terracottaDark,
+      fontSize: FS.small,
+      icon: (g, sz) => iconWorkshop(g, 'repair', sz),
+      onClick: () => this.openJobs(),
+    });
+    this.deskIcon = new Button(this, 0, 0, {
+      w: 84,
+      h: 76,
+      label: '',
+      color: C.terracottaDark,
+      icon: (g, sz) => iconWorkshop(g, 'repair', sz),
+      onClick: () => this.openJobs(),
+    });
     this.root.add([
+      this.deskBtn,
+      this.deskIcon,
       this.goBtn,
       this.switchBtn,
       this.trendsBtn,
@@ -224,6 +247,16 @@ export class MarketScene extends GameScene {
       this.rerollBtn.setPosition(650, by);
       this.giftBtn.setPosition(f.w - 420, by);
     }
+    // The Repair Desk sits top left, opposite the upgrades button.
+    const desk = session.state.flags.tutorialDone && hasWorkshop(session.state);
+    const db = f.portrait ? this.deskIcon : this.deskBtn;
+    this.deskBtn.setVisible(false);
+    this.deskIcon.setVisible(false);
+    db.setVisible(desk);
+    db.setPosition(24 + (f.portrait ? 42 : 95), top + (f.portrait ? 30 : 44));
+    const open = jobOffers(session.state).length - session.state.day.jobs.length;
+    db.setBadge(desk && open > 0 ? String(open) : null);
+    this.mark('desk', db);
     this.updateButtons();
     this.updateTutorial();
   }
@@ -531,6 +564,89 @@ export class MarketScene extends GameScene {
     });
     rows.push(sw);
     m.content.add(rows);
+  }
+
+  /** The Repair Desk: today's customer jobs (fix their things for a fee). */
+  private openJobs(): void {
+    const s = session.state;
+    const offers = jobOffers(s);
+    const rowH = 150;
+    const m = this.openModal({ title: t('jobs.title'), w: 680, h: 260 + Math.max(1, offers.length) * rowH });
+    m.content.add(
+      makeText(this, 0, -m.ph / 2 + 92, t('jobs.intro'), FS.tiny, C.inkSoft, { wrap: 600, bold: false }),
+    );
+    if (!offers.length) m.content.add(makeText(this, 0, 0, t('jobs.none'), FS.body, C.inkSoft));
+    const top = -m.ph / 2 + 196;
+    offers.forEach((o, i) =>
+      m.content.add(
+        this.jobRow(o, i, top + i * rowH, () => {
+          m.close();
+          this.layout();
+          this.openJobs();
+        }),
+      ),
+    );
+  }
+
+  private jobRow(o: JobOffer, i: number, y: number, after: () => void): Phaser.GameObjects.Container {
+    const s = session.state;
+    const taken = s.day.jobs.includes(i);
+    const row = this.add.container(0, y);
+    const g = this.add.graphics();
+    drawCard(g, -320, -66, 640, 132, taken ? 0xdff2d5 : C.white, {
+      radius: 18,
+      stroke: C.ink,
+      strokeW: 3,
+      shadow: 3,
+    });
+    const inst: ItemInstance = {
+      uid: -1,
+      a: o.a,
+      r: 0,
+      rev: true,
+      s: o.s,
+      d: o.d,
+      paid: 0,
+      q: -1,
+      sc: [],
+      col: '',
+      day: 0,
+    };
+    const img = this.add.image(-262, 0, instanceThumb(this, inst));
+    img.setDisplaySize(108, 108);
+    const who = t('jobs.from', { name: persona(o.p).name });
+    const what = t(`jobs.kind.${o.k}`, { item: ITEMS[o.a].name });
+    row.add([
+      g,
+      img,
+      makeText(this, -196, -38, who, FS.tiny, C.inkSoft, { align: 'left', bold: false }),
+      makeText(this, -196, -2, what, FS.small, C.ink, { align: 'left', wrap: 290 }),
+    ]);
+    const coin = this.add.graphics();
+    iconCoin(coin, 30);
+    coin.setPosition(-180, 40);
+    row.add([
+      coin,
+      makeText(this, -158, 40, t('jobs.pays', { n: o.fee }), FS.small, C.leafDark, { align: 'left' }),
+    ]);
+    const b = new Button(this, 225, 0, {
+      w: 160,
+      h: 72,
+      label: taken ? t('jobs.taken') : t('jobs.accept'),
+      color: taken ? C.inkSoft : C.terracotta,
+      fontSize: FS.small,
+      onClick: () => {
+        if (!acceptJob(s, i)) return;
+        session.audio.play('stamp');
+        session.haptic('success');
+        void session.save(true);
+        after();
+      },
+    });
+    b.setEnabled(!taken);
+    this.mark(`job${i}`, b);
+    row.add(b);
+    return row;
   }
 
   private async doReroll(): Promise<void> {

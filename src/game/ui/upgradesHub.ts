@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { BaseScene } from '../scenes/BaseScene';
 import { Button, ProgressBar, drawCard, makeText } from './widgets';
-import { iconCoin, iconHeart } from './icons';
+import { iconCoin, iconHeart, iconWorkshop } from './icons';
 import { drawDecor } from '../art/decor';
 import { C, FS } from '../theme';
 import { session } from '../session';
@@ -10,6 +10,7 @@ import { DECOR, affordableDecor, buyDecor, decorStatus } from '../../core/decor'
 import { canUpgradeTier, nextGoal, skillPoints, upgradeStatus } from '../../core/progression';
 import { openSkills, openTierUpgrade, openUpgrades } from './menus';
 import type { DecorFx } from '../../core/types';
+import { WORKSHOPS, affordableWorkshops, buyWorkshop, workshopStatus } from '../../core/jobs';
 import { t } from '../../i18n';
 
 function refresh(scene: BaseScene): void {
@@ -20,13 +21,13 @@ function refresh(scene: BaseScene): void {
 export function upgradesAvailable(): number {
   const s = session.state;
   const tools = BALANCE.upgrades.filter((u) => upgradeStatus(s, u) === 'available').length;
-  return (canUpgradeTier(s) ? 1 : 0) + tools + affordableDecor(s) + skillPoints(s);
+  return (canUpgradeTier(s) ? 1 : 0) + tools + affordableDecor(s) + skillPoints(s) + affordableWorkshops(s);
 }
 
 /** One place for every way to grow: bigger shop, decorations, tools and skills. */
 export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
   const s = session.state;
-  const m = scene.openModal({ title: t('hub.title'), w: 620, h: 820 });
+  const m = scene.openModal({ title: t('hub.title'), w: 620, h: 900 });
   const goal = nextGoal(s);
   const rows: Array<{
     id: string;
@@ -53,6 +54,14 @@ export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
       open: () => openDecor(scene, after),
     },
     {
+      id: 'hub_workshops',
+      label: t('hub.workshops'),
+      sub: t('hub.workshopsSub', { n: s.workshops.length, total: WORKSHOPS.length }),
+      color: C.terracotta,
+      badge: affordableWorkshops(s) ? String(affordableWorkshops(s)) : null,
+      open: () => openWorkshops(scene, after),
+    },
+    {
       id: 'hub_tools',
       label: t('hub.tools'),
       sub: t('hub.toolsSub'),
@@ -74,9 +83,9 @@ export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
     onChange?.();
   }
   rows.forEach((r, i) => {
-    const b = new Button(scene, 0, -270 + i * 114, {
+    const b = new Button(scene, 0, -318 + i * 104, {
       w: 520,
-      h: 100,
+      h: 92,
       label: r.label,
       sub: r.sub,
       color: r.color,
@@ -90,7 +99,7 @@ export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
     scene.mark(r.id, b);
     m.content.add(b);
   });
-  if (goal) m.content.add(goalBanner(scene, 520).setPosition(0, 206));
+  if (goal) m.content.add(goalBanner(scene, 520).setPosition(0, 262));
 }
 
 /** "Next shop: Garage Shop" tracker with coins / reputation progress. */
@@ -209,6 +218,75 @@ export function openDecor(scene: BaseScene, onChange?: () => void): void {
     });
     b.setEnabled(st === 'available');
     scene.mark(`decor_${d.id}`, b);
+    row.add(b);
+    m.content.add(row);
+  });
+}
+
+/** Workshops: a Repair Shop, then a Computer Workshop and a Car Garage, where customers bring work. */
+export function openWorkshops(scene: BaseScene, onChange?: () => void): void {
+  const s = session.state;
+  const rowH = 150;
+  const m = scene.openModal({ title: t('jobs.wsTitle'), w: 660, h: 300 + WORKSHOPS.length * rowH });
+  m.content.add(
+    makeText(scene, 0, -m.ph / 2 + 92, t('jobs.wsIntro'), FS.tiny, C.inkSoft, { wrap: 580, bold: false }),
+  );
+  const top = -m.ph / 2 + 200;
+  WORKSHOPS.forEach((w, i) => {
+    const y = top + i * rowH;
+    const st = workshopStatus(s, w);
+    const row = scene.add.container(0, y);
+    const g = scene.add.graphics();
+    drawCard(g, -300, -64, 600, 128, st === 'owned' ? 0xdff2d5 : C.white, {
+      radius: 18,
+      stroke: C.ink,
+      strokeW: 3,
+      shadow: 3,
+    });
+    const art = scene.add.graphics();
+    iconWorkshop(art, w.id, 70);
+    art.setPosition(-250, -4);
+    if (st === 'locked') art.setAlpha(0.35);
+    const name = makeText(scene, -200, -36, t(`jobs.ws.${w.id}`), FS.small, C.ink, { align: 'left' });
+    const why =
+      st === 'locked'
+        ? t('upgrades.needTier', { tier: t(`tier.${BALANCE.tiers[w.tier].id}`) })
+        : st === 'needs'
+          ? t('jobs.needsRepair')
+          : t(`jobs.wsDesc.${w.id}`);
+    const desc = makeText(scene, -200, 14, why, FS.tiny, C.inkSoft, {
+      align: 'left',
+      bold: false,
+      wrap: 300,
+    });
+    row.add([g, art, name, desc]);
+    const label =
+      st === 'owned'
+        ? t('common.owned')
+        : st === 'available' || st === 'poor'
+          ? String(w.cost)
+          : t('decor.locked');
+    const b = new Button(scene, 205, 0, {
+      w: 160,
+      h: 64,
+      label,
+      color: st === 'available' ? C.leaf : C.inkSoft,
+      fontSize: FS.small,
+      icon: st === 'available' || st === 'poor' ? (gr, sz) => iconCoin(gr, sz) : undefined,
+      onClick: () => {
+        if (buyWorkshop(s, w.id)) {
+          session.audio.play('register');
+          session.haptic('success');
+          void session.save(true);
+          refresh(scene);
+          m.close();
+          onChange?.();
+          openWorkshops(scene, onChange);
+        }
+      },
+    });
+    b.setEnabled(st === 'available');
+    scene.mark(`ws_${w.id}`, b);
     row.add(b);
     m.content.add(row);
   });

@@ -78,6 +78,8 @@ export interface DayState {
   /** Ad counters (per in-game day). */
   gifts: number;
   tipsAds: number;
+  /** Indices of today's job offers already taken on. */
+  jobs: number[];
 }
 
 export interface Settings {
@@ -133,7 +135,9 @@ export interface GameState {
   owned: string[];
   /** Owned shop decorations (ids). */
   decor: string[];
-  /** 120 chars: '0' unseen, '1' found, '2' perfectly restored. */
+  /** Owned workshops (Repair Shop, Computer Workshop, Car Garage). */
+  workshops: string[];
+  /** One char per item: '0' unseen, '1' found, '2' perfectly restored. */
   catalog: string;
   requests: CustomerRequest[];
   stats: LifetimeStats;
@@ -199,6 +203,7 @@ export function newDay(n: number, market: string, mseed: number): DayState {
     doubled: false,
     gifts: 0,
     tipsAds: 0,
+    jobs: [],
   };
 }
 
@@ -218,6 +223,7 @@ export function newGame(seed: number): GameState {
     perks: [],
     owned: [],
     decor: [],
+    workshops: [],
     catalog: '0'.repeat(ITEMS.length),
     requests: [],
     stats: {

@@ -9,6 +9,8 @@ export type Migration = (old: SaveObj) => SaveObj;
 export const MIGRATIONS: Migration[] = [
   // v1 -> v2: shop decorations were added (owned decoration ids in `dc`).
   (old) => ({ ...old, v: 2, dc: Array.isArray(old.dc) ? old.dc : [] }),
+  // v2 -> v3: workshops (`ws`), today's accepted jobs (dy[15]) and job items (item tuple [11]).
+  (old) => ({ ...old, v: 3, ws: Array.isArray(old.ws) ? old.ws : [] }),
 ];
 
 export const CURRENT_VERSION = MIGRATIONS.length + 1;

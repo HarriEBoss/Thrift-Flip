@@ -306,3 +306,79 @@ export function iconShopBag(g: G, s: number): void {
 export function iconSparkle(g: G, s: number): void {
   pixelDraw(g, `iconSparkle`, { grid: gridFor(s), extent: 40, size: s }, (p) => v_iconSparkle(p, 40));
 }
+
+/** Workshop signs: a toolbox (Repair Shop), a computer (Computer Workshop), a car (Car Garage). */
+function v_iconWorkshop(g: Pen, id: string, s: number): void {
+  const k = s / 40;
+  g.lineStyle(2.5 * k, C.ink, 1);
+  if (id === 'computer') {
+    g.fillStyle(0xd9d4c4, 1);
+    g.fillRoundedRect(-17 * k, -15 * k, 34 * k, 24 * k, 3 * k);
+    g.strokeRoundedRect(-17 * k, -15 * k, 34 * k, 24 * k, 3 * k);
+    g.fillStyle(C.teal, 1);
+    g.fillRect(-13 * k, -11 * k, 26 * k, 16 * k);
+    g.fillStyle(C.tealLight, 1);
+    g.fillRect(-10 * k, -8 * k, 8 * k, 3 * k);
+    g.fillStyle(0xd9d4c4, 1);
+    g.fillRect(-4 * k, 9 * k, 8 * k, 5 * k);
+    g.fillRoundedRect(-12 * k, 13 * k, 24 * k, 5 * k, 2 * k);
+    g.strokeRoundedRect(-12 * k, 13 * k, 24 * k, 5 * k, 2 * k);
+  } else if (id === 'garage') {
+    g.fillStyle(C.terracotta, 1);
+    g.fillPoints(
+      [
+        V(-18 * k, 8 * k),
+        V(-18 * k, -1 * k),
+        V(-9 * k, -3 * k),
+        V(-4 * k, -11 * k),
+        V(8 * k, -11 * k),
+        V(13 * k, -3 * k),
+        V(18 * k, -1 * k),
+        V(18 * k, 8 * k),
+      ],
+      true,
+    );
+    g.strokePoints(
+      [
+        V(-18 * k, 8 * k),
+        V(-18 * k, -1 * k),
+        V(-9 * k, -3 * k),
+        V(-4 * k, -11 * k),
+        V(8 * k, -11 * k),
+        V(13 * k, -3 * k),
+        V(18 * k, -1 * k),
+        V(18 * k, 8 * k),
+      ],
+      true,
+    );
+    g.fillStyle(C.tealLight, 1);
+    g.fillPoints([V(-6 * k, -3 * k), V(-2 * k, -8 * k), V(6 * k, -8 * k), V(9 * k, -3 * k)], true);
+    g.fillStyle(C.ink, 1);
+    g.fillCircle(-10 * k, 9 * k, 6 * k);
+    g.fillCircle(10 * k, 9 * k, 6 * k);
+    g.fillStyle(0xc0cbdc, 1);
+    g.fillCircle(-10 * k, 9 * k, 2.5 * k);
+    g.fillCircle(10 * k, 9 * k, 2.5 * k);
+  } else {
+    g.fillStyle(C.terracotta, 1);
+    g.fillRoundedRect(-17 * k, -6 * k, 34 * k, 22 * k, 3 * k);
+    g.strokeRoundedRect(-17 * k, -6 * k, 34 * k, 22 * k, 3 * k);
+    g.fillStyle(C.terracottaDark, 1);
+    g.fillRect(-17 * k, 1 * k, 34 * k, 4 * k);
+    g.beginPath();
+    g.moveTo(-8 * k, -6 * k);
+    g.lineTo(-8 * k, -13 * k);
+    g.lineTo(8 * k, -13 * k);
+    g.lineTo(8 * k, -6 * k);
+    g.strokePath();
+    g.fillStyle(C.mustard, 1);
+    g.fillRect(-3 * k, 0, 6 * k, 6 * k);
+    g.strokeRect(-3 * k, 0, 6 * k, 6 * k);
+  }
+}
+
+export function iconWorkshop(g: G, id: string, s: number): void {
+  pixelDraw(g, `iconWorkshop|${id}`, { grid: gridFor(s), extent: 40, size: s }, (p) =>
+    v_iconWorkshop(p, id, 40),
+  );
+}
