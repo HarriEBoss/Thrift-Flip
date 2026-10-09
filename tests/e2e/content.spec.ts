@@ -74,7 +74,9 @@ test('auction night, catalog, daily fix and completion screens are reachable', a
   await press(page, 'mouse', 'switch');
   await press(page, 'mouse', 'market_auction');
   await waitForScene(page, 'Auction');
-  for (let i = 0; i < 12; i++) {
+  // Keep bidding until a lot is won (a pricey lot can be lost to the other bidders first).
+  const won = () => page.evaluate(() => (window as unknown as { __tf: Tf }).__tf.state().day.bought.length);
+  for (let i = 0; i < 80 && (await won()) < 1; i++) {
     const bid = await page.evaluate(() =>
       (window as unknown as { __tf: { where(id: string): { x: number; y: number } | null } }).__tf.where(
         'bid',
@@ -83,16 +85,12 @@ test('auction night, catalog, daily fix and completion screens are reachable', a
     if (bid) await tap(page, 'mouse', bid);
     await page.waitForTimeout(500);
   }
-  await page.waitForTimeout(6000);
-  const bought = await page.evaluate(
-    () => (window as unknown as { __tf: Tf }).__tf.state().day.bought.length,
-  );
-  expect(bought).toBeGreaterThanOrEqual(1);
+  expect(await won()).toBeGreaterThanOrEqual(1);
   // Completion screen
   await page.evaluate(() => {
     const tf = (window as unknown as { __tf: Tf & { state(): { catalog: string } } }).__tf;
     const st = tf.state() as unknown as { catalog: string; tier: number };
-    st.catalog = '1'.repeat(120);
+    st.catalog = '1'.repeat(195);
     st.tier = 4;
     tf.goto('Complete');
   });
