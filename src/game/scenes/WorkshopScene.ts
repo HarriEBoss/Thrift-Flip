@@ -20,6 +20,7 @@ import { StickerGame } from '../minigames/StickerGame';
 import { GlueGame } from '../minigames/GlueGame';
 import { PaintGame } from '../minigames/PaintGame';
 import { RepairGame } from '../minigames/RepairGame';
+import { DesignGame } from '../minigames/DesignGame';
 import { completeJob, type JobResult } from '../../core/jobs';
 import { isReselling } from '../../core/empire';
 import { ITEMS, persona } from '../../core/data';
@@ -505,6 +506,9 @@ export class WorkshopScene extends GameScene {
       case 'fix':
         this.mini = new RepairGame(ctx, 'fix');
         break;
+      case 'design':
+        this.mini = new DesignGame(ctx);
+        break;
     }
     this.mini!.start();
     this.instruction.setText(t(this.mini!.instruction()));
@@ -707,7 +711,7 @@ export class WorkshopScene extends GameScene {
       this.dailyKey
         ? t('daily.result', { stars: res.stars })
         : job && inst.job
-          ? t('jobs.paid', { name: persona(inst.job.p).name, n: job.fee })
+          ? t('jobs.paid', { name: inst.job.c || persona(inst.job.p).name, n: job.fee })
           : t('reveal.flip', { paid: inst.paid, value: res.value }),
       FS.h3,
       C.ink,
@@ -715,7 +719,12 @@ export class WorkshopScene extends GameScene {
     );
     card.add(line);
     let extra = '';
-    if (job) extra = job.tip > 0 ? t('jobs.tip', { n: job.tip }) : '';
+    if (job)
+      extra = job.missed
+        ? t('jobs.missed', { stars: '★'.repeat(inst.job?.t ?? 1) })
+        : job.tip > 0
+          ? t('jobs.tip', { n: job.tip })
+          : '';
     else if (res.gemRevealed) extra = t('reveal.gem');
     else if (res.newPerfect) extra = t('reveal.perfect');
     else if (inst.r > 0) extra = `${'★'.repeat(inst.r)} ${rarityLabel(inst.r)}`;
@@ -727,7 +736,13 @@ export class WorkshopScene extends GameScene {
           30,
           extra,
           FS.body,
-          job ? C.leafDark : res.gemRevealed ? C.purple : RARITY_COLORS[Math.max(1, inst.r)],
+          job
+            ? job.missed
+              ? C.terracottaDark
+              : C.leafDark
+            : res.gemRevealed
+              ? C.purple
+              : RARITY_COLORS[Math.max(1, inst.r)],
           { stroke: C.white, strokeW: 4 },
         ),
       );
@@ -836,7 +851,7 @@ export class WorkshopScene extends GameScene {
         w: sk.w,
       };
     }
-    if (this.mini instanceof RepairGame) info.repair = this.mini.debug();
+    if (this.mini instanceof RepairGame || this.mini instanceof DesignGame) info.repair = this.mini.debug();
     return info;
   }
 

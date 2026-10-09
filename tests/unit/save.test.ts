@@ -183,6 +183,22 @@ describe('migrations', () => {
     expect(h.company).toBe(newGame(h.seed).company);
   });
 
+  it('v4 -> v5: no brand yet, no campaigns today; v5 keeps brand, campaigns and contract details', () => {
+    const v4 = JSON.parse(readFileSync(new URL('v4-midgame.json', FIXTURES), 'utf8'));
+    const m = migrate(v4);
+    expect(m.br).toBe(0);
+    const g = deserialize(JSON.stringify(v4));
+    expect(g.brand).toBe(0);
+    expect(g.day.ads).toEqual([]);
+    const job = g.inv.find((i) => i.job)!.job!;
+    expect(job.t).toBeUndefined();
+    expect(job.c).toBeUndefined();
+    const v5 = deserialize(readFileSync(new URL('v5-midgame.json', FIXTURES), 'utf8'));
+    expect(v5.brand).toBeGreaterThan(0);
+    expect(v5.day.ads).toEqual(['flyers', 'radio']);
+    expect(v5.inv.some((i) => i.job?.k === 'design' && i.job.t === 1 && !!i.job.c)).toBe(true);
+  });
+
   it('migrate is a no-op at the current version and validates chain', () => {
     const obj = { v: CURRENT_VERSION, a: 1 };
     expect(migrate(obj)).toBe(obj);

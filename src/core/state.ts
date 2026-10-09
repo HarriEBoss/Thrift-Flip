@@ -26,7 +26,15 @@ export interface ItemInstance {
   /** Day bought. */
   day: number;
   /** A customer's repair job (not ours to sell): fee paid when done, persona id, kind of job. */
-  job?: { fee: number; p: string; k: JobKind };
+  job?: {
+    fee: number;
+    p: string;
+    k: JobKind;
+    /** Reveal stars the client asked for (1-3); missing it lowers the pay. */
+    t?: number;
+    /** Client company name for contracts (else the customer persona is the client). */
+    c?: string;
+  };
 }
 
 export interface CustomerRequest {
@@ -81,6 +89,8 @@ export interface DayState {
   tipsAds: number;
   /** Ids of today's job offers already taken on. */
   jobs: number[];
+  /** Marketing campaigns run today. */
+  ads: string[];
 }
 
 export interface Settings {
@@ -140,6 +150,8 @@ export interface GameState {
   company: string;
   /** Businesses owned (ladder ids, always including 'reselling') and the one worked at today. */
   biz: { own: string[]; cur: string };
+  /** Brand points from marketing (fade a little every day). */
+  brand: number;
   /** One char per item: '0' unseen, '1' found, '2' perfectly restored. */
   catalog: string;
   requests: CustomerRequest[];
@@ -209,6 +221,7 @@ export function newDay(n: number, market: string, mseed: number): DayState {
     gifts: 0,
     tipsAds: 0,
     jobs: [],
+    ads: [],
   };
 }
 
@@ -230,6 +243,7 @@ export function newGame(seed: number): GameState {
     decor: [],
     company: suggestName(seed >>> 0),
     biz: { own: ['reselling'], cur: 'reselling' },
+    brand: 0,
     catalog: '0'.repeat(ITEMS.length),
     requests: [],
     stats: {

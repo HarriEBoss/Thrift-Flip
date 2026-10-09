@@ -157,6 +157,28 @@ JSON entry plus i18n keys (`biz.*`, `bizDesc.*`); categories that only come in a
 - Job ids are stable per day (ladder index × 10 + slot), so taking a job survives saves. Job items do not
   count against shop space and are never sold.
 
+### Contracts, marketing and custom engineering
+
+- **Contracts** (`core/jobs.ts`, numbers in `business.contract` and `empire.contracts`): every offer is a
+  contract between your company and a client (a customer, or a client company for bigger work). It has a
+  difficulty (1–5 stars: pay × (1 + payPerStar × (stars − 1)), one star more once you own a bigger
+  business), a quality the client wants (reveal stars; missing it pays `belowTarget` of the fee, no tip,
+  no reputation) and may be a **fleet order** of 2–3 items (pay per item, plus `fleetBonus` per extra
+  item). The signing screen shows the parties, the work, difficulty, quality wanted and pay. Job items
+  carry `t` (target) and `c` (client company).
+- **Marketing** (`core/marketing.ts`, `empire.marketing`): campaigns (flyers → radio → TV → billboards →
+  web → satellite ads, each needing a business) cost coins and add brand points, once a day each. Brand
+  gives a flow multiplier `1 + flowMax × (1 − e^(−brand / flowK))`, so returns diminish. It multiplies
+  contract offers per job type (up to 4) and adds shop customers (half the bonus, up to 10 a day). The
+  brand fades by `decay` every night. Upgrades hub → Marketing.
+- **Custom engineering** (`core/design.ts`, `src/data/designs.json`, `minigames/DesignGame.ts`): your
+  biggest business (from Computer Repair on) offers one design contract a day. Its recipe is
+  design → repair → polish. The design step is a blueprint: tap a slot, pick one of three parts; gauges
+  show power (speed, strength or thrust), weight and cost against the client's spec. `makeSpec` builds
+  the spec from a hidden mixed design and loosens it a little, so it can always be met but the strongest
+  parts are too heavy or too pricey. `solveDesign` finds a solution (bot and tests). It pays
+  `designPay` (about 2× a normal contract).
+
 ## Growing the shop
 
 Every way to grow sits behind one **Upgrades** button (Main Menu, Market header, Day Summary), in
@@ -216,7 +238,8 @@ bright palette in `theme.ts` and the Nunito font.
   forces a write on day end, purchases and pause. It checks UTF-16 well-formedness and the 3 MiB / 500 KiB limits.
   A corrupt save is kept in memory and writing is blocked until the player sees a friendly message.
 
-Current version: **v4**. v2 added `dc` (owned decorations); v3 added `ws` (owned workshops), `dy[15]`
+Current version: **v5** (v5 adds `br`, the brand, `dy[16]`, today's campaigns, and the job tuple's
+quality target and client company). v2 added `dc` (owned decorations); v3 added `ws` (owned workshops), `dy[15]`
 (today's taken jobs) and an optional job tuple `[fee, persona, kind]` at the end of an item; v4 adds `cn`
 (company name), `bz` (`[owned businesses, today's business]`) and `fl.nm` (named), and drops `ws`: the
 Repair Shop becomes Phone Repair, the Computer Workshop Computer Repair and the Car Garage Mechanic.

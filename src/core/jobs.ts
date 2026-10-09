@@ -1,94 +1,184 @@
 /**
- * Customer jobs. Every business you own (after the Reselling Shop) gets jobs each day: fix a phone,
- * rebuild a PC, swap a car's engine, repair a robot or a rocket (business.jobs in balance.json). A job
- * is restored in the workshop like your own items, but it is not yours to sell: when it is done the
- * customer pays the fee, plus a tip for great work.
+ * Contracts. Every business you own (after the Reselling Shop) gets contracts each day, signed in your
+ * company's name: fix a phone, a fleet of scooters, rebuild a PC, swap a car's engine, repair a robot
+ * or a rocket, or design something new (business.jobs / business.contract in balance.json). Each has a
+ * difficulty (more stars, more pay) and a quality the client asks for. Contract items are restored in
+ * the workshop like your own, but are not yours to sell: when one is done the client pays (less if the
+ * quality target was missed, a tip for great work).
  */
 import { BALANCE, ITEMS, PERSONAS } from './data';
 import { Rng, hashSeed } from './prng';
 import { addXp } from './progression';
 import { makeInstance, recipeFor } from './items';
 import { BUSINESSES, business, ownsBusiness } from './empire';
+import { brandFlow } from './marketing';
+import { designFor } from './design';
+import { starsFor } from './economy';
+import namesJson from '../data/names.json';
 import type { JobKind } from './repair';
 import type { GameState, ItemInstance } from './state';
 import type { JobDef } from './types';
 
-/** A job a customer offers today. */
+/** A contract a customer or client company offers today. */
 export interface JobOffer {
   /** Stable id for today: business ladder index x 10 + slot. */
   id: number;
   /** Business it belongs to. */
   b: string;
-  /** Item archetype. */
+  /** The items to fix (2-3 for a fleet order). The first is shown on the card. */
+  items: Array<{ a: number; s: number; d: number }>;
   a: number;
   s: number;
   d: number;
   k: JobKind;
+  /** Pay per item (before the tip). */
   fee: number;
-  /** Persona id of the customer. */
+  /** Persona id of the contact person. */
   p: string;
+  /** Client company ('' = the contact person is the client). */
+  client: string;
+  /** Difficulty, 1-5 stars. */
+  stars: number;
+  /** Reveal stars the client asks for (1-3). */
+  target: number;
 }
 
 const round5 = (v: number) => Math.round(v / 5) * 5;
 
-/** What a job pays (before the tip). */
+/** What a job pays (before difficulty, fleet bonus and tip). */
 export function jobFee(base: number, def: Pick<JobDef, 'fee'>, d: number): number {
   return round5(base * def.fee[0] + def.fee[1] + d * def.fee[2]);
 }
 
-/** Today's job offers at one business (deterministic per save, day and business). */
+/** Pay for one item of a contract: harder contracts and bigger fleet orders pay more. */
+export function contractFee(base: number, stars: number, count: number): number {
+  const c = BALANCE.empire.contracts;
+  return round5(base * (1 + c.payPerStar * (stars - 1)) * (1 + c.fleetBonus * (count - 1)));
+}
+
+const CLIENTS = (namesJson as { clients: Record<string, string[]> }).clients;
+
+function topIndex(state: GameState): number {
+  let top = 0;
+  BUSINESSES.forEach((b, i) => {
+    if (ownsBusiness(state, b.id)) top = i;
+  });
+  return top;
+}
+
+/**
+ * Today's contracts at one business (deterministic per save, day and business). Difficulty scales
+ * with the business and goes up a star once you own a bigger one; marketing (brand) brings more
+ * offers; the biggest business you own also gets a custom design contract.
+ */
 export function businessOffers(state: GameState, id: string): JobOffer[] {
   const bi = BUSINESSES.findIndex((b) => b.id === id);
   const b = BUSINESSES[bi];
-  if (!b || !ownsBusiness(state, id)) return [];
+  if (!b || !ownsBusiness(state, id) || !b.contract) return [];
+  const cfg = b.contract;
+  const top = topIndex(state);
+  const bonus = top > bi ? 1 : 0;
+  const flow = brandFlow(state.brand);
   const rng = new Rng(hashSeed(state.seed, 'jobs', state.day.n, id));
   const out: JobOffer[] = [];
   let slot = 0;
-  for (const def of b.jobs) {
-    const pool = ITEMS.map((it, a) => ({ it, a })).filter(
+  const contact = (cat: string) => {
+    const people = PERSONAS.filter((p) => p.cats.includes(cat as never));
+    return people.length ? rng.pick(people).id : rng.pick(PERSONAS).id;
+  };
+  const poolFor = (def: JobDef) =>
+    ITEMS.map((it, a) => ({ it, a })).filter(
       (x) => def.cats.includes(x.it.cat) && (!def.shapes || def.shapes.includes(x.it.shape)),
     );
-    for (let i = 0; i < def.n && pool.length; i++) {
-      const { it, a } = rng.pick(pool);
-      const d = rng.int(1, 2);
-      const people = PERSONAS.filter((p) => p.cats.includes(it.cat));
-      const p = people.length ? rng.pick(people).id : rng.pick(PERSONAS).id;
+  for (const def of b.jobs) {
+    const pool = poolFor(def);
+    const n = Math.min(4, Math.round(def.n * flow));
+    for (let i = 0; i < n && pool.length; i++) {
+      const stars = Math.min(5, rng.int(cfg.stars[0], cfg.stars[1]) + bonus);
+      const target = rng.int(cfg.target[0], cfg.target[1]);
+      const count = def.k === 'service' && rng.chance(cfg.fleet) ? rng.int(2, 3) : 1;
+      const items = Array.from({ length: count }, () => {
+        const { a } = rng.pick(pool);
+        return { a, s: rng.int(1000, 2 ** 30), d: rng.int(1, 2) };
+      });
+      const first = items[0];
+      const it = ITEMS[first.a];
+      const p = contact(it.cat);
+      // Always draw the client, so a difficulty bonus changes nothing else about the offer.
+      const company = rng.pick(CLIENTS[id] ?? ['']);
+      const client = count > 1 || stars >= 3 ? company : '';
       out.push({
         id: bi * 10 + slot++,
         b: id,
-        a,
-        s: rng.int(1000, 2 ** 30),
-        d,
+        items,
+        ...first,
         k: def.k,
-        fee: jobFee(it.base, def, d),
+        fee: contractFee(jobFee(it.base, def, first.d), stars, count),
         p,
+        client,
+        stars,
+        target,
       });
+    }
+  }
+  if (cfg.design && bi === top && designFor(id)) {
+    // Custom engineering: design something new for a client, then build it.
+    const def = b.jobs.find((j) => j.k !== 'service') ?? b.jobs[0];
+    const pool = poolFor(def);
+    if (pool.length) {
+      const { it, a } = rng.pick(pool);
+      const stars = Math.min(5, cfg.stars[1] + bonus);
+      const dp = BALANCE.empire.contracts.designPay;
+      out.push({
+        id: bi * 10 + slot,
+        b: id,
+        items: [{ a, s: rng.int(1000, 2 ** 30), d: 0 }],
+        a,
+        s: 0,
+        d: 0,
+        k: 'design',
+        fee: contractFee(round5(it.base * dp[0] + dp[1]), stars, 1),
+        p: contact(it.cat),
+        client: rng.pick(CLIENTS[id] ?? ['']),
+        stars,
+        target: 1,
+      });
+      const last = out[out.length - 1];
+      last.s = last.items[0].s;
     }
   }
   return out;
 }
 
-/** Every job on offer today, at every business you own. */
+/** Every contract on offer today, at every business you own. */
 export function jobOffers(state: GameState): JobOffer[] {
   return BUSINESSES.flatMap((b) => businessOffers(state, b.id));
 }
 
-/** Jobs still open today at a business. */
+/** Contracts still open today at a business. */
 export function openJobs(state: GameState, id: string): number {
   return businessOffers(state, id).filter((o) => !state.day.jobs.includes(o.id)).length;
 }
 
-/** Takes on job `id`: the customer's item goes into the workshop queue. */
-export function acceptJob(state: GameState, id: number): ItemInstance | null {
-  if (state.day.ph !== 'market' || state.day.jobs.includes(id)) return null;
+/** Signs contract `id`: its items go into the workshop queue. Returns them. */
+export function signContract(state: GameState, id: number): ItemInstance[] {
+  if (state.day.ph !== 'market' || state.day.jobs.includes(id)) return [];
   const o = jobOffers(state).find((x) => x.id === id);
-  if (!o) return null;
-  const inst = makeInstance(state, o.a, 0, o.s, o.d, 0, true);
-  inst.job = { fee: o.fee, p: o.p, k: o.k };
-  inst.sc = recipeFor(inst).map(() => null);
-  state.inv.push(inst);
+  if (!o) return [];
+  const out = o.items.map((x) => {
+    const inst = makeInstance(state, x.a, 0, x.s, x.d, 0, true);
+    inst.job = { fee: o.fee, p: o.p, k: o.k, t: o.target, ...(o.client ? { c: o.client } : {}) };
+    inst.sc = recipeFor(inst).map(() => null);
+    state.inv.push(inst);
+    return inst;
+  });
   state.day.jobs.push(id);
-  return inst;
+  return out;
+}
+
+/** Takes on job `id` (a one-item contract): returns its item. */
+export function acceptJob(state: GameState, id: number): ItemInstance | null {
+  return signContract(state, id)[0] ?? null;
 }
 
 /** Fee plus a tip for great work (up to +20% for a perfect job with the default balance). */
@@ -98,6 +188,8 @@ export function jobPay(fee: number, quality: number): { fee: number; tip: number
 }
 
 export interface JobResult {
+  /** The client's quality target was missed (lower pay). */
+  missed: boolean;
   fee: number;
   tip: number;
   xp: number;
@@ -111,19 +203,23 @@ export function completeJob(state: GameState, inst: ItemInstance): JobResult {
   if (idx < 0 || !inst.job) throw new Error('not a job in the inventory');
   if (inst.q < 0) throw new Error('job not finished');
   state.inv.splice(idx, 1);
-  const { fee, tip } = jobPay(inst.job.fee, inst.q);
+  // Missing the client's quality target lowers the pay (and there is no tip).
+  const missed = !!inst.job.t && starsFor(inst.q) < inst.job.t;
+  const { fee, tip } = missed
+    ? { fee: Math.round(inst.job.fee * BALANCE.empire.contracts.belowTarget), tip: 0 }
+    : jobPay(inst.job.fee, inst.q);
   const pay = fee + tip;
   state.coins += pay;
   state.day.stats.revenue += pay;
   state.stats.revenue += pay;
   state.stats.profit += pay;
   const r = BALANCE.empire.jobRep;
-  const rep = inst.q >= 0.95 ? r.perfect : r.done;
+  const rep = missed ? 0 : inst.q >= 0.95 ? r.perfect : r.done;
   state.rep += rep;
   state.day.stats.rep += rep;
   const xp = 10 + pay / 20;
   const levelUps = addXp(state, xp);
-  return { fee, tip, xp: Math.round(xp), rep, levelUps };
+  return { fee, tip, xp: Math.round(xp), rep, levelUps, missed };
 }
 
 export { business };

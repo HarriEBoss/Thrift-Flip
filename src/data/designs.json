@@ -1,0 +1,66 @@
+{
+  "computer": {
+    "power": "speed",
+    "slots": [
+      { "type": "cpu", "u": 0.3, "v": 0.36 },
+      { "type": "gpu", "u": 0.7, "v": 0.36 },
+      { "type": "ram", "u": 0.3, "v": 0.56 },
+      { "type": "psu", "u": 0.7, "v": 0.56 }
+    ],
+    "parts": {
+      "cpu": [["Basic CPU", 20, 2, 60], ["Fast CPU", 35, 3, 120], ["Turbo CPU", 50, 4, 220]],
+      "gpu": [["Office card", 10, 3, 50], ["Gamer card", 30, 6, 160], ["Monster card", 55, 10, 320]],
+      "ram": [["8 GB", 5, 1, 20], ["16 GB", 10, 1, 40], ["32 GB", 16, 2, 90]],
+      "psu": [["300 W", 2, 3, 30], ["600 W", 5, 4, 60], ["1000 W", 8, 6, 110]]
+    }
+  },
+  "mechanic": {
+    "power": "speed",
+    "slots": [
+      { "type": "engine", "u": 0.3, "v": 0.36 },
+      { "type": "gearbox", "u": 0.7, "v": 0.36 },
+      { "type": "wheels", "u": 0.3, "v": 0.56 },
+      { "type": "body", "u": 0.7, "v": 0.56 }
+    ],
+    "parts": {
+      "engine": [["Eco engine", 30, 60, 300], ["V6 engine", 55, 90, 600], ["V8 engine", 80, 130, 1000]],
+      "gearbox": [["Manual box", 5, 30, 100], ["Auto box", 8, 40, 200], ["Sport box", 14, 35, 350]],
+      "wheels": [["Steel wheels", 2, 40, 80], ["Alloy wheels", 5, 28, 180], ["Racing wheels", 9, 22, 320]],
+      "body": [["Steel body", 0, 200, 300], ["Alloy body", 4, 140, 600], ["Carbon body", 8, 90, 1100]]
+    }
+  },
+  "robotics": {
+    "power": "strength",
+    "slots": [
+      { "type": "motor", "u": 0.22, "v": 0.36 },
+      { "type": "battery", "u": 0.5, "v": 0.36 },
+      { "type": "sensor", "u": 0.78, "v": 0.36 },
+      { "type": "chip", "u": 0.34, "v": 0.56 },
+      { "type": "frame", "u": 0.66, "v": 0.56 }
+    ],
+    "parts": {
+      "motor": [["Small motor", 15, 4, 150], ["Strong motor", 30, 7, 300], ["Mega motor", 50, 12, 560]],
+      "battery": [["Mini pack", 3, 3, 80], ["Big pack", 8, 6, 180], ["Power cell", 12, 4, 400]],
+      "sensor": [["Bump sensor", 1, 1, 40], ["Camera eye", 4, 1, 160], ["Laser eye", 8, 2, 380]],
+      "chip": [["Basic brain", 4, 1, 100], ["Smart brain", 10, 1, 260], ["Genius brain", 18, 1, 600]],
+      "frame": [["Plastic frame", 0, 6, 60], ["Steel frame", 6, 14, 200], ["Titanium frame", 10, 8, 520]]
+    }
+  },
+  "rocket": {
+    "power": "thrust",
+    "slots": [
+      { "type": "engine", "u": 0.22, "v": 0.36 },
+      { "type": "tank", "u": 0.5, "v": 0.36 },
+      { "type": "avionics", "u": 0.78, "v": 0.36 },
+      { "type": "fins", "u": 0.34, "v": 0.56 },
+      { "type": "capsule", "u": 0.66, "v": 0.56 }
+    ],
+    "parts": {
+      "engine": [["Spark engine", 40, 30, 800], ["Blaze engine", 70, 45, 1600], ["Nova engine", 110, 70, 3000]],
+      "tank": [["Small tank", 10, 40, 300], ["Long tank", 20, 70, 600], ["Light tank", 18, 35, 1300]],
+      "avionics": [["Basic computer", 2, 4, 400], ["Smart computer", 6, 5, 900], ["Star computer", 10, 3, 2000]],
+      "fins": [["Steel fins", 1, 12, 100], ["Alloy fins", 3, 8, 300], ["Carbon fins", 5, 4, 700]],
+      "capsule": [["Cargo pod", 0, 30, 500], ["Crew capsule", 2, 55, 1200], ["Light capsule", 3, 25, 2400]]
+    }
+  }
+}

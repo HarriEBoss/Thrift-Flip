@@ -521,7 +521,19 @@
               10
             ]
           }
-        ]
+        ],
+        "contract": {
+          "stars": [
+            1,
+            2
+          ],
+          "target": [
+            1,
+            1
+          ],
+          "fleet": 0.2,
+          "design": false
+        }
       },
       {
         "id": "computer",
@@ -560,7 +572,19 @@
               0
             ]
           }
-        ]
+        ],
+        "contract": {
+          "stars": [
+            2,
+            3
+          ],
+          "target": [
+            1,
+            2
+          ],
+          "fleet": 0.3,
+          "design": true
+        }
       },
       {
         "id": "mechanic",
@@ -601,7 +625,19 @@
               4
             ]
           }
-        ]
+        ],
+        "contract": {
+          "stars": [
+            3,
+            3
+          ],
+          "target": [
+            2,
+            2
+          ],
+          "fleet": 0.3,
+          "design": true
+        }
       },
       {
         "id": "robotics",
@@ -624,7 +660,19 @@
               60
             ]
           }
-        ]
+        ],
+        "contract": {
+          "stars": [
+            3,
+            4
+          ],
+          "target": [
+            2,
+            2
+          ],
+          "fleet": 0.4,
+          "design": true
+        }
       },
       {
         "id": "rocket",
@@ -647,7 +695,19 @@
               150
             ]
           }
-        ]
+        ],
+        "contract": {
+          "stars": [
+            4,
+            5
+          ],
+          "target": [
+            2,
+            3
+          ],
+          "fleet": 0.4,
+          "design": true
+        }
       }
     ],
     "jobTip": {
@@ -657,6 +717,58 @@
     "jobRep": {
       "done": 2,
       "perfect": 3
+    },
+    "marketing": {
+      "flowMax": 1.0,
+      "flowK": 120,
+      "decay": 0.06,
+      "campaigns": [
+        {
+          "id": "flyers",
+          "cost": 40,
+          "brand": 12,
+          "needs": "reselling"
+        },
+        {
+          "id": "radio",
+          "cost": 300,
+          "brand": 30,
+          "needs": "phone"
+        },
+        {
+          "id": "tv",
+          "cost": 1500,
+          "brand": 60,
+          "needs": "computer"
+        },
+        {
+          "id": "billboard",
+          "cost": 5000,
+          "brand": 100,
+          "needs": "mechanic"
+        },
+        {
+          "id": "web",
+          "cost": 12000,
+          "brand": 160,
+          "needs": "robotics"
+        },
+        {
+          "id": "satellite",
+          "cost": 40000,
+          "brand": 260,
+          "needs": "rocket"
+        }
+      ]
+    },
+    "contracts": {
+      "payPerStar": 0.15,
+      "fleetBonus": 0.1,
+      "belowTarget": 0.6,
+      "designPay": [
+        2.2,
+        300
+      ]
     }
   }
 }

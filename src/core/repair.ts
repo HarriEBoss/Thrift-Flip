@@ -493,7 +493,7 @@ export function fixRigFor(cat: CategoryId, shape: number): Rig {
 }
 
 /** Big customer jobs at the Computer Workshop and the Car Garage. */
-export type JobKind = 'service' | 'pc' | 'engine';
+export type JobKind = 'service' | 'pc' | 'engine' | 'design';
 
 /**
  * A full PC rebuild: dust it out, fresh thermal paste, new cooler, new memory and drive, plug in every

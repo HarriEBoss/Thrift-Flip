@@ -30,7 +30,8 @@ export const CATEGORY_IDS: readonly CategoryId[] = [
   'rockets',
 ];
 
-export type StepKind = 'sticker' | 'scrub' | 'rust' | 'sand' | 'glue' | 'wire' | 'fix' | 'paint' | 'polish';
+export type StepKind =
+  'sticker' | 'scrub' | 'rust' | 'sand' | 'glue' | 'design' | 'wire' | 'fix' | 'paint' | 'polish';
 /** Canonical order steps are performed in. */
 export const STEP_ORDER: readonly StepKind[] = [
   'sticker',
@@ -38,6 +39,7 @@ export const STEP_ORDER: readonly StepKind[] = [
   'rust',
   'sand',
   'glue',
+  'design',
   'wire',
   'fix',
   'paint',
@@ -253,10 +255,45 @@ export interface BusinessDef {
   income: number;
   needs: { business?: string; shopTier?: number };
   jobs: JobDef[];
+  /** How its contracts scale (none for the Reselling Shop). */
+  contract?: ContractDef;
+}
+
+/** Contract difficulty at a business. */
+export interface ContractDef {
+  /** Difficulty stars (1-5): more pay. One more when you own a bigger business. */
+  stars: [number, number];
+  /** Quality the client asks for, in reveal stars (1-3). */
+  target: [number, number];
+  /** Chance a contract is a fleet order (2-3 items). */
+  fleet: number;
+  /** Offers a custom engineering contract when this is your biggest business. */
+  design: boolean;
+}
+
+export interface CampaignDef {
+  id: string;
+  cost: number;
+  /** Brand points it adds. */
+  brand: number;
+  /** Business you must own to run it. */
+  needs: string;
 }
 
 export interface EmpireBalance {
   businesses: BusinessDef[];
+  /** Brand flow = 1 + flowMax x (1 - e^(-brand / flowK)); brand fades by `decay` a day. */
+  marketing: { flowMax: number; flowK: number; decay: number; campaigns: CampaignDef[] };
+  contracts: {
+    /** Pay x (1 + payPerStar x (stars - 1)). */
+    payPerStar: number;
+    /** Extra pay per item beyond the first in a fleet order. */
+    fleetBonus: number;
+    /** Pay factor when the client's quality target is missed. */
+    belowTarget: number;
+    /** Custom design pay: base x [0] + [1]. */
+    designPay: [number, number];
+  };
   /** Tip for great work: fee x max(0, quality - from) x rate. */
   jobTip: { from: number; rate: number };
   jobRep: { done: number; perfect: number };

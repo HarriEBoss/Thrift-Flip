@@ -97,6 +97,18 @@ function v_drawStepIcon(g: Pen, kind: StepKind, s: number): void {
       g.lineTo(10 * k, 16 * k);
       g.strokePath();
       break;
+    case 'design': // blueprint and pencil
+      g.fillStyle(C.sky, 1);
+      g.fillRect(-15 * k, -13 * k, 26 * k, 28 * k);
+      g.strokeRect(-15 * k, -13 * k, 26 * k, 28 * k);
+      g.lineStyle(1.5 * k, C.white, 0.9);
+      g.strokeRect(-10 * k, -8 * k, 16 * k, 10 * k);
+      g.strokeCircle(-2 * k, 8 * k, 3.5 * k);
+      g.lineStyle(2.5 * k, C.ink, 1);
+      g.fillStyle(C.mustard, 1);
+      g.fillPoints([V(8 * k, 14 * k), V(17 * k, -6 * k), V(20 * k, -4 * k), V(11 * k, 16 * k)], true);
+      g.strokePoints([V(8 * k, 14 * k), V(17 * k, -6 * k), V(20 * k, -4 * k), V(11 * k, 16 * k)], true);
+      break;
     case 'fix': // spanner over a gear
       g.fillStyle(C.mustard, 1);
       g.fillCircle(6 * k, 6 * k, 9 * k);
@@ -358,6 +370,20 @@ function v_iconWorkshop(g: Pen, id: string, s: number): void {
     g.strokeCircle(0, -3 * k, 3.5 * k);
     g.fillStyle(C.mustard, 1);
     g.fillPoints([V(-4 * k, 15 * k), V(4 * k, 15 * k), V(0, 21 * k)], true);
+    return;
+  }
+  if (id === 'marketing') {
+    // Megaphone.
+    g.fillStyle(C.terracotta, 1);
+    g.fillPoints([V(-12 * k, -6 * k), V(12 * k, -16 * k), V(12 * k, 16 * k), V(-12 * k, 6 * k)], true);
+    g.strokePoints([V(-12 * k, -6 * k), V(12 * k, -16 * k), V(12 * k, 16 * k), V(-12 * k, 6 * k)], true);
+    g.fillStyle(C.cream, 1);
+    g.fillRect(-18 * k, -6 * k, 7 * k, 12 * k);
+    g.strokeRect(-18 * k, -6 * k, 7 * k, 12 * k);
+    g.lineStyle(2 * k, C.ink, 1);
+    g.lineBetween(15 * k, -8 * k, 19 * k, -11 * k);
+    g.lineBetween(15 * k, 0, 20 * k, 0);
+    g.lineBetween(15 * k, 8 * k, 19 * k, 11 * k);
     return;
   }
   if (id === 'reselling') {

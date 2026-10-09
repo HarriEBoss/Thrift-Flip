@@ -133,8 +133,9 @@ test('business ladder: open Phone Repair, work there, fix a customer phone and g
   await page.waitForTimeout(500);
   await press(page, 'mouse', 'job0');
   await press(page, 'mouse', 'take');
-  await page.waitForTimeout(300);
-  expect(await tf(page, (t) => t.state().inv.length)).toBe(1);
+  await page.waitForTimeout(1000);
+  // A contract can be a fleet order of a few items.
+  expect(await tf(page, (t) => t.state().inv.length)).toBeGreaterThanOrEqual(1);
   const coins = await tf(page, (t) => t.state().coins);
   await press(page, 'mouse', 'go');
   await waitForScene(page, 'Workshop');
@@ -171,7 +172,7 @@ test('workshop jobs: take a PC rebuild at Computer Repair, fix it and get paid',
   // Board: two small computer repairs, then the full PC rebuild.
   await press(page, 'mouse', 'job2');
   await press(page, 'mouse', 'take');
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(1000);
   const jobs = await tf(page, (t) => t.state().inv.length);
   expect(jobs).toBe(1);
   await press(page, 'mouse', 'go');
@@ -185,4 +186,68 @@ test('workshop jobs: take a PC rebuild at Computer Repair, fix it and get paid',
   // The customer took the PC home and paid well for the rebuild.
   expect(after.inv).toBe(0);
   expect(after.coins).toBeGreaterThan(300);
+});
+
+test('marketing and a custom design contract: run ads, design to the spec, build it, get paid', async ({
+  page,
+}) => {
+  test.setTimeout(300_000);
+  await page.setViewportSize({ width: 405, height: 720 });
+  await setupPage(page);
+  await page.goto('/');
+  await waitForScene(page, 'MainMenu');
+  type Tf = { setup(p: object): void; goto(k: string): void };
+  await page.evaluate(() => {
+    const tf = (window as unknown as { __tf: Tf }).__tf;
+    tf.setup({
+      tutorialDone: true,
+      tier: 4,
+      coins: 2000,
+      day: 6,
+      phase: 'market',
+      named: true,
+      businesses: ['phone', 'computer'],
+      business: 'computer',
+    });
+    tf.goto('Market');
+  });
+  await waitForScene(page, 'Market');
+  const state = () =>
+    tf(page, (t) => t.state() as unknown as { coins: number; brand: number; inv: unknown[] });
+  // Marketing: flyers and a radio ad grow the brand.
+  await press(page, 'mouse', 'upgrades');
+  await press(page, 'mouse', 'hub_marketing');
+  await press(page, 'mouse', 'mkt_flyers');
+  await press(page, 'mouse', 'mkt_radio');
+  await page.waitForTimeout(300);
+  expect((await state()).brand).toBeGreaterThan(0);
+  await closeModals(page, 'mouse');
+  // The board is rebuilt with the extra contracts the brand brings; the design one is last.
+  await page.evaluate(() => (window as unknown as { __tf: Tf }).__tf.goto('Market'));
+  await waitForScene(page, 'Market');
+  await page.waitForTimeout(500);
+  let last = 0;
+  for (let i = 0; i < 10; i++)
+    if (
+      await page.evaluate(
+        (k) => !!(window as unknown as { __tf: { where(id: string): unknown } }).__tf.where(k),
+        `job${i}`,
+      )
+    )
+      last = i;
+  await press(page, 'mouse', `job${last}`);
+  await press(page, 'mouse', 'take');
+  await page.waitForTimeout(1000);
+  await press(page, 'mouse', 'go');
+  await waitForScene(page, 'Workshop');
+  const steps = await page.evaluate(
+    () => (window as unknown as { __tf: { ws(): { steps: string[] } } }).__tf.ws().steps,
+  );
+  expect(steps).toEqual(['design', 'fix', 'polish']);
+  const before = (await state()).coins;
+  await playWorkshop(page, 'mouse');
+  await waitForScene(page, 'Summary');
+  const after = await state();
+  expect(after.inv).toHaveLength(0);
+  expect(after.coins - before).toBeGreaterThan(400);
 });

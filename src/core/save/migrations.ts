@@ -26,6 +26,9 @@ export const MIGRATIONS: Migration[] = [
     delete next.ws;
     return next;
   },
+  // v4 -> v5: marketing (`br` brand points, dy[16] campaigns run today). Job tuples may now carry a
+  // quality target and a client company (older ones simply have none).
+  (old) => ({ ...old, v: 5, br: typeof old.br === 'number' ? old.br : 0 }),
 ];
 
 export const CURRENT_VERSION = MIGRATIONS.length + 1;

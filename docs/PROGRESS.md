@@ -271,12 +271,27 @@ Next: Phase 3, the playable core loop in Phaser.
   jobs per business, v3 → v4 migration and fixtures, e2e for naming, opening Phone Repair and fixing a
   customer's phone, and a PC rebuild at Computer Repair.
 
+## Business empire, phase 2: marketing and contracts ✅
+- **Marketing:** six campaigns from flyers to satellite ads, unlocked by your businesses. They grow your
+  brand, which brings more shop customers and more contracts, with diminishing returns; the brand fades
+  a little every day.
+- **Contracts in your company's name:** each job is now a contract with a client (customers or companies
+  such as "Sky Post" or "Orbit Labs"), a difficulty (1–5 stars), the quality the client wants and the
+  pay. Fleet orders bring 2–3 items at once. Missing the quality target pays less. Contracts get harder
+  and pay more as you climb the ladder.
+- **Custom engineering:** your biggest business offers a design contract each day: design a new PC,
+  car, robot or rocket on a blueprint to the client's spec (power, weight, budget), then build and polish
+  it, for about twice the pay.
+- Save v5 (brand, today's campaigns, contract details). Tests: brand curve and decay, campaign rules,
+  contract scaling, fleet orders, quality targets, design specs always solvable, migration, and e2e for
+  running ads and completing a design contract.
+
 ## Definition of done: status
 | Item | Status |
 |---|---|
 | `npm run check` (lint, typecheck, unit + coverage, YouTube build + bundle checks, e2e) | ✅ passes in this container (see the final run log in the commit message / PR) |
 | `thrift-flip-youtube.zip` meets every automatable MUST in §7 | ✅ automated; manual items listed in SUBMISSION_YOUTUBE.md |
 | iOS project builds in Xcode | ⏳ **human step**: no Xcode on Linux. `build:ios` + `cap sync` pass; IAP and ads are absent from the YouTube bundle (checked) |
-| Old-save migration tests | ✅ (v1–v4 fixtures; every migration tested) |
+| Old-save migration tests | ✅ (v1–v5 fixtures; every migration tested) |
 | Docs complete | ✅ ARCHITECTURE, BALANCE, PROGRESS, HUMAN_TODO, SUBMISSION_IOS, SUBMISSION_YOUTUBE, PRIVACY_POLICY, STORE_LISTING |
 | HUMAN_TODO lists every required human step | ✅ |

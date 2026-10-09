@@ -2,6 +2,7 @@ import { BALANCE } from './data';
 import type { GameState } from './state';
 import type { ToolParams } from './types';
 import { decorFx } from './decor';
+import { brandCustomers } from './marketing';
 
 export const BASE_TOOLS: ToolParams = {
   scrubBrush: 1,
@@ -96,7 +97,9 @@ export function customersPerDay(state: GameState): number {
   const base = BALANCE.tiers[state.tier].customers;
   const repBonus = state.rep >= 100 ? 1 : 0;
   const perk = hasPerk(state, 'shop_expansion') ? 1 : 0;
-  return Math.min(8, Math.max(3, base + repBonus + perk + decorFx(state).customers));
+  const own = Math.min(8, Math.max(3, base + repBonus + perk + decorFx(state).customers));
+  // Marketing brings extra customers on top (up to 10 a day).
+  return Math.min(10, own + brandCustomers(state, base));
 }
 
 /** Items the player may buy at the market per day: 3..6. */

@@ -10,6 +10,7 @@ import { DECOR, affordableDecor, buyDecor, decorStatus } from '../../core/decor'
 import { canUpgradeTier, nextGoal, skillPoints, upgradeStatus } from '../../core/progression';
 import { openSkills, openTierUpgrade, openUpgrades } from './menus';
 import type { DecorFx } from '../../core/types';
+import { CAMPAIGNS, brandFlow, campaignStatus, runCampaign } from '../../core/marketing';
 import {
   BUSINESSES,
   businessStatus,
@@ -34,7 +35,7 @@ export function upgradesAvailable(): number {
 /** One place for every way to grow: bigger shop, decorations, tools and skills. */
 export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
   const s = session.state;
-  const m = scene.openModal({ title: t('hub.title'), w: 620, h: 900 });
+  const m = scene.openModal({ title: t('hub.title'), w: 620, h: 980 });
   const goal = nextGoal(s);
   const rows: Array<{
     id: string;
@@ -69,6 +70,14 @@ export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
       open: () => openEmpire(scene, after),
     },
     {
+      id: 'hub_marketing',
+      label: t('hub.marketing'),
+      sub: t('hub.marketingSub', { n: Math.round((brandFlow(s.brand) - 1) * 100) }),
+      color: C.mustardDark,
+      badge: null,
+      open: () => openMarketing(scene, after),
+    },
+    {
       id: 'hub_tools',
       label: t('hub.tools'),
       sub: t('hub.toolsSub'),
@@ -90,9 +99,9 @@ export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
     onChange?.();
   }
   rows.forEach((r, i) => {
-    const b = new Button(scene, 0, -318 + i * 104, {
+    const b = new Button(scene, 0, -372 + i * 100, {
       w: 520,
-      h: 92,
+      h: 88,
       label: r.label,
       sub: r.sub,
       color: r.color,
@@ -106,7 +115,7 @@ export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
     scene.mark(r.id, b);
     m.content.add(b);
   });
-  if (goal || nextBusinessGoal(s)) m.content.add(goalBanner(scene, 520).setPosition(0, 262));
+  if (goal || nextBusinessGoal(s)) m.content.add(goalBanner(scene, 520).setPosition(0, 286));
 }
 
 /** "Next shop: Garage Shop" tracker with coins / reputation progress. */
@@ -329,6 +338,83 @@ export function openEmpire(scene: BaseScene, onChange?: () => void): void {
     btn.setEnabled(st === 'available');
     scene.mark(`biz_${b.id}`, btn);
     row.add(btn);
+    m.content.add(row);
+  });
+}
+
+/** Marketing: run campaigns to grow the brand, which brings more customers and contracts. */
+export function openMarketing(scene: BaseScene, onChange?: () => void): void {
+  const s = session.state;
+  const rowH = 100;
+  const m = scene.openModal({
+    title: t('mkt.title'),
+    w: 660,
+    h: Math.min(1240, 330 + CAMPAIGNS.length * rowH),
+  });
+  const pct = Math.round((brandFlow(s.brand) - 1) * 100);
+  m.content.add(
+    makeText(scene, 0, -m.ph / 2 + 92, t('mkt.intro', { company: s.company }), FS.tiny, C.inkSoft, {
+      wrap: 590,
+      bold: false,
+    }),
+  );
+  // Brand meter: how much extra flow the brand brings now (it fades a little each day).
+  const meterY = -m.ph / 2 + 158;
+  const bar = new ProgressBar(scene, 0, meterY, 520, 20, C.mustard);
+  bar.setValue(pct / Math.round(BALANCE.empire.marketing.flowMax * 100));
+  m.content.add([
+    bar,
+    makeText(scene, 0, meterY + 32, t('mkt.brand', { brand: Math.round(s.brand), n: pct }), FS.small, C.ink),
+  ]);
+  const top = -m.ph / 2 + 260;
+  CAMPAIGNS.forEach((c, i) => {
+    const st = campaignStatus(s, c);
+    const row = scene.add.container(0, top + i * rowH);
+    const g = scene.add.graphics();
+    drawCard(g, -300, -44, 600, 88, st === 'ran' ? 0xdff2d5 : C.white, {
+      radius: 18,
+      stroke: C.ink,
+      strokeW: 3,
+      shadow: 3,
+    });
+    const art = scene.add.graphics();
+    iconWorkshop(art, 'marketing', 52);
+    art.setPosition(-256, 0);
+    if (st === 'locked') art.setAlpha(0.35);
+    const sub =
+      st === 'locked' ? t('empire.needsBiz', { biz: t(`biz.${c.needs}`) }) : t('mkt.adds', { n: c.brand });
+    row.add([
+      g,
+      art,
+      makeText(scene, -214, -16, t(`mkt.${c.id}`), FS.small, C.ink, { align: 'left' }),
+      makeText(scene, -214, 18, sub, FS.tiny, C.inkSoft, { align: 'left', bold: false }),
+    ]);
+    const label = st === 'ran' ? t('mkt.ran') : st === 'locked' ? t('decor.locked') : String(c.cost);
+    const b = new Button(scene, 210, 0, {
+      w: 160,
+      h: 64,
+      label,
+      color: st === 'available' ? C.leaf : C.inkSoft,
+      fontSize: FS.small,
+      icon: st === 'available' || st === 'poor' ? (gr, sz) => iconCoin(gr, sz) : undefined,
+      onClick: () => {
+        if (!runCampaign(s, c.id)) return;
+        session.audio.play('register');
+        session.haptic('success');
+        void session.save(true);
+        refresh(scene);
+        (scene as unknown as { toast?: (s: string, c?: number) => void }).toast?.(
+          t(`mkt.toast.${c.id}`, { company: s.company }),
+          C.mustardDark,
+        );
+        m.close();
+        onChange?.();
+        openMarketing(scene, onChange);
+      },
+    });
+    b.setEnabled(st === 'available');
+    scene.mark(`mkt_${c.id}`, b);
+    row.add(b);
     m.content.add(row);
   });
 }

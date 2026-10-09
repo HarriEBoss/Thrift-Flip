@@ -66,6 +66,12 @@ export const TUTORIAL_SEED = 777;
  * for computers, cars and the big jobs), and an optional polish.
  */
 function jobRecipe(cat: CategoryId, k: JobKind): RecipeStep[] {
+  if (k === 'design')
+    return [
+      { k: 'design', req: true },
+      { k: 'fix', req: true },
+      { k: 'polish', req: false },
+    ];
   const fix = k !== 'service' || RECIPES[cat].some((s) => s.k === 'fix');
   return [
     { k: 'scrub', req: true },

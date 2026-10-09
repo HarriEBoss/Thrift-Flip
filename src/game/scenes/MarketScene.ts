@@ -32,7 +32,7 @@ import type { ItemInstance } from '../../core/state';
 import { REWARD_IDS } from '../../platform/Platform';
 import { t } from '../../i18n';
 import type { StepKind } from '../../core/types';
-import { acceptJob, businessOffers, openJobs, type JobOffer } from '../../core/jobs';
+import { businessOffers, openJobs, signContract, type JobOffer } from '../../core/jobs';
 import { BUSINESSES, canSwitchBusiness, isReselling, setCurrentBusiness } from '../../core/empire';
 import { persona } from '../../core/data';
 
@@ -43,6 +43,7 @@ export const HINT_KEYS: Record<StepKind, string> = {
   sand: 'hint.sand',
   glue: 'hint.glue',
   wire: 'hint.wire',
+  design: 'hint.design',
   fix: 'hint.fix',
   paint: 'hint.paint',
   polish: 'hint.polish',
@@ -605,19 +606,22 @@ export class MarketScene extends GameScene {
     const taken = s.day.jobs.includes(o.id);
     const c = this.add.container(0, 0);
     const bg = this.add.graphics();
-    drawCard(bg, -w / 2, -h / 2, w, h, taken ? 0xe8efe0 : C.paper, {
+    const special = o.k !== 'service' || o.items.length > 1;
+    drawCard(bg, -w / 2, -h / 2, w, h, taken ? 0xe8efe0 : o.k === 'design' ? 0xe3eefc : C.paper, {
       radius: 20,
-      stroke: o.k === 'service' ? C.ink : C.terracotta,
-      strokeW: o.k === 'service' ? 4 : 6,
+      stroke: special ? C.terracotta : C.ink,
+      strokeW: special ? 6 : 4,
     });
-    const img = this.add.image(0, -h * 0.1, instanceThumb(this, jobInstance(o)));
-    img.setDisplaySize(w * 0.78, w * 0.78);
-    const name = makeText(this, 0, h * 0.3, ITEMS[o.a].name, Math.max(16, Math.round(w * 0.1)), C.ink);
+    const img = this.add.image(0, -h * 0.07, instanceThumb(this, jobInstance(o)));
+    img.setDisplaySize(w * 0.7, w * 0.7);
+    if (o.k === 'design') img.setTint(0x9fc8ff);
+    const label = o.items.length > 1 ? `${o.items.length} × ${ITEMS[o.a].name}` : ITEMS[o.a].name;
+    const name = makeText(this, 0, h * 0.3, label, Math.max(16, Math.round(w * 0.1)), C.ink);
     if (name.width > w - 14) name.setScale((w - 14) / name.width);
-    const kind = makeText(this, 0, -h / 2 + 18, t(`jobs.kindShort.${o.k}`), FS.tiny, C.inkSoft, {
-      bold: false,
-    });
+    const kindKey = o.items.length > 1 ? 'jobs.kindShort.fleet' : `jobs.kindShort.${o.k}`;
+    const kind = makeText(this, 0, -h / 2 + 18, t(kindKey), FS.tiny, C.inkSoft, { bold: false });
     if (kind.width > w - 10) kind.setScale((w - 10) / kind.width);
+    const stars = makeText(this, 0, -h / 2 + 44, '★'.repeat(o.stars), FS.tiny, C.mustardDark);
     const tag = this.add.graphics();
     const tw = Math.max(80, w * 0.55);
     drawCard(tag, -tw / 2, h / 2 - 34, tw, 40, taken ? C.leaf : C.mustard, {
@@ -629,52 +633,106 @@ export class MarketScene extends GameScene {
     const coin = this.add.graphics();
     iconCoin(coin, 26);
     coin.setPosition(-tw / 2 + 20, h / 2 - 14);
-    const pt = makeText(this, 10, h / 2 - 14, taken ? t('jobs.taken') : String(o.fee), FS.small, C.ink);
+    const total = o.fee * o.items.length;
+    const pt = makeText(this, 10, h / 2 - 14, taken ? t('jobs.taken') : String(total), FS.small, C.ink);
+    if (pt.width > tw - 44) pt.setScale((tw - 44) / pt.width);
     const zone = this.add.zone(0, 0, w, h).setInteractive({ useHandCursor: true });
     zone.on('pointerup', () => this.openJobDetail(o));
-    c.add([bg, img, name, kind, tag, coin, pt, zone]);
+    c.add([bg, img, name, kind, stars, tag, coin, pt, zone]);
     if (taken) c.setAlpha(0.75);
     return c;
   }
 
-  /** Who wants what, what it pays, and "Take job". */
+  /** The contract: between your company and the client, what to do, how well, what it pays. */
   private openJobDetail(o: JobOffer): void {
     const s = session.state;
     if (this.hasModal()) return;
     session.audio.play('pop');
     const taken = s.day.jobs.includes(o.id);
-    const m = this.openModal({ title: t('jobs.title'), w: 620, h: 700 });
-    const img = this.add.image(0, -150, instanceThumb(this, jobInstance(o)));
-    img.setDisplaySize(260, 260);
-    const who = t('jobs.from', { name: persona(o.p).name, company: s.company });
-    const what = t(`jobs.kind.${o.k}`, { item: ITEMS[o.a].name });
-    const coin = this.add.graphics();
-    iconCoin(coin, 34);
-    coin.setPosition(-70, 116);
-    const b = new Button(this, 0, 210, {
-      w: 300,
+    const m = this.openModal({ title: t('contract.title'), w: 640, h: 860 });
+    const paper = this.add.graphics();
+    drawCard(paper, -280, -330, 560, 470, 0xfffdf4, { radius: 10, stroke: C.inkSoft, strokeW: 2, shadow: 4 });
+    const client = o.client || persona(o.p).name;
+    const parties = makeText(
+      this,
+      0,
+      -296,
+      t('contract.between', { company: s.company, client }),
+      FS.small,
+      C.ink,
+      {
+        wrap: 520,
+      },
+    );
+    const img = this.add.image(-170, -180, instanceThumb(this, jobInstance(o)));
+    img.setDisplaySize(150, 150);
+    if (o.k === 'design') img.setTint(0x9fc8ff);
+    const item = ITEMS[o.a].name;
+    const what =
+      o.k === 'design'
+        ? t('contract.design', { item })
+        : o.items.length > 1
+          ? t('contract.fleet', { n: o.items.length, item })
+          : t(`jobs.kind.${o.k}`, { item });
+    const lines: Array<[string, string]> = [
+      [t('contract.difficulty'), '★'.repeat(o.stars) + '☆'.repeat(5 - o.stars)],
+      [t('contract.quality'), '★'.repeat(o.target)],
+      [
+        t('contract.pay'),
+        o.items.length > 1
+          ? t('contract.payEach', { n: o.fee, total: o.fee * o.items.length })
+          : String(o.fee),
+      ],
+    ];
+    const rows: Phaser.GameObjects.GameObject[] = [
+      paper,
+      parties,
+      img,
+      makeText(this, -80, -180, what, FS.body, C.ink, { align: 'left', wrap: 340 }),
+    ];
+    lines.forEach(([k, v], i) => {
+      const y = -60 + i * 46;
+      rows.push(
+        makeText(this, -240, y, k, FS.small, C.inkSoft, { align: 'left', bold: false }),
+        makeText(this, 240, y, v, FS.small, i === 2 ? C.leafDark : C.mustardDark, { align: 'right' }),
+      );
+    });
+    // Signature line with the company name.
+    const sig = this.add.graphics();
+    sig.lineStyle(3, C.inkSoft, 1);
+    sig.lineBetween(-200, 112, 200, 112);
+    const signed = makeText(this, 0, 92, taken ? s.company : '…', FS.body, C.sky, { wrap: 420 });
+    signed.setAngle(-3);
+    rows.push(
+      sig,
+      signed,
+      makeText(this, 0, 128, t('contract.signHere'), FS.tiny, C.inkSoft, { bold: false }),
+    );
+    rows.push(
+      makeText(this, 0, 186, t('contract.note', { name: client }), FS.tiny, C.inkSoft, {
+        wrap: 560,
+        bold: false,
+      }),
+    );
+    const b = new Button(this, 0, 270, {
+      w: 360,
       h: 84,
-      label: taken ? t('jobs.taken') : t('jobs.accept'),
+      label: taken ? t('jobs.taken') : t('contract.sign'),
       color: taken ? C.inkSoft : C.terracotta,
       fontSize: FS.h3,
       onClick: () => {
-        if (!acceptJob(s, o.id)) return;
+        if (!signContract(s, o.id).length) return;
         session.audio.play('stamp');
         session.haptic('success');
         void session.save(true);
         m.close();
         this.layout();
+        this.toast(t('contract.signed', { company: s.company }), C.leafDark);
       },
     });
     b.setEnabled(!taken);
-    m.content.add([
-      img,
-      makeText(this, 0, 10, who, FS.small, C.inkSoft, { wrap: 540, bold: false }),
-      makeText(this, 0, 56, what, FS.h3, C.ink, { wrap: 540 }),
-      coin,
-      makeText(this, -44, 116, t('jobs.pays', { n: o.fee }), FS.h3, C.leafDark, { align: 'left' }),
-      this.mark('take', b),
-    ]);
+    rows.push(this.mark('take', b));
+    m.content.add(rows);
   }
 
   /** Choose which of your businesses to work at today. */

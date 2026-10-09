@@ -18,14 +18,16 @@ import { CURRENT_VERSION, migrate } from './migrations';
  * Language is never stored (YouTube requirement).
  *
  * Shape (see tests/fixtures/saves for real examples; v2 added `dc`, v3 added dy[15] and the optional
- * job tuple [fee, persona, kind] at the end of an item, v4 added `cn` and `bz` and dropped `ws`):
+ * job tuple [fee, persona, kind] at the end of an item, v4 added `cn` and `bz` and dropped `ws`, v5 added `br`, dy[16] and the job tuple's target and
+ * client):
  * { v, sd, c, x, l, rp, t, nu, dy:[...], iv:[[...]], sk, up, pk, ow, ct, rq:[[t,p,day]], st:{...}, bs, se:{...}, dl:[...], fl:{...} }
  */
 export type SaveObject = Record<string, unknown> & { v: number };
 
 const PHASES: DayPhase[] = ['market', 'workshop', 'shop', 'summary'];
 
-type JobTuple = [number, string, string];
+/** [fee, persona, kind, target stars (0 = none), client company ('' = the persona)] (v5 adds the last two). */
+type JobTuple = [number, string, string, number?, string?];
 type ItemTuple = [
   number,
   number,
@@ -40,7 +42,7 @@ type ItemTuple = [
   number,
   JobTuple?,
 ];
-const JOB_KINDS: JobKind[] = ['service', 'pc', 'engine'];
+const JOB_KINDS: JobKind[] = ['service', 'pc', 'engine', 'design'];
 
 function encodeItem(i: ItemInstance): ItemTuple {
   const t: ItemTuple = [
@@ -56,7 +58,7 @@ function encodeItem(i: ItemInstance): ItemTuple {
     i.col,
     i.day,
   ];
-  if (i.job) t.push([i.job.fee, i.job.p, i.job.k]);
+  if (i.job) t.push([i.job.fee, i.job.p, i.job.k, i.job.t ?? 0, i.job.c ?? '']);
   return t;
 }
 
@@ -66,7 +68,13 @@ function decodeItem(t: unknown): ItemInstance | null {
   if (typeof a !== 'number' || a < 0 || a >= ITEMS.length) return null;
   const job =
     Array.isArray(jb) && JOB_KINDS.includes(jb[2] as JobKind)
-      ? { fee: Math.max(0, num(jb[0], 0)), p: str(jb[1], 'student'), k: jb[2] as JobKind }
+      ? {
+          fee: Math.max(0, num(jb[0], 0)),
+          p: str(jb[1], 'student'),
+          k: jb[2] as JobKind,
+          ...(num(jb[3], 0) > 0 ? { t: Math.min(3, num(jb[3], 0)) } : {}),
+          ...(str(jb[4], '') ? { c: cleanName(str(jb[4], '')).slice(0, 30) } : {}),
+        }
       : undefined;
   return {
     ...(job ? { job } : {}),
@@ -142,6 +150,7 @@ export function serialize(state: GameState): string {
       d.gifts,
       d.tipsAds,
       d.jobs,
+      d.ads,
     ],
     iv: state.inv.map(encodeItem),
     sk: state.skills,
@@ -151,6 +160,7 @@ export function serialize(state: GameState): string {
     dc: state.decor,
     cn: state.company,
     bz: [state.biz.own, state.biz.cur],
+    br: Math.round(state.brand * 10) / 10,
     ct: state.catalog,
     rq: state.requests.map((r) => [r.t, r.p, r.day]),
     st: { ...state.stats },
@@ -236,6 +246,7 @@ function fromObject(o: SaveObject): GameState {
       gifts: num(dy[13], 0),
       tipsAds: num(dy[14], 0),
       jobs: numArr(dy[15]),
+      ads: strArr(dy[16]),
     };
   }
   g.inv = Array.isArray(o.iv)
@@ -253,6 +264,7 @@ function fromObject(o: SaveObject): GameState {
   g.biz.own = [RESELLING, ...own.filter((id) => id !== RESELLING)];
   const cur = str(bz[1], RESELLING);
   g.biz.cur = g.biz.own.includes(cur) ? cur : RESELLING;
+  g.brand = Math.max(0, num(o.br, 0));
   const ct = str(o.ct, '');
   g.catalog = /^[012]*$/.test(ct)
     ? ct.padEnd(ITEMS.length, '0').slice(0, ITEMS.length)

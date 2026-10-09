@@ -33,6 +33,7 @@ import {
 import { catalogFoundCount } from '../src/core/catalog';
 import { DECOR, buyDecor } from '../src/core/decor';
 import { acceptJob, businessOffers, completeJob } from '../src/core/jobs';
+import { CAMPAIGNS, campaignStatus, runCampaign } from '../src/core/marketing';
 import { BUSINESSES, businessStatus, openBusiness, openCost, setCurrentBusiness } from '../src/core/empire';
 import { isContentComplete } from '../src/core/complete';
 import { snapPrice } from '../src/core/economy';
@@ -120,6 +121,13 @@ function playDay(g: GameState, rng: Rng, skill: number): number {
   // Open the next business as soon as the savings allow (keeping a reserve for the shop).
   for (const b of BUSINESSES) {
     if (businessStatus(g, b) === 'available' && g.coins - openCost(b) >= reserve * 0.5) openBusiness(g, b.id);
+  }
+  // Marketing: every few days, the best campaign it can comfortably afford.
+  if (g.day.n % 3 === 1) {
+    const c = [...CAMPAIGNS]
+      .reverse()
+      .find((x) => campaignStatus(g, x) === 'available' && g.coins > x.cost * 4);
+    if (c) runCampaign(g, c.id);
   }
   // Work at the biggest business two days out of three, the Reselling Shop on the third.
   const top = BUSINESSES.filter((b) => g.biz.own.includes(b.id)).pop()!;

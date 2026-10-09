@@ -5,6 +5,7 @@ import { categoryComplete, markFound, markPerfect } from './catalog';
 import { instanceValue, isRestored, qualityOf, recipeFor, requiredDone } from './items';
 import { addXp } from './progression';
 import { decorFx } from './decor';
+import { fadeBrand } from './marketing';
 import { matchesRequest, requestTemplate, type SaleResult } from './customers';
 import { newDay, type DayPhase, type GameState, type ItemInstance } from './state';
 import type { CategoryId } from './types';
@@ -183,6 +184,7 @@ function startNextDay(state: GameState): void {
   const prev = markets.find((m) => m.id === state.day.market) ? state.day.market : markets[0].id;
   if (!state.flags.tutorialDone) state.flags.tutorialDone = true;
   state.day = newDay(n, prev, hashSeed(state.seed, 'day', n) >>> 0);
+  fadeBrand(state);
   // Old requests expire after 7 days so the board keeps moving.
   state.requests = state.requests.filter((r) => n - r.day <= 7);
 }
