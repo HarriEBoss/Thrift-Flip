@@ -20,6 +20,16 @@ type Tf = {
   };
 };
 
+type U = { u: number; v: number };
+/** What the repair asks the bot to do next (src/game/minigames/repair/host.ts). */
+export type BotAction =
+  | { a: 'wait' }
+  | { a: 'tap'; p: U }
+  | { a: 'hold'; p: U }
+  | { a: 'holdLevel'; p: U; until: number }
+  | { a: 'drag'; from: U; to: U }
+  | { a: 'circle'; c: U; r: number };
+
 export interface WsInfo {
   view: 'steps' | 'reveal';
   kind: string | null;
@@ -31,21 +41,11 @@ export interface WsInfo {
   locked: boolean;
   path?: Array<{ x: number; y: number }>;
   sticker?: { corner: { u: number; v: number }; dir: number; w: number };
-  wire?: {
+  repair?: {
     phase: string;
-    screws: Array<{ u: number; v: number }>;
-    center: { u: number; v: number };
-    radius: number;
-    left: Array<{ u: number; v: number }>;
-    right: Array<{ u: number; v: number }>;
-    order: number[];
-    swap: {
-      broken: { u: number; v: number };
-      fresh: { u: number; v: number };
-      slot: { u: number; v: number };
-      bin: { u: number; v: number };
-    } | null;
-    pour: { cap: { u: number; v: number }; level: number; lo: number; hi: number } | null;
+    task: string | null;
+    level: number | null;
+    action: BotAction;
   };
 }
 
@@ -208,60 +208,45 @@ export async function solveStep(page: Page, mode: Mode): Promise<void> {
     const path = info.path.map((p) => unit(info!, p.x, p.y));
     for (let i = 0; i + 1 < path.length; i++) pts.push(...lerpPath(path[i], path[i + 1], 6));
     await drag(page, mode, pts, 6);
-  } else if ((kind === 'wire' || kind === 'fix') && info.wire) {
-    // The repair: turn over, unscrew (hold) or twist off the cover, lift it, connect wires, wait.
-    for (let guard = 0; guard < 60 && (await stillHere()); guard++) {
+  } else if ((kind === 'wire' || kind === 'fix') && info.repair) {
+    // The repair tells the bot what to do next (hold a screw, drag a part, pour to a level...).
+    for (let guard = 0; guard < 160 && (await stillHere()); guard++) {
       const now = await ws(page);
-      const w = now?.wire;
-      if (!now || !w) break;
-      if (w.phase === 'screws' && w.screws.length) {
-        const p = unit(now, w.screws[0].u, w.screws[0].v);
-        await drag(
-          page,
-          mode,
-          Array.from({ length: 12 }, () => p),
-          100,
-        );
-        await page.waitForTimeout(500);
-      } else if (w.phase === 'twist') {
+      const act = now?.repair?.action;
+      if (!now || !act) break;
+      const key = JSON.stringify(act);
+      const changed = async () => {
+        const i = await ws(page);
+        return !i?.repair || JSON.stringify(i.repair.action) !== key;
+      };
+      if (act.a === 'hold') {
+        await holdUntil(page, mode, unit(now, act.p.u, act.p.v), changed);
+        await page.waitForTimeout(150);
+      } else if (act.a === 'holdLevel') {
+        await holdUntil(page, mode, unit(now, act.p.u, act.p.v), async () => {
+          const i = await ws(page);
+          return (i?.repair?.level ?? 1) >= act.until || (await changed());
+        });
+        await page.waitForTimeout(400);
+      } else if (act.a === 'tap') {
+        const c = unit(now, act.p.u, act.p.v);
+        await drag(page, mode, [c, c], 40);
+        await page.waitForTimeout(600);
+      } else if (act.a === 'drag') {
+        const a = unit(now, act.from.u, act.from.v);
+        const b = unit(now, act.to.u, act.to.v);
+        await drag(page, mode, lerpPath(a, b, 12), 12);
+        await page.waitForTimeout(250);
+      } else if (act.a === 'circle') {
         const pts: Pt[] = [];
         for (let i = 0; i <= 72; i++) {
-          const a = (i / 24) * Math.PI * 2;
-          pts.push(
-            unit(now, w.center.u + Math.cos(a) * w.radius * 0.6, w.center.v + Math.sin(a) * w.radius * 0.6),
-          );
+          const ang = (i / 24) * Math.PI * 2;
+          pts.push(unit(now, act.c.u + Math.cos(ang) * act.r, act.c.v + Math.sin(ang) * act.r));
         }
         await drag(page, mode, pts, 15);
         await page.waitForTimeout(300);
-      } else if (w.phase === 'cover') {
-        const c = unit(now, w.center.u, w.center.v);
-        await drag(page, mode, [c, c], 40);
-        await page.waitForTimeout(700);
-      } else if ((w.phase === 'swapOut' || w.phase === 'swapIn') && w.swap) {
-        const from = w.phase === 'swapOut' ? w.swap.broken : w.swap.fresh;
-        const to = w.phase === 'swapOut' ? w.swap.bin : w.swap.slot;
-        await drag(page, mode, lerpPath(unit(now, from.u, from.v), unit(now, to.u, to.v), 10), 12);
-        await page.waitForTimeout(500);
-      } else if (w.phase === 'pour' && w.pour) {
-        await holdUntil(page, mode, unit(now, w.pour.cap.u, w.pour.cap.v), async () => {
-          const i = await ws(page);
-          return !i?.wire?.pour || i.wire.pour.level >= w.pour!.lo + 0.04;
-        });
-        await page.waitForTimeout(600);
-      } else if (w.phase === 'wires') {
-        for (let l = 0; l < w.left.length; l++) {
-          const r = w.order.indexOf(l);
-          await drag(
-            page,
-            mode,
-            lerpPath(unit(now, w.left[l].u, w.left[l].v), unit(now, w.right[r].u, w.right[r].v), 12),
-            10,
-          );
-          await page.waitForTimeout(80);
-        }
-        await page.waitForTimeout(400);
       } else {
-        await page.waitForTimeout(300);
+        await page.waitForTimeout(250);
       }
     }
   }

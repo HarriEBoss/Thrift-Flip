@@ -815,7 +815,7 @@ export class WorkshopScene extends GameScene {
         w: sk.w,
       };
     }
-    if (this.mini instanceof RepairGame) info.wire = this.mini.debug();
+    if (this.mini instanceof RepairGame) info.repair = this.mini.debug();
     return info;
   }
 

@@ -1,5 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { TWIST_NEEDED, angleDelta, panelGeom, rigFor, screwLayout, wireLayout } from '../../src/core/repair';
+import {
+  PASTE_BAND,
+  POUR_BAND,
+  POUR_RATE,
+  TWIST_NEEDED,
+  angleDelta,
+  boltLayout,
+  cableSet,
+  dustLayout,
+  engineSwapRig,
+  fixRigFor,
+  hoistLayout,
+  panelGeom,
+  pcRebuildRig,
+  pourLayout,
+  pourScore,
+  pourStep,
+  repairRig,
+  rigFor,
+  screwLayout,
+  swapLayout,
+  wireLayout,
+  type Rig,
+} from '../../src/core/repair';
 import { ITEMS, RECIPES } from '../../src/core/data';
 
 describe('repair rigs', () => {
@@ -57,5 +80,95 @@ describe('repair rigs', () => {
       last = a;
     }
     expect(total).toBeGreaterThan(TWIST_NEEDED);
+  });
+});
+
+describe('big repairs (computers, cars, workshop jobs)', () => {
+  const inPanel = (r: Rig, p: { u: number; v: number }, k = 1.05) => {
+    const g = panelGeom(r);
+    return Math.abs(p.u - g.cx) <= g.rx * k && Math.abs(p.v - g.cy) <= g.ry * k;
+  };
+
+  it('every computer and vehicle has a multi-step Repair rig', () => {
+    for (const it of ITEMS.filter((i) => i.cat === 'tech' || i.cat === 'vehicles')) {
+      const r = repairRig('fix', it.cat, it.shape);
+      expect(r).toBe(fixRigFor(it.cat, it.shape));
+      expect(r.tasks.length).toBeGreaterThanOrEqual(2);
+      if (it.cat === 'vehicles') expect(r.glow).toBe('engine');
+    }
+  });
+
+  it('workshop jobs: a full PC rebuild and an engine swap with lots to do', () => {
+    const pc = repairRig('fix', 'tech', 0, 'pc');
+    expect(pc.tasks.map((t) => t.k)).toEqual(['dust', 'swap', 'swap', 'swap', 'bolts', 'cables']);
+    expect(pc.tasks.some((t) => t.k === 'swap' && t.paste)).toBe(true);
+    const eng = repairRig('fix', 'vehicles', 0, 'engine');
+    expect(eng.inside).toBe('bay');
+    expect(eng.tasks.length).toBeGreaterThanOrEqual(10);
+    // Out comes before in, and the engine is unbolted before it is hoisted.
+    const ks = eng.tasks.map((t) => (t.k === 'hoist' || t.k === 'bolts' ? `${t.k}:${t.dir}` : t.k));
+    expect(ks.indexOf('bolts:out')).toBeLessThan(ks.indexOf('hoist:out'));
+    expect(ks.indexOf('hoist:out')).toBeLessThan(ks.indexOf('hoist:in'));
+    expect(ks.indexOf('hoist:in')).toBeLessThan(ks.indexOf('bolts:in'));
+    // The wire step never turns into a job.
+    expect(repairRig('wire', 'lamps', 0, 'engine')).toBe(rigFor('lamps', 0));
+  });
+
+  it('parts, caps, bolts, sockets and dust all sit inside the compartment', () => {
+    const rigs = [
+      pcRebuildRig(),
+      engineSwapRig(),
+      ...[0, 1, 2, 3, 4].flatMap((s) => [fixRigFor('tech', s), fixRigFor('vehicles', s)]),
+    ];
+    for (const r of rigs) {
+      for (const t of r.tasks) {
+        if (t.k === 'swap') {
+          const sl = swapLayout(r, t);
+          for (const p of [sl.slot, sl.fresh, sl.bin]) expect(inPanel(r, p)).toBe(true);
+        } else if (t.k === 'pour' || t.k === 'drain') {
+          const pl = pourLayout(r, t.k, t.fluid);
+          expect(inPanel(r, pl.cap)).toBe(true);
+          expect(inPanel(r, pl.gauge)).toBe(true);
+        } else if (t.k === 'bolts') {
+          const b = boltLayout(r, t);
+          expect(b).toHaveLength(t.n);
+          for (const p of b) expect(inPanel(r, p)).toBe(true);
+        } else if (t.k === 'cables') {
+          const cs = cableSet(r, t.set, 7);
+          expect(cableSet(r, t.set, 7)).toEqual(cs);
+          expect(new Set(cs.map((c) => c.id)).size).toBe(cs.length);
+          for (const c of cs) {
+            expect(inPanel(r, c.plug)).toBe(true);
+            expect(inPanel(r, c.socket)).toBe(true);
+          }
+        } else if (t.k === 'dust') {
+          const d = dustLayout(r, t.n, 3);
+          expect(d).toHaveLength(t.n);
+          for (const p of d) expect(inPanel(r, p)).toBe(true);
+        }
+      }
+    }
+  });
+
+  it('two fluids never share a cap, and the hoist lifts the engine clear of the bay', () => {
+    for (const r of [fixRigFor('vehicles', 1), engineSwapRig()]) {
+      const oil = pourLayout(r, 'pour', 'oil').cap;
+      const cool = pourLayout(r, 'pour', 'coolant').cap;
+      expect(Math.hypot(oil.u - cool.u, oil.v - cool.v)).toBeGreaterThan(0.12);
+    }
+    const h = hoistLayout(engineSwapRig());
+    expect(h.seat.v - h.up.v).toBeGreaterThan(h.h);
+  });
+
+  it('pouring fills at a steady rate and scores the green band best', () => {
+    let lvl = 0;
+    for (let i = 0; i < 10; i++) lvl = pourStep(lvl, 0.1);
+    expect(lvl).toBeCloseTo(POUR_RATE);
+    expect(pourStep(0.95, 1)).toBe(1);
+    expect(pourScore(0.5)).toBe(0);
+    expect(pourScore((POUR_BAND[0] + POUR_BAND[1]) / 2)).toBe(1);
+    expect(pourScore(1)).toBeLessThan(1);
+    expect(pourScore(1)).toBeGreaterThanOrEqual(0.6);
+    expect(pourScore(0.5, PASTE_BAND)).toBe(1);
   });
 });

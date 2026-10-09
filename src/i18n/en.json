@@ -367,5 +367,14 @@
   "mg.rep.pourCoolant": "Hold on the cap to pour in coolant. Let go in the green!",
   "catOne.tech": "computer or game",
   "catOne.vehicles": "car or bike",
-  "mg.fix": "Open it up and fix what's broken inside."
+  "mg.fix": "Open it up and fix what's broken inside.",
+  "mg.rep.dust": "Hold the air can on each dust bunny to blow it away.",
+  "mg.rep.paste": "Hold on the CPU to squeeze on thermal paste. Let go in the green: a pea-sized dot!",
+  "mg.rep.drain": "Hold on the drain plug to let the old oil run out.",
+  "mg.rep.boltsOut": "Hold the spanner on each bolt to undo it.",
+  "mg.rep.boltsIn": "Hold the spanner on each bolt to tighten it.",
+  "mg.rep.hoistOut": "Drag the old engine up and out on the hoist!",
+  "mg.rep.hoistIn": "Lower the new engine down into the bay.",
+  "mg.rep.cables": "Plug each cable into the socket with the same label and shape.",
+  "mg.rep.hoses": "Push each hose onto the pipe with the same label."
 }

@@ -1,9 +1,10 @@
 /**
- * The wiring repair, per object. Instead of an abstract puzzle board, the item is turned over to its
- * electrical compartment (the base of a lamp, the back of a radio, the case back of a watch), the
- * cover comes off, the loose wires are reconnected to their terminals, the repair is tested and the
- * cover goes back on. This module is pure: which way each object turns, what the compartment looks
- * like and where everything sits (in stage unit coordinates, 0..1).
+ * Repairs, done "for real" and different per object. The item is turned to its compartment (the base
+ * of a lamp, the back of a radio, the case back of a watch, the hood of a car), the cover comes off,
+ * then a list of hands-on tasks is done in order (reconnect wires, swap a broken part, pour oil,
+ * unbolt and hoist an engine, plug in motherboard cables...), the repair is tested and the cover goes
+ * back on. This module is pure: which way each object turns, which tasks it needs and where
+ * everything sits (stage unit coordinates, 0..1).
  */
 import { Rng } from './prng';
 import type { CategoryId } from './types';
@@ -15,21 +16,45 @@ import type { CategoryId } from './types';
 export type RepairView = 'base' | 'back' | 'hood';
 /** How the cover comes off: screws, a twist-off case back, or a hood you lift. */
 export type LidKind = 'screws' | 'twist' | 'hood';
-/** What is inside. */
-export type Inside = 'socket' | 'board' | 'tubes' | 'movement' | 'battery' | 'pc' | 'engine';
+/** What is inside. 'bay' is an engine bay whose engine is a movable part (engine swaps). */
+export type Inside = 'socket' | 'board' | 'tubes' | 'movement' | 'battery' | 'pc' | 'engine' | 'bay';
 /** What lights up (or starts) when the repair is tested. */
 export type Glow = 'bulb' | 'tubes' | 'screen' | 'led' | 'engine';
-/** Jobs inside the compartment, done in order. */
-export type RepairTask = 'swap' | 'pour' | 'wires';
 /** A part that gets swapped for a new one. */
-export type PartKind = 'battery' | 'fan' | 'ram' | 'drive' | 'cell' | 'plug';
+export type PartKind = 'battery' | 'fan' | 'ram' | 'drive' | 'cell' | 'plug' | 'cooler' | 'gpu';
 export type Fluid = 'oil' | 'coolant';
+/** Corners / centre of the compartment where things sit. */
+export type Zone = 'tl' | 'tr' | 'bl' | 'br' | 'c';
+
+/** One hands-on job inside the compartment. */
+export type TaskSpec =
+  /** Connect each loose wire to the terminal with the same colour and symbol. */
+  | { k: 'wires' }
+  /**
+   * Pull the broken part out to the bin, then put the new one in its slot. With `paste`, thermal
+   * paste goes on the CPU in between (CPU coolers).
+   */
+  | { k: 'swap'; part: PartKind; zone?: Zone; paste?: boolean }
+  /** Hold on the filler cap and stop with the level in the green band. */
+  | { k: 'pour'; fluid: Fluid }
+  /** Hold on the drain plug until the old fluid has run out. */
+  | { k: 'drain'; fluid: Fluid }
+  /** Hold the spanner on each bolt (engine mounts, card bracket) to undo or tighten it. */
+  | { k: 'bolts'; n: number; dir: 'out' | 'in'; at: 'engine' | 'card' }
+  /** Engine swap: hoist the old engine out, or lower the new one in. */
+  | { k: 'hoist'; dir: 'out' | 'in' }
+  /** Plug each cable or hose into its matching socket (by shape and label). */
+  | { k: 'cables'; set: 'pc' | 'hoses' }
+  /** Blow the dust bunnies away with the air can. */
+  | { k: 'dust'; n: number }
+  /** Squeeze thermal paste onto the CPU: a pea-sized dot, not too much. */
+  | { k: 'paste' };
 
 export interface Rig {
   view: RepairView;
   panel: 'round' | 'rect';
   lid: LidKind;
-  /** Number of screws holding the cover (0 for a twist-off lid). */
+  /** Number of screws holding the cover (0 for a twist-off lid or a hood). */
   screws: number;
   inside: Inside;
   glow: Glow;
@@ -37,10 +62,8 @@ export interface Rig {
   mains: boolean;
   /** Width / height of a rectangular panel. */
   aspect: number;
-  /** What to do once the cover is off (the plain wire step only reconnects wires). */
-  tasks: RepairTask[];
-  part: PartKind;
-  fluid: Fluid;
+  /** What to do once the cover is off, in order. */
+  tasks: TaskSpec[];
 }
 
 const rig = (r: Partial<Rig> & Pick<Rig, 'view' | 'panel' | 'inside' | 'glow'>): Rig => ({
@@ -48,11 +71,13 @@ const rig = (r: Partial<Rig> & Pick<Rig, 'view' | 'panel' | 'inside' | 'glow'>):
   screws: 4,
   mains: false,
   aspect: 1.3,
-  tasks: ['wires'],
-  part: 'battery',
-  fluid: 'oil',
+  tasks: [{ k: 'wires' }],
   ...r,
 });
+
+export function hasTask(r: Rig, k: TaskSpec['k']): boolean {
+  return r.tasks.some((t) => t.k === k);
+}
 
 /** One rig per item shape (category:shape index). */
 const RIGS: Record<string, Rig> = {
@@ -121,8 +146,8 @@ export function rigFor(cat: CategoryId, shape: number): Rig {
 }
 
 /**
- * The full "Repair" step of big-ticket items (computers, consoles, cars, bikes): open it up, swap the
- * broken part, top up the fluid where there is one, reconnect the wiring, then test it.
+ * The "Repair" step of big-ticket items you buy (computers, consoles, cars, bikes): open it up, swap
+ * the broken part, top up fluids, reconnect wiring, then test it.
  */
 const FIX_RIGS: Record<string, Rig> = {
   'tech:0': rig({
@@ -132,8 +157,11 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'screen',
     mains: true,
     aspect: 1.2,
-    tasks: ['swap', 'wires'],
-    part: 'fan',
+    tasks: [
+      { k: 'dust', n: 4 },
+      { k: 'swap', part: 'fan' },
+      { k: 'cables', set: 'pc' },
+    ],
   }),
   'tech:1': rig({
     view: 'base',
@@ -142,8 +170,7 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'pc',
     glow: 'screen',
     aspect: 1.5,
-    tasks: ['swap', 'wires'],
-    part: 'ram',
+    tasks: [{ k: 'swap', part: 'ram' }, { k: 'swap', part: 'drive', zone: 'tl' }, { k: 'wires' }],
   }),
   'tech:2': rig({
     view: 'back',
@@ -151,8 +178,7 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'pc',
     glow: 'led',
     aspect: 1.6,
-    tasks: ['swap', 'wires'],
-    part: 'fan',
+    tasks: [{ k: 'dust', n: 3 }, { k: 'swap', part: 'fan' }, { k: 'wires' }],
   }),
   'tech:3': rig({
     view: 'back',
@@ -161,8 +187,7 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'screen',
     mains: true,
     aspect: 1.05,
-    tasks: ['swap', 'wires'],
-    part: 'drive',
+    tasks: [{ k: 'swap', part: 'drive' }, { k: 'dust', n: 3 }, { k: 'wires' }],
   }),
   'tech:4': rig({
     view: 'back',
@@ -171,8 +196,7 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'battery',
     glow: 'screen',
     aspect: 1.1,
-    tasks: ['swap', 'wires'],
-    part: 'cell',
+    tasks: [{ k: 'swap', part: 'cell' }, { k: 'wires' }],
   }),
   'vehicles:0': rig({
     view: 'hood',
@@ -182,8 +206,7 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'engine',
     glow: 'engine',
     aspect: 1.5,
-    tasks: ['swap', 'pour', 'wires'],
-    part: 'battery',
+    tasks: [{ k: 'swap', part: 'battery' }, { k: 'pour', fluid: 'oil' }, { k: 'wires' }],
   }),
   'vehicles:1': rig({
     view: 'hood',
@@ -193,8 +216,12 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'engine',
     glow: 'engine',
     aspect: 1.5,
-    tasks: ['swap', 'pour', 'wires'],
-    part: 'battery',
+    tasks: [
+      { k: 'swap', part: 'battery' },
+      { k: 'pour', fluid: 'coolant' },
+      { k: 'pour', fluid: 'oil' },
+      { k: 'wires' },
+    ],
   }),
   'vehicles:2': rig({
     view: 'back',
@@ -203,8 +230,10 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'engine',
     glow: 'engine',
     aspect: 1.4,
-    tasks: ['swap', 'pour'],
-    part: 'plug',
+    tasks: [
+      { k: 'swap', part: 'plug' },
+      { k: 'pour', fluid: 'oil' },
+    ],
   }),
   'vehicles:3': rig({
     view: 'back',
@@ -213,8 +242,7 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'engine',
     glow: 'engine',
     aspect: 1.4,
-    tasks: ['swap', 'pour', 'wires'],
-    part: 'plug',
+    tasks: [{ k: 'swap', part: 'plug' }, { k: 'pour', fluid: 'oil' }, { k: 'wires' }],
   }),
   'vehicles:4': rig({
     view: 'hood',
@@ -224,9 +252,7 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'engine',
     glow: 'engine',
     aspect: 1.5,
-    tasks: ['swap', 'pour', 'wires'],
-    part: 'battery',
-    fluid: 'coolant',
+    tasks: [{ k: 'swap', part: 'battery' }, { k: 'pour', fluid: 'coolant' }, { k: 'wires' }],
   }),
 };
 
@@ -235,22 +261,79 @@ const DEFAULT_FIX_RIG = rig({
   panel: 'rect',
   inside: 'pc',
   glow: 'led',
-  tasks: ['swap', 'wires'],
-  part: 'fan',
+  tasks: [{ k: 'swap', part: 'fan' }, { k: 'wires' }],
 });
 
 export function fixRigFor(cat: CategoryId, shape: number): Rig {
   return FIX_RIGS[`${cat}:${shape}`] ?? DEFAULT_FIX_RIG;
 }
 
-/** Where the broken part sits, where the new one waits, and where old parts are dropped. */
-export interface SwapLayout {
-  slot: Pt;
-  fresh: Pt;
-  bin: Pt;
-  /** Part size in stage units (width, height). */
-  w: number;
-  h: number;
+/** Big customer jobs at the Computer Workshop and the Car Garage. */
+export type JobKind = 'service' | 'pc' | 'engine';
+
+/**
+ * A full PC rebuild: dust it out, fresh thermal paste, new cooler, new memory and drive, plug in every
+ * motherboard cable, screw the graphics card down.
+ */
+export function pcRebuildRig(): Rig {
+  return rig({
+    view: 'back',
+    panel: 'rect',
+    inside: 'pc',
+    glow: 'screen',
+    mains: true,
+    aspect: 1.05,
+    tasks: [
+      { k: 'dust', n: 5 },
+      { k: 'swap', part: 'cooler', zone: 'tl', paste: true },
+      { k: 'swap', part: 'ram' },
+      { k: 'swap', part: 'gpu', zone: 'c' },
+      { k: 'bolts', n: 2, dir: 'in', at: 'card' },
+      { k: 'cables', set: 'pc' },
+    ],
+  });
+}
+
+/**
+ * An engine swap: drain the oil, undo the engine mounts, hoist the old engine out, lower the new one
+ * in, bolt it down, reconnect the hoses, fill oil and coolant, new battery, ignition wiring.
+ */
+export function engineSwapRig(): Rig {
+  return rig({
+    view: 'hood',
+    panel: 'rect',
+    lid: 'hood',
+    screws: 0,
+    inside: 'bay',
+    glow: 'engine',
+    aspect: 1.05,
+    tasks: [
+      { k: 'drain', fluid: 'oil' },
+      { k: 'bolts', n: 4, dir: 'out', at: 'engine' },
+      { k: 'hoist', dir: 'out' },
+      { k: 'hoist', dir: 'in' },
+      { k: 'bolts', n: 4, dir: 'in', at: 'engine' },
+      { k: 'cables', set: 'hoses' },
+      { k: 'pour', fluid: 'oil' },
+      { k: 'pour', fluid: 'coolant' },
+      { k: 'swap', part: 'battery' },
+      { k: 'wires' },
+    ],
+  });
+}
+
+/** The rig for a repair step: the wire step, the item's own Repair step, or a big job. */
+export function repairRig(step: 'wire' | 'fix', cat: CategoryId, shape: number, job?: JobKind): Rig {
+  if (step === 'fix' && job === 'pc') return pcRebuildRig();
+  if (step === 'fix' && job === 'engine') return engineSwapRig();
+  return step === 'fix' ? fixRigFor(cat, shape) : rigFor(cat, shape);
+}
+
+/** Centre of a zone of the compartment. */
+export function zonePt(r: Rig, z: Zone): Pt {
+  const g = panelGeom(r);
+  const k = { tl: [-0.6, -0.6], tr: [0.6, -0.62], bl: [-0.62, 0.62], br: [0.62, 0.62], c: [0, 0.05] }[z];
+  return { u: g.cx + g.rx * k[0], v: g.cy + g.ry * k[1] };
 }
 
 export function partSize(kind: PartKind): { w: number; h: number } {
@@ -258,6 +341,7 @@ export function partSize(kind: PartKind): { w: number; h: number } {
     case 'battery':
       return { w: 0.2, h: 0.15 };
     case 'fan':
+    case 'cooler':
       return { w: 0.16, h: 0.16 };
     case 'ram':
       return { w: 0.24, h: 0.07 };
@@ -267,32 +351,64 @@ export function partSize(kind: PartKind): { w: number; h: number } {
       return { w: 0.18, h: 0.07 };
     case 'plug':
       return { w: 0.07, h: 0.17 };
+    case 'gpu':
+      return { w: 0.4, h: 0.11 };
   }
 }
 
-export function swapLayout(r: Rig): SwapLayout {
-  const g = panelGeom(r);
-  const { w, h } = partSize(r.part);
-  return {
-    slot: { u: g.cx + g.rx * 0.6, v: g.cy - g.ry * 0.62 },
-    fresh: { u: g.cx + g.rx * 0.62, v: g.cy + g.ry * 0.62 },
-    bin: { u: g.cx - g.rx * 0.65, v: g.cy + g.ry * 0.66 },
-    w,
-    h,
-  };
+/** Where the broken part sits, where the new one waits, and where old parts are dropped. */
+export interface SwapLayout {
+  slot: Pt;
+  fresh: Pt;
+  bin: Pt;
+  w: number;
+  h: number;
 }
 
-/** The oil / coolant filler cap and its level gauge. */
+export function swapLayout(r: Rig, spec: { part: PartKind; zone?: Zone }): SwapLayout {
+  const { w, h } = partSize(spec.part);
+  return { slot: zonePt(r, spec.zone ?? 'tr'), fresh: zonePt(r, 'br'), bin: zonePt(r, 'bl'), w, h };
+}
+
+/** Filler cap (pour), drain plug (drain), CPU (paste) and the level gauge next to it. */
 export interface PourLayout {
   cap: Pt;
   gauge: Pt;
 }
 
-export function pourLayout(r: Rig): PourLayout {
+export function pourLayout(
+  r: Rig,
+  kind: 'pour' | 'drain' | 'paste' = 'pour',
+  fluid: Fluid = 'oil',
+): PourLayout {
   const g = panelGeom(r);
+  if (kind === 'drain')
+    return {
+      cap: { u: g.cx - g.rx * 0.55, v: g.cy + g.ry * 0.7 },
+      gauge: { u: g.cx - g.rx * 0.25, v: g.cy + g.ry * 0.62 },
+    };
+  if (kind === 'paste')
+    return {
+      cap: { u: g.cx - g.rx * 0.6, v: g.cy - g.ry * 0.6 },
+      gauge: { u: g.cx - g.rx * 0.28, v: g.cy - g.ry * 0.6 },
+    };
+  if (r.inside === 'bay') {
+    // Engine swap: oil goes in on top of the engine, coolant into the radiator at the front.
+    return fluid === 'oil'
+      ? {
+          cap: { u: g.cx - g.rx * 0.2, v: g.cy - g.ry * 0.2 },
+          gauge: { u: g.cx + g.rx * 0.08, v: g.cy - g.ry * 0.2 },
+        }
+      : {
+          cap: { u: g.cx - g.rx * 0.1, v: g.cy - g.ry * 0.8 },
+          gauge: { u: g.cx + g.rx * 0.18, v: g.cy - g.ry * 0.8 },
+        };
+  }
+  // Oil on the left, coolant on the right, so a second fluid never lands on the first.
+  const side = fluid === 'oil' ? -1 : 1;
   return {
-    cap: { u: g.cx - g.rx * 0.6, v: g.cy - g.ry * 0.6 },
-    gauge: { u: g.cx - g.rx * 0.3, v: g.cy - g.ry * 0.6 },
+    cap: { u: g.cx + side * g.rx * 0.6, v: g.cy - g.ry * 0.6 },
+    gauge: { u: g.cx + side * g.rx * 0.3, v: g.cy - g.ry * 0.6 },
   };
 }
 
@@ -300,6 +416,10 @@ export function pourLayout(r: Rig): PourLayout {
 export const POUR_BAND: [number, number] = [0.7, 0.88];
 /** Fill speed while holding (level per second). */
 export const POUR_RATE = 0.45;
+/** Thermal paste: a pea-sized dot. */
+export const PASTE_BAND: [number, number] = [0.45, 0.68];
+/** Drained when the old fluid is below this. */
+export const DRAIN_DONE = 0.08;
 
 /** New level after pouring for dt seconds (never above 1). */
 export function pourStep(level: number, dt: number, rate = POUR_RATE): number {
@@ -312,6 +432,92 @@ export function pourScore(level: number, band: [number, number] = POUR_BAND): nu
   if (level <= band[1]) return 1;
   return Math.max(0.6, 1 - (level - band[1]) * 2.5);
 }
+
+/** Bolts: engine mounts around the engine, or the graphics card bracket at the right. */
+export function boltLayout(r: Rig, spec: { n: number; at: 'engine' | 'card' }): Pt[] {
+  const g = panelGeom(r);
+  if (spec.at === 'card') {
+    const c = zonePt(r, 'c');
+    return Array.from({ length: spec.n }, (_, i) => ({ u: c.u + 0.17, v: c.v - 0.025 + i * 0.05 }));
+  }
+  const pts: Pt[] = [
+    { u: g.cx - g.rx * 0.55, v: g.cy - g.ry * 0.38 },
+    { u: g.cx + g.rx * 0.55, v: g.cy - g.ry * 0.38 },
+    { u: g.cx + g.rx * 0.55, v: g.cy + g.ry * 0.45 },
+    { u: g.cx - g.rx * 0.55, v: g.cy + g.ry * 0.45 },
+  ];
+  return pts.slice(0, spec.n);
+}
+
+/** Engine swap: where the engine sits, where it is hoisted to, and its size. */
+export function hoistLayout(r: Rig): { seat: Pt; up: Pt; w: number; h: number } {
+  const g = panelGeom(r);
+  return {
+    seat: { u: g.cx, v: g.cy + g.ry * 0.06 },
+    up: { u: g.cx, v: g.cy - g.ry * 1.25 },
+    w: g.rx * 1.25,
+    h: g.ry * 0.95,
+  };
+}
+
+/** A cable (PC) or hose (engine): its plug's start position, its socket, label and shape. */
+export interface CableDef {
+  id: string;
+  label: string;
+  /** Plug size in stage units: the shape is the clue (wide 24-pin, square 8-pin, tiny front panel). */
+  w: number;
+  h: number;
+  color: number;
+  plug: Pt;
+  socket: Pt;
+}
+
+export function cableSet(r: Rig, set: 'pc' | 'hoses', seed: number): CableDef[] {
+  const g = panelGeom(r);
+  const P = (fx: number, fy: number): Pt => ({ u: g.cx + g.rx * fx, v: g.cy + g.ry * fy });
+  const defs =
+    set === 'pc'
+      ? [
+          { id: 'atx', label: '24', w: 0.12, h: 0.045, color: 0x2a2a2e, socket: P(0.78, 0.0) },
+          { id: 'cpu', label: 'CPU', w: 0.06, h: 0.045, color: 0x2a2a2e, socket: P(-0.2, -0.78) },
+          { id: 'gpu', label: 'GPU', w: 0.07, h: 0.04, color: 0x2a2a2e, socket: P(0.42, 0.28) },
+          { id: 'sata', label: 'SATA', w: 0.07, h: 0.022, color: 0xf2c12e, socket: P(0.72, 0.62) },
+          { id: 'fp', label: 'FP', w: 0.04, h: 0.028, color: 0xe03c31, socket: P(0.2, 0.75) },
+        ]
+      : [
+          { id: 'rad', label: 'RAD', w: 0.075, h: 0.075, color: 0x2a2a2e, socket: P(0.8, -0.1) },
+          { id: 'heat', label: 'HEAT', w: 0.05, h: 0.05, color: 0x3a3a40, socket: P(-0.8, -0.1) },
+          { id: 'fuel', label: 'FUEL', w: 0.04, h: 0.04, color: 0x2f6fd0, socket: P(0.8, 0.32) },
+          { id: 'air', label: 'AIR', w: 0.09, h: 0.09, color: 0x55595f, socket: P(-0.8, 0.32) },
+        ];
+  // Loose plugs lie in a row along the bottom, shuffled so they are not in socket order.
+  const rng = new Rng(seed);
+  const order = rng.shuffle(defs.map((_, i) => i));
+  return defs.map((d, i) => ({
+    ...d,
+    plug: {
+      u: g.cx - g.rx * 0.7 + (g.rx * 1.4 * (order.indexOf(i) + 0.5)) / defs.length,
+      v: g.cy + g.ry * 0.86,
+    },
+  }));
+}
+
+/** Dust bunnies to blow away: spread over the board, never on top of each other. */
+export function dustLayout(r: Rig, n: number, seed: number): Pt[] {
+  const g = panelGeom(r);
+  const rng = new Rng(seed);
+  const pts: Pt[] = [];
+  for (let tries = 0; pts.length < n && tries < 400; tries++) {
+    const p = { u: g.cx + g.rx * rng.range(-0.75, 0.75), v: g.cy + g.ry * rng.range(-0.7, 0.6) };
+    if (pts.every((q) => Math.hypot(q.u - p.u, q.v - p.v) > 0.13)) pts.push(p);
+  }
+  return pts;
+}
+
+/** Seconds of holding the spanner on an engine bolt (they are tighter than case screws). */
+export const BOLT_SECONDS = 0.8;
+/** Seconds of air to blow one dust bunny away. */
+export const DUST_SECONDS = 0.35;
 
 export interface Pt {
   u: number;

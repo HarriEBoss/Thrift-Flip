@@ -1,51 +1,37 @@
 import Phaser from 'phaser';
 import { MiniGame, STAGE } from './MiniGame';
-import { connectWire, makeWirePuzzle, wireScore, wireSolved, type WirePuzzle } from '../../core/minigame';
+import { makeWirePuzzle, type WirePuzzle } from '../../core/minigame';
 import {
-  POUR_BAND,
   SCREW_SECONDS,
   TWIST_NEEDED,
   angleDelta,
-  fixRigFor,
+  hoistLayout,
   panelGeom,
-  pourLayout,
-  pourScore,
-  pourStep,
-  rigFor,
+  repairRig,
   screwLayout,
-  swapLayout,
   wireLayout,
   type PanelGeom,
-  type PourLayout,
   type Pt,
-  type RepairTask,
   type Rig,
-  type SwapLayout,
   type WireLayout,
 } from '../../core/repair';
 import { hashSeed } from '../../core/prng';
 import { ITEMS } from '../../core/data';
 import {
-  drawCan,
   drawCompartment,
   drawCover,
+  drawEngine,
   drawGlow,
-  drawPart,
   drawScrew,
   drawScrewdriver,
 } from '../art/repairArt';
 import { colorsFor, releaseCanvas } from '../art/itemArt';
-import { makeText } from '../ui/widgets';
-import { C, FS } from '../theme';
 import { session } from '../session';
+import { at, drawSlot, type BotAction, type RepairTask, type TaskHost } from './repair/host';
+import { makeTask } from './repair/tasks';
 
-type Phase =
-  'turn' | 'screws' | 'twist' | 'cover' | 'swapOut' | 'swapIn' | 'pour' | 'wires' | 'test' | 'close' | 'done';
+type Phase = 'turn' | 'screws' | 'twist' | 'cover' | 'task' | 'test' | 'close' | 'done';
 
-/** Mains cable colours (brown, blue, green-yellow earth, black, grey) and low-voltage ones. */
-const MAINS = [0x8b5a2b, 0x2f6fd0, 0x3fae49, 0x2a2a2e, 0x9a9aa2];
-const LOW = [0xe03c31, 0x2a2a2e, 0xf2c12e, 0xf4f4f4, 0x2fa14d];
-const SYMBOLS = ['●', '■', '▲', '◆', '★'];
 const GLOW_TINT = {
   bulb: 0xffe08a,
   tubes: 0xff9a3c,
@@ -62,16 +48,16 @@ interface Screw {
 }
 
 /**
- * The wiring repair, done "for real": the item turns over to its electrical compartment (the base
- * of a lamp, the back of a radio, the case back of a watch), the screws come out one by one with a
- * screwdriver (or the back is twisted off), the cover lifts away, each loose wire is connected to
- * the terminal with the same colour and shape, the repair is tested (it lights up) and everything
- * goes back together. Scoring is the same pure wire puzzle as before (mistakes cost a little).
+ * A repair done "for real": the item turns to its compartment (the base of a lamp, the back of a
+ * radio or PC, the hood of a car), the screws come out one by one (or the back twists off, or the
+ * hood lifts), the cover comes away, then each hands-on task of the rig is done in order (see
+ * ./repair/tasks: wires, part swaps, fluids, bolts, the engine hoist, cables, dust). Then it is
+ * tested (it lights up or the engine starts) and goes back together.
  */
 export class RepairGame extends MiniGame {
   constructor(
     ctx: ConstructorParameters<typeof MiniGame>[0],
-    /** 'wire': reconnect the wiring. 'fix': the full repair of big items (parts, fluids, wiring). */
+    /** 'wire': reconnect the wiring. 'fix': the item's full repair (or a customer's big job). */
     private mode: 'wire' | 'fix' = 'wire',
   ) {
     super(ctx);
@@ -79,25 +65,10 @@ export class RepairGame extends MiniGame {
 
   private rig!: Rig;
   private tasks: RepairTask[] = [];
-  private hasWires = true;
-  private swapLay: SwapLayout | null = null;
-  private broken: Phaser.GameObjects.Image | null = null;
-  private fresh: Phaser.GameObjects.Image | null = null;
-  private badge: Phaser.GameObjects.Text | null = null;
-  private partDrag: { u: number; v: number; ox: number; oy: number } | null = null;
-  private pourLay: PourLayout | null = null;
-  private can: Phaser.GameObjects.Image | null = null;
-  private gauge: Phaser.GameObjects.Graphics | null = null;
-  private level = 0.15;
-  private pouring = false;
-  private pourResult = 1;
-  private pourDone = false;
-  private glugT = 0;
+  private cur = -1;
   private geom!: PanelGeom;
   private lay!: WireLayout;
   private puzzle!: WirePuzzle;
-  private n = 3;
-  private colors: number[] = MAINS;
   private phase: Phase = 'turn';
   private hidden: Phaser.GameObjects.GameObject[] = [];
   private itemView!: Phaser.GameObjects.Container;
@@ -105,13 +76,9 @@ export class RepairGame extends MiniGame {
   private cover!: Phaser.GameObjects.Image;
   private screws: Screw[] = [];
   private driver!: Phaser.GameObjects.Image;
-  private wires!: Phaser.GameObjects.Graphics;
-  private termScrews: Phaser.GameObjects.Image[] = [];
   private glow!: Phaser.GameObjects.Image;
   /** Slots of the cover screws (drawn as lines so they turn without rotating images). */
   private slots!: Phaser.GameObjects.Graphics;
-  private termSlots!: Phaser.GameObjects.Graphics;
-  private termAngles: number[] = [];
   private screwAngles: number[] = [];
   /** Grip ridges + notch of a twist-off case back. */
   private lidMarks!: Phaser.GameObjects.Graphics;
@@ -121,7 +88,6 @@ export class RepairGame extends MiniGame {
   private twistTotal = 0;
   private twistLast: number | null = null;
   private coverDrag: { u: number; v: number; ox: number; oy: number } | null = null;
-  private drag: { l: number; u: number; v: number } | null = null;
   private ownTextures: string[] = [];
   private restored = false;
   private speed = 1;
@@ -130,14 +96,11 @@ export class RepairGame extends MiniGame {
     const sc = this.ctx.scene;
     const inst = this.ctx.inst;
     const arch = ITEMS[inst.a];
-    this.rig = this.mode === 'fix' ? fixRigFor(arch.cat, arch.shape) : rigFor(arch.cat, arch.shape);
-    this.tasks = [...this.rig.tasks];
-    this.hasWires = this.tasks.includes('wires');
+    this.rig = repairRig(this.mode, arch.cat, arch.shape, inst.job?.k);
     this.geom = panelGeom(this.rig);
-    this.n = 3 + Math.min(2, inst.d);
-    this.colors = this.rig.mains ? MAINS : LOW;
-    this.puzzle = makeWirePuzzle(hashSeed(inst.s, 'wire'), this.n);
-    this.lay = wireLayout(this.rig, this.n, hashSeed(inst.s, 'wirelay'));
+    const n = 3 + Math.min(2, inst.d);
+    this.puzzle = makeWirePuzzle(hashSeed(inst.s, 'wire'), n);
+    this.lay = wireLayout(this.rig, n, hashSeed(inst.s, 'wirelay'));
     this.speed = session.settings().reducedMotion ? 0.45 : 1;
 
     // Hide the normal item view; the repair has its own close-up.
@@ -165,22 +128,44 @@ export class RepairGame extends MiniGame {
     const screwPts = screwLayout(this.rig);
     const coverKey = `${this.ctx.key}_rcover`;
     const insideKey = `${this.ctx.key}_rinside`;
+    const wiresFirst = this.rig.tasks[0]?.k === 'wires';
     this.addTexture(coverKey, drawCover(this.rig, body, size, screwPts));
     this.addTexture(
       insideKey,
-      drawCompartment(this.rig, size, this.lay, hashSeed(inst.s, 'board'), this.hasWires),
+      drawCompartment(
+        this.rig,
+        size,
+        this.lay,
+        hashSeed(inst.s, 'board'),
+        this.rig.tasks.some((t) => t.k === 'wires'),
+      ),
     );
     this.sharedTexture('repair_screw2', () => drawScrew(96));
-    this.sharedTexture('repair_brass2', () => drawScrew(96, true));
     this.sharedTexture('repair_driver', () => drawScrewdriver(80, 260));
     this.sharedTexture('repair_glow', () => drawGlow(256));
 
     this.closeup = this.add(sc.add.container(STAGE / 2, STAGE / 2));
-    const at = (p: Pt) => ({ x: p.u * STAGE - STAGE / 2, y: p.v * STAGE - STAGE / 2 });
     const inside = sc.add
       .image(-STAGE / 2, -STAGE / 2, insideKey)
       .setOrigin(0, 0)
       .setDisplaySize(STAGE, STAGE);
+    const layer = sc.add.container(0, 0);
+    const engine = sc.add.container(0, 0);
+    layer.add(engine);
+    if (this.rig.inside === 'bay') {
+      // Engine swap: the old engine sits in the bay until it is hoisted out.
+      const hl = hoistLayout(this.rig);
+      const w = Math.round(hl.w * STAGE * 1.3);
+      const h = Math.round(hl.h * STAGE * 1.3);
+      this.sharedTexture('repair_engine_old', () => drawEngine(w, h, true));
+      const p = at(hl.seat);
+      engine.add(
+        sc.add
+          .image(p.x, p.y, 'repair_engine_old')
+          .setDisplaySize(hl.w * STAGE, hl.h * STAGE)
+          .setName('engine'),
+      );
+    }
     const gp = at(this.lay.glow);
     this.glow = sc.add
       .image(gp.x, gp.y, 'repair_glow')
@@ -188,78 +173,40 @@ export class RepairGame extends MiniGame {
       .setTint(GLOW_TINT[this.rig.glow])
       .setBlendMode(Phaser.BlendModes.ADD)
       .setAlpha(0);
-    this.wires = sc.add.graphics();
-    this.closeup.add([inside, this.glow, this.wires]);
-    if (this.tasks.includes('swap')) {
-      const sl = swapLayout(this.rig);
-      this.swapLay = sl;
-      this.sharedTexture(`repair_part_${this.rig.part}`, () => drawPart(this.rig.part, false));
-      this.sharedTexture(`repair_partx_${this.rig.part}`, () => drawPart(this.rig.part, true));
-      const sp = at(sl.slot);
-      const fp = at(sl.fresh);
-      this.broken = sc.add
-        .image(sp.x, sp.y, `repair_partx_${this.rig.part}`)
-        .setDisplaySize(sl.w * STAGE, sl.h * STAGE);
-      this.fresh = sc.add
-        .image(fp.x, fp.y, `repair_part_${this.rig.part}`)
-        .setDisplaySize(sl.w * STAGE, sl.h * STAGE);
-      this.badge = makeText(
-        sc,
-        sp.x + (sl.w * STAGE) / 2,
-        sp.y - (sl.h * STAGE) / 2,
-        '!',
-        FS.small,
-        C.white,
-        {
-          stroke: C.terracottaDark,
-          strokeW: 8,
-        },
-      );
-      this.closeup.add([this.broken, this.fresh, this.badge]);
-    }
-    if (this.tasks.includes('pour')) {
-      const pl = pourLayout(this.rig);
-      this.pourLay = pl;
-      this.sharedTexture(`repair_can_${this.rig.fluid}`, () => drawCan(this.rig.fluid, 160, 200));
-      const cp = at(pl.cap);
-      this.can = sc.add
-        .image(cp.x + STAGE * 0.06, cp.y - STAGE * 0.1, `repair_can_${this.rig.fluid}`)
-        .setDisplaySize(STAGE * 0.13, STAGE * 0.16)
-        .setAlpha(0);
-      this.gauge = sc.add.graphics();
-      this.closeup.add([this.gauge, this.can]);
-    }
-    if (this.hasWires)
-      this.lay.terminals.forEach((tp, r) => {
-        const p = at(tp);
-        const s = sc.add.image(p.x, p.y, 'repair_brass2').setDisplaySize(STAGE * 0.07, STAGE * 0.07);
-        this.termScrews.push(s);
-        this.termAngles.push(0.6);
-        const want = this.puzzle.rightOrder[r];
-        const tag = sc.add.graphics();
-        tag.fillStyle(this.colors[want], 1);
-        tag.lineStyle(3, C.ink, 1);
-        tag.fillRoundedRect(p.x - 20, p.y + STAGE * 0.045, 40, 30, 6);
-        tag.strokeRoundedRect(p.x - 20, p.y + STAGE * 0.045, 40, 30, 6);
-        const sym = makeText(sc, p.x, p.y + STAGE * 0.045 + 15, SYMBOLS[want], FS.tiny, C.white, {
-          stroke: C.ink,
-          strokeW: 4,
+    this.closeup.add([inside, layer, this.glow]);
+
+    const host: TaskHost = {
+      scene: sc,
+      layer,
+      rig: this.rig,
+      inst,
+      speed: this.speed,
+      engine,
+      sfx: (k, i) => this.sfx(k, i),
+      burst: (u, v, tex, cnt, tints, sp) => this.burst(u, v, tex, cnt, tints, sp),
+      shared: (key, make) => {
+        this.sharedTexture(key, make);
+        return key;
+      },
+      own: (key, canvas) => {
+        this.addTexture(key, canvas);
+        return key;
+      },
+      shake: () => {
+        this.ctx.scene.tweens.add({
+          targets: this.closeup,
+          x: this.closeup.x + 8,
+          duration: 50,
+          yoyo: true,
+          repeat: 2,
         });
-        this.closeup.add([s, tag, sym]);
-      });
-    // Loose wire tags (same symbols, so colour is never the only cue).
-    if (this.hasWires)
-      this.lay.loose.forEach((lp, l) => {
-        const p = at(lp);
-        this.closeup.add(
-          makeText(sc, p.x + 26, p.y + 4, SYMBOLS[l], FS.tiny, C.white, {
-            stroke: C.ink,
-            strokeW: 4,
-          }).setName(`wtag${l}`),
-        );
-      });
-    this.termSlots = sc.add.graphics();
-    this.closeup.add(this.termSlots);
+      },
+    };
+    this.tasks = this.rig.tasks.map((spec, i) =>
+      makeTask(host, spec, { lay: this.lay, puzzle: this.puzzle }, i === 0 && wiresFirst),
+    );
+    for (const t of this.tasks) t.init();
+
     this.cover = sc.add
       .image(-STAGE / 2, -STAGE / 2, coverKey)
       .setOrigin(0, 0)
@@ -282,7 +229,6 @@ export class RepairGame extends MiniGame {
     this.driver.setVisible(false);
     this.closeup.add(this.driver);
     this.closeup.setAlpha(0);
-    this.drawWires();
     this.drawDetails();
     this.playTurn(false, () => {
       this.phase = this.rig.lid === 'twist' ? 'twist' : this.screws.length ? 'screws' : 'cover';
@@ -417,21 +363,16 @@ export class RepairGame extends MiniGame {
   instruction(): string {
     switch (this.phase) {
       case 'turn':
-        return 'mg.rep.turn';
+        // Between two jobs, keep showing the one just finished.
+        return this.tasks[this.cur]?.instruction() ?? 'mg.rep.turn';
       case 'screws':
         return 'mg.rep.screws';
       case 'twist':
         return 'mg.rep.twist';
       case 'cover':
         return this.rig.lid === 'hood' ? 'mg.rep.hood' : 'mg.rep.cover';
-      case 'swapOut':
-        return 'mg.rep.swapOut';
-      case 'swapIn':
-        return 'mg.rep.swapIn';
-      case 'pour':
-        return this.rig.fluid === 'oil' ? 'mg.rep.pourOil' : 'mg.rep.pourCoolant';
-      case 'wires':
-        return 'mg.wire';
+      case 'task':
+        return this.tasks[this.cur]?.instruction() ?? 'mg.rep.turn';
       case 'test':
         return 'mg.rep.test';
       default:
@@ -442,24 +383,16 @@ export class RepairGame extends MiniGame {
   progress(): number {
     switch (this.phase) {
       case 'turn':
-        return 0;
+        return this.cur < 0 ? 0 : 0.3 + (0.62 * this.cur) / Math.max(1, this.tasks.length);
       case 'screws':
         return (0.25 * this.screws.filter((s) => s.out).length) / Math.max(1, this.screws.length);
       case 'twist':
         return 0.25 * Math.min(1, this.twistTotal / TWIST_NEEDED);
       case 'cover':
         return 0.28;
-      case 'swapOut':
-      case 'swapIn':
-      case 'pour':
-      case 'wires': {
-        const total = this.rig.tasks.length;
-        const left = this.tasks.length + 1;
-        let part = 0;
-        if (this.phase === 'wires') part = this.puzzle.connected.filter(Boolean).length / this.n;
-        else if (this.phase === 'swapIn') part = 0.5;
-        else if (this.phase === 'pour') part = Math.min(1, this.level / POUR_BAND[0]);
-        return 0.3 + (0.62 * (total - left + part)) / total;
+      case 'task': {
+        const t = this.tasks[this.cur];
+        return 0.3 + (0.62 * (this.cur + (t?.progress() ?? 0))) / Math.max(1, this.tasks.length);
       }
       case 'test':
       case 'close':
@@ -472,9 +405,10 @@ export class RepairGame extends MiniGame {
   score(): number {
     if (this.phase !== 'test' && this.phase !== 'close' && this.phase !== 'done')
       return 0.5 * this.progress();
-    const wires = this.hasWires ? wireScore(this.puzzle) : 1;
-    const pour = this.rig.tasks.includes('pour') ? this.pourResult : 1;
-    return Math.max(0.4, wires * pour);
+    return Math.max(
+      0.4,
+      this.tasks.reduce((p, t) => p * t.score(), 1),
+    );
   }
 
   autoComplete(): boolean {
@@ -485,43 +419,53 @@ export class RepairGame extends MiniGame {
     return 2;
   }
 
-  /** E2E: what the bot needs for the current phase, in stage unit coords. */
-  debug(): {
-    phase: Phase;
-    screws: Pt[];
-    center: Pt;
-    radius: number;
-    left: Array<{ u: number; v: number }>;
-    right: Array<{ u: number; v: number }>;
-    order: number[];
-    swap: { broken: Pt; fresh: Pt; slot: Pt; bin: Pt } | null;
-    pour: { cap: Pt; level: number; lo: number; hi: number } | null;
-  } {
-    const toU = (o: Phaser.GameObjects.Image) => ({
-      u: (o.x + STAGE / 2) / STAGE,
-      v: (o.y + STAGE / 2) / STAGE,
-    });
+  /** E2E: what the bot should do next, in stage unit coords. */
+  debug(): { phase: Phase; task: string | null; level: number | null; action: BotAction } {
+    const t = this.phase === 'task' ? this.tasks[this.cur] : undefined;
     return {
-      swap:
-        this.swapLay && this.broken && this.fresh
-          ? {
-              broken: toU(this.broken),
-              fresh: toU(this.fresh),
-              slot: this.swapLay.slot,
-              bin: this.swapLay.bin,
-            }
-          : null,
-      pour: this.pourLay
-        ? { cap: this.pourLay.cap, level: this.level, lo: POUR_BAND[0], hi: POUR_BAND[1] }
-        : null,
       phase: this.phase,
-      screws: this.screws.filter((s) => !s.out).map((s) => s.p),
-      center: { u: this.geom.cx, v: this.geom.cy },
-      radius: Math.min(this.geom.rx, this.geom.ry),
-      left: this.lay.loose.map((p) => ({ ...p })),
-      right: this.lay.terminals.map((p) => ({ ...p })),
-      order: [...this.puzzle.rightOrder],
+      task: t ? this.rig.tasks[this.cur].k : null,
+      level: t?.level() ?? null,
+      action: this.botAction(),
     };
+  }
+
+  private botAction(): BotAction {
+    switch (this.phase) {
+      case 'screws': {
+        const s = this.screws.find((x) => !x.out);
+        return s ? { a: 'hold', p: s.p } : { a: 'wait' };
+      }
+      case 'twist':
+        return {
+          a: 'circle',
+          c: { u: this.geom.cx, v: this.geom.cy },
+          r: Math.min(this.geom.rx, this.geom.ry) * 0.6,
+        };
+      case 'cover':
+        return { a: 'tap', p: { u: this.geom.cx, v: this.geom.cy } };
+      case 'task':
+        return this.tasks[this.cur]?.bot() ?? { a: 'wait' };
+      default:
+        return { a: 'wait' };
+    }
+  }
+
+  /** The next job inside the compartment, or the test when all are done. */
+  private startTask(i: number): void {
+    if (this.restored) return;
+    this.cur = i;
+    const t = this.tasks[i];
+    if (!t) {
+      this.test();
+      return;
+    }
+    this.phase = 'task';
+    t.onDone = () => {
+      this.phase = 'turn';
+      this.ctx.scene.time.delayedCall(Math.round(250 * this.speed), () => this.startTask(i + 1));
+    };
+    t.start();
   }
 
   // ---------------- input ----------------
@@ -544,38 +488,8 @@ export class RepairGame extends MiniGame {
       case 'cover':
         if (this.inPanel(u, v, 1.05)) this.coverDrag = { u, v, ox: this.cover.x, oy: this.cover.y };
         break;
-      case 'swapOut':
-      case 'swapIn': {
-        const img = this.phase === 'swapOut' ? this.broken : this.fresh;
-        const sl = this.swapLay;
-        if (!img || !sl) break;
-        const pu = (img.x + STAGE / 2) / STAGE;
-        const pv = (img.y + STAGE / 2) / STAGE;
-        if (Math.abs(u - pu) < sl.w / 2 + 0.04 && Math.abs(v - pv) < sl.h / 2 + 0.04) {
-          this.partDrag = { u, v, ox: img.x, oy: img.y };
-          this.sfx('snap');
-          session.haptic('light');
-        }
-        break;
-      }
-      case 'pour':
-        if (this.pourLay && Math.hypot(u - this.pourLay.cap.u, v - this.pourLay.cap.v) < 0.11) {
-          this.pouring = true;
-          this.can?.setPosition(this.can.x - STAGE * 0.02, this.can.y + STAGE * 0.03);
-        }
-        break;
-      case 'wires':
-        for (let l = 0; l < this.n; l++) {
-          if (this.puzzle.connected[l]) continue;
-          const p = this.lay.loose[l];
-          if (Math.hypot(p.u - u, p.v - v) < 0.08) {
-            this.drag = { l, u, v };
-            this.sfx('snap');
-            session.haptic('light');
-            this.drawWires();
-            break;
-          }
-        }
+      case 'task':
+        this.tasks[this.cur]?.pointerDown(u, v);
         break;
     }
   }
@@ -608,22 +522,7 @@ export class RepairGame extends MiniGame {
         this.coverDrag.ox + (u - this.coverDrag.u) * STAGE,
         this.coverDrag.oy + (v - this.coverDrag.v) * STAGE,
       );
-    } else if ((this.phase === 'swapOut' || this.phase === 'swapIn') && this.partDrag) {
-      const img = this.phase === 'swapOut' ? this.broken : this.fresh;
-      img?.setPosition(
-        this.partDrag.ox + (u - this.partDrag.u) * STAGE,
-        this.partDrag.oy + (v - this.partDrag.v) * STAGE,
-      );
-      if (this.phase === 'swapOut' && this.badge && this.broken)
-        this.badge.setPosition(
-          this.broken.x + this.broken.displayWidth / 2,
-          this.broken.y - this.broken.displayHeight / 2,
-        );
-    } else if (this.phase === 'wires' && this.drag) {
-      this.drag.u = u;
-      this.drag.v = v;
-      this.drawWires();
-    }
+    } else if (this.phase === 'task') this.tasks[this.cur]?.pointerMove(u, v);
   }
 
   override pointerUp(u: number, v: number): void {
@@ -637,119 +536,7 @@ export class RepairGame extends MiniGame {
       const len = Math.hypot(dx, dy);
       const dir = len < 0.06 ? { x: 0.3, y: -1 } : { x: dx / len, y: dy / len };
       this.removeCover(dir);
-    } else if ((this.phase === 'swapOut' || this.phase === 'swapIn') && this.partDrag) this.dropPart(u, v);
-    else if (this.phase === 'pour' && this.pouring) this.stopPouring();
-    else if (this.phase === 'wires' && this.drag) this.dropWire(u, v);
-  }
-
-  /** Swap: the broken part is pulled out to the bin, then the new one clicks into its slot. */
-  private dropPart(u: number, v: number): void {
-    const sl = this.swapLay!;
-    this.partDrag = null;
-    const tw = this.ctx.scene.tweens;
-    const at = (p: Pt) => ({ x: p.u * STAGE - STAGE / 2, y: p.v * STAGE - STAGE / 2 });
-    if (this.phase === 'swapOut' && this.broken) {
-      const pu = (this.broken.x + STAGE / 2) / STAGE;
-      const pv = (this.broken.y + STAGE / 2) / STAGE;
-      if (Math.hypot(pu - sl.slot.u, pv - sl.slot.v) > 0.14) {
-        const b = at(sl.bin);
-        this.sfx('pop');
-        this.badge?.setVisible(false);
-        tw.add({
-          targets: this.broken,
-          x: b.x,
-          y: b.y,
-          alpha: 0,
-          scale: this.broken.scale * 0.6,
-          duration: 320,
-        });
-        this.phase = 'swapIn';
-      } else {
-        const s0 = at(sl.slot);
-        tw.add({ targets: this.broken, x: s0.x, y: s0.y, duration: 160 });
-        this.badge?.setPosition(s0.x + (sl.w * STAGE) / 2, s0.y - (sl.h * STAGE) / 2);
-      }
-    } else if (this.phase === 'swapIn' && this.fresh) {
-      const s0 = at(sl.slot);
-      if (Math.hypot(u - sl.slot.u, v - sl.slot.v) < 0.12) {
-        this.fresh.setPosition(s0.x, s0.y);
-        this.sfx('stamp');
-        this.sfx('ding');
-        session.haptic('success');
-        this.burst(sl.slot.u, sl.slot.v, 'p_spark', 10, [0xffffff, 0xffe08a], 140);
-        this.nextTask();
-      } else {
-        const f0 = at(sl.fresh);
-        tw.add({ targets: this.fresh, x: f0.x, y: f0.y, duration: 200 });
-      }
-    }
-  }
-
-  private stopPouring(): void {
-    if (!this.pouring) return;
-    this.pouring = false;
-    this.can?.setPosition(this.can.x + STAGE * 0.02, this.can.y - STAGE * 0.03);
-    if (this.level >= POUR_BAND[0]) this.finishPour();
-  }
-
-  private finishPour(): void {
-    if (this.pourDone) return;
-    this.pourDone = true;
-    this.pourResult = pourScore(this.level);
-    if (this.pourResult >= 1) {
-      this.sfx('ding');
-      session.haptic('success');
-    } else {
-      this.sfx('fail');
-      if (this.pourLay)
-        this.burst(this.pourLay.cap.u, this.pourLay.cap.v, 'p_dot', 10, [0x3a2a10, 0xc78d14], 120);
-    }
-    this.ctx.scene.tweens.add({
-      targets: this.can,
-      alpha: 0,
-      duration: 260,
-      onComplete: () => this.nextTask(),
-    });
-  }
-
-  /** Next job inside the compartment, or the test when all are done. */
-  private nextTask(): void {
-    const t = this.tasks.shift();
-    if (!t) {
-      this.test();
-      return;
-    }
-    if (t === 'swap') this.phase = 'swapOut';
-    else if (t === 'pour') {
-      this.phase = 'pour';
-      this.ctx.scene.tweens.add({ targets: this.can, alpha: 1, duration: 220 });
-      this.drawGauge();
-    } else this.phase = 'wires';
-    this.drawWires();
-  }
-
-  /** Dipstick-style level gauge with the green "just right" band. */
-  private drawGauge(): void {
-    const g = this.gauge;
-    const pl = this.pourLay;
-    if (!g || !pl) return;
-    g.clear();
-    const x = pl.gauge.u * STAGE - STAGE / 2;
-    const y = pl.gauge.v * STAGE - STAGE / 2;
-    const w = STAGE * 0.035;
-    const h = STAGE * 0.13;
-    const top = y - h / 2;
-    g.fillStyle(0x15121b, 0.9);
-    g.fillRect(x - w / 2 - 3, top - 3, w + 6, h + 6);
-    g.fillStyle(0x3a3640, 1);
-    g.fillRect(x - w / 2, top, w, h);
-    g.fillStyle(0x4cc65a, 0.85);
-    g.fillRect(x - w / 2, top + h * (1 - POUR_BAND[1]), w, h * (POUR_BAND[1] - POUR_BAND[0]));
-    const col = this.rig.fluid === 'oil' ? 0xffc23d : 0x4fb6ff;
-    g.fillStyle(col, 1);
-    g.fillRect(x - w / 2 + 3, top + h * (1 - this.level), w - 6, h * this.level);
-    g.lineStyle(2, 0xffffff, 0.8);
-    g.lineBetween(x - w / 2 - 6, top + h * (1 - this.level), x + w / 2 + 6, top + h * (1 - this.level));
+    } else if (this.phase === 'task') this.tasks[this.cur]?.pointerUp(u, v);
   }
 
   private inPanel(u: number, v: number, k: number): boolean {
@@ -764,28 +551,8 @@ export class RepairGame extends MiniGame {
 
   override update(dt: number): void {
     this.drawDetails();
-    if (this.phase === 'pour' && this.pouring) {
-      this.level = pourStep(this.level, dt);
-      this.glugT += dt;
-      if (this.glugT > 0.22) {
-        this.glugT = 0;
-        this.sfx('glug');
-      }
-      if (this.pourLay && Math.random() < 0.4)
-        this.burst(
-          this.pourLay.cap.u,
-          this.pourLay.cap.v - 0.02,
-          'p_dot',
-          1,
-          [this.rig.fluid === 'oil' ? 0xffc23d : 0x4fb6ff],
-          40,
-        );
-      this.drawGauge();
-      if (this.level >= 1) {
-        this.pouring = false;
-        this.finishPour();
-      }
-    }
+    // Every task draws its turning bits; only the current one reacts to input.
+    for (const t of this.tasks) t.update(dt);
     if (this.phase !== 'screws' || this.holding === null) return;
     const s = this.screws[this.holding];
     s.t += dt;
@@ -830,48 +597,8 @@ export class RepairGame extends MiniGame {
       alpha: 0,
       duration: Math.round(380 * this.speed),
       ease: 'Sine.in',
-      onComplete: () => this.nextTask(),
+      onComplete: () => this.startTask(0),
     });
-  }
-
-  private dropWire(u: number, v: number): void {
-    const l = this.drag!.l;
-    this.drag = null;
-    for (let r = 0; r < this.n; r++) {
-      const t = this.lay.terminals[r];
-      if (Math.hypot(u - t.u, v - t.v) >= 0.08) continue;
-      if (connectWire(this.puzzle, l, r)) {
-        this.sfx('snap');
-        this.sfx('ding');
-        session.haptic('success');
-        this.burst(t.u, t.v, 'p_spark', 8, [0xffe08a, 0xffffff], 120);
-        // The terminal screw tightens down on the wire.
-        const ta = { a: this.termAngles[r] };
-        this.ctx.scene.tweens.add({
-          targets: ta,
-          a: ta.a + Math.PI * 1.5,
-          duration: 260,
-          onUpdate: () => {
-            this.termAngles[r] = ta.a;
-          },
-        });
-        (this.closeup.getByName(`wtag${l}`) as Phaser.GameObjects.Text | null)?.setVisible(false);
-      } else {
-        this.sfx('buzz');
-        session.haptic('medium');
-        this.burst(t.u, t.v, 'p_spark', 10, [0xff9a3c, 0xffe08a], 180);
-        this.ctx.scene.tweens.add({
-          targets: this.ctx.stage,
-          x: this.ctx.stage.x + 8,
-          duration: 50,
-          yoyo: true,
-          repeat: 2,
-        });
-      }
-      break;
-    }
-    this.drawWires();
-    if (wireSolved(this.puzzle)) this.nextTask();
   }
 
   /** It works: the light comes on, then everything goes back together. */
@@ -949,35 +676,15 @@ export class RepairGame extends MiniGame {
 
   // ---------------- drawing ----------------
 
-  /** Screw slots (turning lines), terminal screw slots and the case back's grip marks. */
+  /** Screw slots (turning lines) and the case back's grip marks. */
   private drawDetails(): void {
     if (!this.slots) return;
-    const slot = (
-      g: Phaser.GameObjects.Graphics,
-      x: number,
-      y: number,
-      r: number,
-      a: number,
-      alpha: number,
-    ) => {
-      const dx = Math.cos(a) * r;
-      const dy = Math.sin(a) * r;
-      g.lineStyle(r * 0.32, 0x19141f, 0.85 * alpha);
-      g.lineBetween(x - dx, y - dy, x + dx, y + dy);
-      g.lineStyle(r * 0.1, 0xffffff, 0.35 * alpha);
-      g.lineBetween(x - dx, y - dy + r * 0.24, x + dx, y + dy + r * 0.24);
-    };
     const s = this.slots;
     s.clear();
     this.screws.forEach((sc, i) => {
       const r = (sc.img.displayWidth / 2) * 0.66;
-      slot(s, sc.img.x, sc.img.y, r, this.screwAngles[i], sc.img.alpha);
+      drawSlot(s, sc.img.x, sc.img.y, r, this.screwAngles[i], sc.img.alpha);
     });
-    const t = this.termSlots;
-    t.clear();
-    this.termScrews.forEach((im, i) =>
-      slot(t, im.x, im.y, (im.displayWidth / 2) * 0.66, this.termAngles[i], 1),
-    );
     const m = this.lidMarks;
     m.clear();
     if (this.rig.lid === 'twist' && this.cover.alpha > 0.01) {
@@ -1002,65 +709,6 @@ export class RepairGame extends MiniGame {
         cx + Math.cos(a) * rr,
         cy + Math.sin(a) * rr,
       );
-    }
-  }
-
-  /** Insulated wires with stripped copper ends, from the cable entry to their ends. */
-  private drawWires(): void {
-    const g = this.wires;
-    g.clear();
-    if (!this.hasWires) return;
-    const at = (p: Pt) => ({ x: p.u * STAGE - STAGE / 2, y: p.v * STAGE - STAGE / 2 });
-    const e = at(this.lay.entry);
-    for (let l = 0; l < this.n; l++) {
-      let end: Pt = this.lay.loose[l];
-      if (this.puzzle.connected[l]) end = this.lay.terminals[this.puzzle.rightOrder.indexOf(l)];
-      else if (this.drag?.l === l) end = { u: this.drag.u, v: this.drag.v };
-      const p = at(end);
-      const sx = e.x + (l - (this.n - 1) / 2) * 7;
-      const c1 = { x: sx, y: e.y - STAGE * 0.16 };
-      const c2 = { x: p.x, y: p.y + STAGE * 0.14 };
-      const pts: Phaser.Math.Vector2[] = [];
-      const steps = 22;
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const a = (1 - t) ** 3;
-        const b = 3 * (1 - t) ** 2 * t;
-        const c = 3 * (1 - t) * t * t;
-        const d = t ** 3;
-        pts.push(
-          new Phaser.Math.Vector2(
-            a * sx + b * c1.x + c * c2.x + d * p.x,
-            a * e.y + b * c1.y + c * c2.y + d * p.y,
-          ),
-        );
-      }
-      const col = this.colors[l];
-      g.lineStyle(16, 0x15121b, 0.9);
-      g.strokePoints(pts, false);
-      g.lineStyle(11, col, 1);
-      g.strokePoints(pts, false);
-      if (this.rig.mains && l === 2) {
-        // Green-yellow earth: yellow stripes.
-        g.lineStyle(11, 0xf2d43a, 1);
-        for (let i = 0; i + 1 < pts.length; i += 2)
-          g.lineBetween(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y);
-      }
-      g.lineStyle(3, 0xffffff, 0.35);
-      g.strokePoints(
-        pts.map((q) => new Phaser.Math.Vector2(q.x - 2, q.y - 2)),
-        false,
-      );
-      // Stripped copper end pointing along the wire.
-      const last = pts[pts.length - 1];
-      const prev = pts[pts.length - 3];
-      const dx = last.x - prev.x;
-      const dy = last.y - prev.y;
-      const len = Math.max(0.001, Math.hypot(dx, dy));
-      g.lineStyle(7, 0xd9a63a, 1);
-      g.lineBetween(last.x, last.y, last.x + (dx / len) * 14, last.y + (dy / len) * 14);
-      g.lineStyle(2, 0xfff1b8, 0.8);
-      g.lineBetween(last.x, last.y - 1, last.x + (dx / len) * 12, last.y + (dy / len) * 12 - 1);
     }
   }
 

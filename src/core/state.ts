@@ -1,3 +1,4 @@
+import type { JobKind } from './repair';
 import { BALANCE, ITEMS } from './data';
 import type { CategoryId, Rarity, StepKind } from './types';
 
@@ -23,6 +24,8 @@ export interface ItemInstance {
   col: string;
   /** Day bought. */
   day: number;
+  /** A customer's repair job (not ours to sell): fee paid when done, persona id, kind of job. */
+  job?: { fee: number; p: string; k: JobKind };
 }
 
 export interface CustomerRequest {
