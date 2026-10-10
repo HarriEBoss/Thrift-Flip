@@ -41,6 +41,7 @@ import {
   flagshipsAt,
   openRegion,
   regionStatus,
+  regionsWon,
 } from '../src/core/regions';
 import {
   branchCost,
@@ -275,6 +276,7 @@ function runBot(seed: number): BotResult {
       if (res.bizDay[i] < 0 && g.biz.own.includes(b.id)) res.bizDay[i] = d;
     });
     if (res.worldDay < 0 && allRegionsWon(g)) res.worldDay = d;
+    if (process.env.REGIONS && d === DAYS) console.error(`regions ${regionsWon(g)} coins ${g.coins}`);
     if (process.env.TRACE && d % 5 === 0)
       console.error(`d${d} t${g.tier} c${g.coins} rep${g.rep} lvl${g.level} inv${g.inv.length}`);
     if (res.completeDay < 0 && isContentComplete(g)) res.completeDay = d;
