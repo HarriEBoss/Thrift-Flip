@@ -35,6 +35,7 @@ import type { StepKind } from '../../core/types';
 import { businessOffers, openJobs, signContract, type JobOffer } from '../../core/jobs';
 import { BUSINESSES, canSwitchBusiness, isReselling, setCurrentBusiness } from '../../core/empire';
 import { persona } from '../../core/data';
+import { openSkillTree } from '../ui/prestigeMenus';
 
 export const HINT_KEYS: Record<StepKind, string> = {
   sticker: 'hint.sticker',
@@ -217,6 +218,14 @@ export class MarketScene extends GameScene {
     if (!s.flags.tutorialDone) {
       this.coach = new Coach(this);
       this.tutorialStep = 0;
+    }
+    if (session.openTreeNext) {
+      // A new run after a prestige: spend the new tokens first.
+      session.openTreeNext = false;
+      this.time.delayedCall(300, () => {
+        this.toast(t('prestige.welcome', { n: s.prestige.n }), C.purple);
+        openSkillTree(this, () => this.refreshHud());
+      });
     }
   }
 

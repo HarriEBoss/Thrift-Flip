@@ -1052,6 +1052,338 @@
         },
         "energy": 100000
       }
+    },
+    "prestige": {
+      "maxDiscount": 0.6,
+      "nodes": [
+        {
+          "id": "cash1",
+          "branch": "money",
+          "cost": 1,
+          "req": [],
+          "fx": {
+            "income": 0.1
+          },
+          "pos": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": "cash2",
+          "branch": "money",
+          "cost": 2,
+          "req": [
+            "cash1"
+          ],
+          "fx": {
+            "income": 0.15
+          },
+          "pos": [
+            0,
+            1
+          ]
+        },
+        {
+          "id": "fees",
+          "branch": "money",
+          "cost": 2,
+          "req": [
+            "cash1"
+          ],
+          "fx": {
+            "fees": 0.25
+          },
+          "pos": [
+            1,
+            1
+          ]
+        },
+        {
+          "id": "cash3",
+          "branch": "money",
+          "cost": 4,
+          "req": [
+            "cash2"
+          ],
+          "fx": {
+            "income": 0.25
+          },
+          "pos": [
+            0,
+            2
+          ]
+        },
+        {
+          "id": "deals1",
+          "branch": "growth",
+          "cost": 1,
+          "req": [],
+          "fx": {
+            "discount": 0.1
+          },
+          "pos": [
+            2,
+            0
+          ]
+        },
+        {
+          "id": "deals2",
+          "branch": "growth",
+          "cost": 2,
+          "req": [
+            "deals1"
+          ],
+          "fx": {
+            "discount": 0.15
+          },
+          "pos": [
+            2,
+            1
+          ]
+        },
+        {
+          "id": "deals3",
+          "branch": "growth",
+          "cost": 4,
+          "req": [
+            "deals2"
+          ],
+          "fx": {
+            "discount": 0.2
+          },
+          "pos": [
+            2,
+            2
+          ]
+        },
+        {
+          "id": "seed1",
+          "branch": "growth",
+          "cost": 1,
+          "req": [],
+          "fx": {
+            "startCoins": 2000
+          },
+          "pos": [
+            3,
+            0
+          ]
+        },
+        {
+          "id": "seed2",
+          "branch": "growth",
+          "cost": 3,
+          "req": [
+            "seed1"
+          ],
+          "fx": {
+            "startCoins": 25000,
+            "startBiz": [
+              "phone"
+            ]
+          },
+          "pos": [
+            3,
+            1
+          ]
+        },
+        {
+          "id": "seed3",
+          "branch": "growth",
+          "cost": 5,
+          "req": [
+            "seed2",
+            "deals2"
+          ],
+          "fx": {
+            "startCoins": 250000,
+            "startBiz": [
+              "computer"
+            ]
+          },
+          "pos": [
+            3,
+            2
+          ]
+        },
+        {
+          "id": "brand1",
+          "branch": "brand",
+          "cost": 1,
+          "req": [],
+          "fx": {
+            "marketing": 0.25
+          },
+          "pos": [
+            4,
+            0
+          ]
+        },
+        {
+          "id": "brand2",
+          "branch": "brand",
+          "cost": 2,
+          "req": [
+            "brand1"
+          ],
+          "fx": {
+            "marketing": 0.35
+          },
+          "pos": [
+            4,
+            1
+          ]
+        },
+        {
+          "id": "loyal",
+          "branch": "brand",
+          "cost": 3,
+          "req": [
+            "brand2"
+          ],
+          "fx": {
+            "loyal": 0.5
+          },
+          "pos": [
+            4,
+            2
+          ]
+        },
+        {
+          "id": "boss1",
+          "branch": "team",
+          "cost": 1,
+          "req": [],
+          "fx": {
+            "managers": 0.1
+          },
+          "pos": [
+            5,
+            0
+          ]
+        },
+        {
+          "id": "boss2",
+          "branch": "team",
+          "cost": 2,
+          "req": [
+            "boss1"
+          ],
+          "fx": {
+            "managers": 0.15
+          },
+          "pos": [
+            5,
+            1
+          ]
+        },
+        {
+          "id": "wages",
+          "branch": "team",
+          "cost": 2,
+          "req": [
+            "boss1"
+          ],
+          "fx": {
+            "wages": 0.5
+          },
+          "pos": [
+            6,
+            1
+          ]
+        },
+        {
+          "id": "boss3",
+          "branch": "team",
+          "cost": 4,
+          "req": [
+            "boss2",
+            "cash2"
+          ],
+          "fx": {
+            "managers": 0.25
+          },
+          "pos": [
+            5,
+            2
+          ]
+        },
+        {
+          "id": "lab1",
+          "branch": "space",
+          "cost": 2,
+          "req": [],
+          "fx": {
+            "research": 0.25
+          },
+          "pos": [
+            7,
+            0
+          ]
+        },
+        {
+          "id": "lab2",
+          "branch": "space",
+          "cost": 3,
+          "req": [
+            "lab1"
+          ],
+          "fx": {
+            "research": 0.25
+          },
+          "pos": [
+            7,
+            1
+          ]
+        },
+        {
+          "id": "mine1",
+          "branch": "space",
+          "cost": 2,
+          "req": [
+            "lab1"
+          ],
+          "fx": {
+            "harvest": 0.5
+          },
+          "pos": [
+            8,
+            1
+          ]
+        },
+        {
+          "id": "mine2",
+          "branch": "space",
+          "cost": 4,
+          "req": [
+            "mine1"
+          ],
+          "fx": {
+            "harvest": 0.5
+          },
+          "pos": [
+            8,
+            2
+          ]
+        },
+        {
+          "id": "swarm",
+          "branch": "space",
+          "cost": 5,
+          "req": [
+            "mine2",
+            "lab2"
+          ],
+          "fx": {
+            "dyson": 0.3
+          },
+          "pos": [
+            7,
+            3
+          ]
+        }
+      ]
     }
   }
 }

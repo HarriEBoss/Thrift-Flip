@@ -9,6 +9,7 @@ import { BALANCE, MARKETS } from './data';
 import { ownsBusiness } from './empire';
 import type { GameState } from './state';
 import type { MarketDef, RegionDef } from './types';
+import { discounted } from './skilltree';
 
 const R = () => BALANCE.empire.regions;
 export const REGIONS: RegionDef[] = BALANCE.empire.regions.list;
@@ -31,14 +32,19 @@ export function regionStatus(state: GameState, r: RegionDef): RegionStatus {
   if (s >= WON) return 'won';
   if (s === OPEN) return 'open';
   if (!expansionUnlocked(state)) return 'locked';
-  return state.coins < r.cost ? 'poor' : 'available';
+  return state.coins < regionCost(state, r) ? 'poor' : 'available';
+}
+
+/** Coins to open a regional office (less with the prestige discount). */
+export function regionCost(state: GameState, r: RegionDef): number {
+  return discounted(state, r.cost);
 }
 
 /** Opens the regional office: the flagship contract then appears on the business's job board. */
 export function openRegion(state: GameState, id: string): boolean {
   const r = region(id);
   if (!r || regionStatus(state, r) !== 'available') return false;
-  state.coins -= r.cost;
+  state.coins -= regionCost(state, r);
   state.regions[id] = OPEN;
   return true;
 }

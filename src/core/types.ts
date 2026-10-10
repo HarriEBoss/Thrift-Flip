@@ -339,8 +339,49 @@ export interface CampaignDef {
   needs: string;
 }
 
+/** Permanent prestige bonuses (fractions unless noted). */
+export interface PrestigeFx {
+  /** More coins from everything you earn (sales, contracts, managers, colonies). */
+  income?: number;
+  /** Contracts pay more. */
+  fees?: number;
+  /** Cheaper businesses, managers, branches, regional offices and colonies. */
+  discount?: number;
+  /** Coins (not a fraction) you start every new run with. */
+  startCoins?: number;
+  /** Businesses you own from the start of every new run. */
+  startBiz?: string[];
+  /** More brand from each campaign. */
+  marketing?: number;
+  /** The brand fades this much slower. */
+  loyal?: number;
+  /** Managers make more. */
+  managers?: number;
+  /** Lower manager wages. */
+  wages?: number;
+  /** Research costs less and takes fewer days. */
+  research?: number;
+  /** Colonies harvest more. */
+  harvest?: number;
+  /** Dyson stages cost less. */
+  dyson?: number;
+}
+
+/** A node of the prestige skill tree: costs tokens, needs the `req` nodes first. */
+export interface SkillNodeDef {
+  id: string;
+  branch: string;
+  cost: number;
+  req: string[];
+  fx: PrestigeFx;
+  /** Place on the tree: [column, row]. */
+  pos: [number, number];
+}
+
 export interface EmpireBalance {
   businesses: BusinessDef[];
+  /** Prestige: tokens buy permanent skill tree nodes. */
+  prestige: { maxDiscount: number; nodes: SkillNodeDef[] };
   /** Space: Earth research, colonies on other bodies, and the Dyson project. */
   space: SpaceBalance;
   /** Global expansion: conquer every region before space. */

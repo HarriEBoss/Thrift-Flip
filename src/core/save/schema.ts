@@ -14,6 +14,7 @@ import { cleanName } from '../names';
 import { maxManagerLevel } from '../managers';
 import { WON, region } from '../regions';
 import { body as spaceBody, tech } from '../space';
+import { skillNode } from '../skilltree';
 import { CURRENT_VERSION, migrate } from './migrations';
 
 /**
@@ -23,7 +24,8 @@ import { CURRENT_VERSION, migrate } from './migrations';
  * Shape (see tests/fixtures/saves for real examples; v2 added `dc`, v3 added dy[15] and the optional
  * job tuple [fee, persona, kind] at the end of an item, v4 added `cn` and `bz` and dropped `ws`, v5 added `br`, dy[16] and the job tuple's target and
  * client), v6 added `mg` (managers), `bn` (branches) and today's manager takings in dy[10][12], v7 added `rg` (regions) and the job tuple's region, v8 added `sp` (space: techs, research, colonies,
- * materials, Dyson stages) and the job tuple's colony):
+ * materials, Dyson stages) and the job tuple's colony, v9 added `pr` (prestige: count, tokens, skill tree
+ * nodes, fewest days to finish a run)):
  * { v, sd, c, x, l, rp, t, nu, dy:[...], iv:[[...]], sk, up, pk, ow, ct, rq:[[t,p,day]], st:{...}, bs, se:{...}, dl:[...], fl:{...} }
  */
 export type SaveObject = Record<string, unknown> & { v: number };
@@ -192,6 +194,7 @@ export function serialize(state: GameState): string {
       { ...state.space.mat },
       state.space.dyson,
     ],
+    pr: [state.prestige.n, state.prestige.tokens, state.prestige.nodes, state.prestige.best],
     ct: state.catalog,
     rq: state.requests.map((r) => [r.t, r.p, r.day]),
     st: { ...state.stats },
@@ -315,6 +318,13 @@ function fromObject(o: SaveObject): GameState {
         .map(([k, v]) => [k, Math.floor(v as number)]),
     ),
     dyson: Math.max(0, Math.min(BALANCE.empire.space.dyson.stages, Math.floor(num(sp[4], 0)))),
+  };
+  const pr = Array.isArray(o.pr) ? (o.pr as unknown[]) : [];
+  g.prestige = {
+    n: Math.max(0, Math.floor(num(pr[0], 0))),
+    tokens: Math.max(0, Math.floor(num(pr[1], 0))),
+    nodes: [...new Set(strArr(pr[2]).filter((id) => !!skillNode(id)))],
+    best: Math.max(0, Math.floor(num(pr[3], 0))),
   };
   const ct = str(o.ct, '');
   g.catalog = /^[012]*$/.test(ct)

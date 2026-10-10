@@ -127,6 +127,18 @@ two long rigs: a **PC rebuild** (dust, cooler + paste, memory, graphics card, ca
 cables) and an **engine swap** (drain, 4 bolts out, hoist out, hoist in, 4 bolts in, 4 hoses, oil, coolant,
 battery, ignition wiring). All layouts are pure and unit-tested; the score is the product of the task scores.
 
+A custom design contract is **built**, not repaired: its recipe is Design → **Build** → Polish, and the
+Build step uses a build rig (`buildRigFor`, `rig.build`). The frame starts open and empty (no screws to
+undo), every `swap` is a `fit` (an empty mount, just put the new part in), then bolts, cables and fluids,
+and finally the cover and its screws go on.
+
+**How it looks.** Cables and hoses are drawn by `repair/cableArt.ts` with a look per cable id: ATX 24-pin,
+EPS and PCIe bundles of coloured wires into latched housings, flat SATA power, twisted front-panel pairs,
+amber phone flex ribbons with board-to-board plugs, servo leads, a grey IDC ribbon, an XT60 battery lead,
+rubber hoses with worm-drive or spring clamps (a corrugated air duct), and braided steel rocket lines with
+AN fittings. Loose wiring comes out of a stripped multicore sheath; mains cores end in twisted copper and
+low-voltage ones in crimped ring terminals on a barrier strip.
+
 ## Company and business ladder (`core/empire.ts`, `core/names.ts`, `core/jobs.ts`)
 
 **Company name.** On first play (and once for older saves) `NameScene` asks for a company name: three
@@ -229,11 +241,28 @@ Once every Earth region is conquered (`spaceUnlocked`), Upgrades → Space progr
   business's board; delivering it ships `rate × contract.reward` extra material home.
 - **Dyson project** (`empire.space.dyson`): stage n needs `coins × n` and `materials[m] × n`; each built
   stage sells `energy` coins a day. Ten stages harvest the whole Sun (`dysonDone`), the end of the race
-  and the trigger for prestige (phase 6).
+  and the trigger for prestige.
 
 All space numbers live in `balance.json` → `empire.space`, the one place to tune the long game.
 `scripts/simulate.ts` plays a long run (`LONG_DAYS`, `LONG_BOTS`) and reports the median day and play
 time of every milestone in `docs/BALANCE.md`. Big numbers are shown short (`ui/format.ts`: 23.5M).
+
+### Prestige and the legacy tree (`core/prestige.ts`, `core/skilltree.ts`, `ui/prestigeMenus.ts`)
+
+When the whole Sun is harvested (`canPrestige`), the Dyson screen and the Legacy tree offer a prestige.
+`prestige(state)` returns a fresh run (new seed) that keeps the company name, prestige count, tokens and
+nodes, settings, catalog, purchases (`owned`, `perks`), decorations, lifetime stats and the daily
+challenge; everything else starts again. The n-th prestige gives n tokens (`tokensFor(n) = n`, so n
+prestiges give `totalTokens(n) = n(n+1)/2`). It also records the fewest days a run took (`best`).
+
+Tokens buy nodes of the **legacy tree** (`balance.json` → `empire.prestige.nodes`: `{ id, branch, cost,
+req[], fx, pos }`, branches Money, Growth, Brand, Team and Space). `prestigeFx(state)` adds up the bonuses
+of the nodes owned and the rest of the game asks it: `income` (sales, contracts, managers, colonies),
+`fees` (contracts), `discount` (business capital and opening, managers, branches, regional offices,
+colonies; capped by `maxDiscount`), `marketing` and `loyal` (brand gain and fade), `managers` and `wages`,
+`research` (tech cost and days), `harvest`, `dyson`, and the head start of the next run (`startCoins`,
+`startBiz`, applied by `applyHeadStart`). `pos` places a node on the tree map (the tablet, phase 7).
+The balance bot plays prestige runs too and reports them in `docs/BALANCE.md`.
 
 ## Asset pipeline
 
@@ -281,7 +310,7 @@ bright palette in `theme.ts` and the Nunito font.
   forces a write on day end, purchases and pause. It checks UTF-16 well-formedness and the 3 MiB / 500 KiB limits.
   A corrupt save is kept in memory and writing is blocked until the player sees a friendly message.
 
-Current version: **v8** (v5 added `br`, the brand, `dy[16]`, today's campaigns, and the job tuple's
+Current version: **v9** (v9 adds `pr`: `[prestiges, tokens, nodes, best run in days]`; v5 added `br`, the brand, `dy[16]`, today's campaigns, and the job tuple's
 quality target and client company; v6 added `mg` managers, `bn` branches and today's manager takings;
 v7 added `rg` regions and the job tuple's region; v8 adds `sp`, the space program, and the job
 tuple's colony). v2 added `dc` (owned decorations); v3 added `ws` (owned workshops), `dy[15]`

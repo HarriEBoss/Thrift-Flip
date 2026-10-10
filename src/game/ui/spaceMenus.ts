@@ -10,6 +10,7 @@ import {
   BODIES,
   TECHS,
   buildDysonStage,
+  colonyCost,
   colonyStatus,
   dysonDone,
   dysonNeeds,
@@ -19,9 +20,13 @@ import {
   spaceUnlocked,
   startResearch,
   sunHarvested,
+  techCost,
+  techDays,
   techStatus,
 } from '../../core/space';
 import { t } from '../../i18n';
+import { openPrestige } from './prestigeMenus';
+import { nextPrestigeTokens } from '../../core/prestige';
 
 function refresh(scene: BaseScene): void {
   (scene as unknown as { refreshHud?: () => void }).refreshHud?.();
@@ -166,7 +171,7 @@ export function openResearch(scene: BaseScene, onChange?: () => void): void {
                 .map((n) => t(`tech.${n}`))
                 .join(', '),
             })
-          : t('space.takes', { n: tc.days });
+          : t('space.takes', { n: techDays(s, tc) });
     const sub2 = makeText(scene, -280, 16, sub, FS.tiny, C.inkSoft, { align: 'left', bold: false });
     if (sub2.width > 390) sub2.setScale(390 / sub2.width);
     row.add([g, makeText(scene, -280, -16, t(`tech.${tc.id}`), FS.small, C.ink, { align: 'left' }), sub2]);
@@ -176,7 +181,7 @@ export function openResearch(scene: BaseScene, onChange?: () => void): void {
         : st === 'researching'
           ? t('space.busy')
           : st === 'available' || st === 'poor' || st === 'busy'
-            ? compact(tc.cost)
+            ? compact(techCost(s, tc))
             : t('decor.locked');
     const b = new Button(scene, 210, 0, {
       w: 160,
@@ -190,7 +195,7 @@ export function openResearch(scene: BaseScene, onChange?: () => void): void {
         session.audio.play('levelup');
         void session.save(true);
         refresh(scene);
-        toast(scene, t('space.started', { tech: t(`tech.${tc.id}`), n: tc.days }));
+        toast(scene, t('space.started', { tech: t(`tech.${tc.id}`), n: techDays(s, tc) }));
         m.close();
         onChange?.();
         openResearch(scene, onChange);
@@ -240,7 +245,7 @@ export function openColonies(scene: BaseScene, onChange?: () => void): void {
       st === 'founded'
         ? t('space.founded')
         : st === 'available' || st === 'poor'
-          ? compact(bd.cost)
+          ? compact(colonyCost(s, bd))
           : t('decor.locked');
     const b = new Button(scene, 210, 0, {
       w: 160,
@@ -311,6 +316,22 @@ export function openDyson(scene: BaseScene, onChange?: () => void): void {
   m.content.add(
     makeText(scene, 0, cy + 170, msg, FS.small, st === 'done' ? C.leafDark : C.inkSoft, { wrap: 580 }),
   );
+  if (st === 'done') {
+    // The end of the race: prestige for tokens and start again stronger.
+    const p = new Button(scene, 0, m.ph / 2 - 150, {
+      w: 420,
+      h: 86,
+      label: t('prestige.open', { n: nextPrestigeTokens(s) }),
+      color: C.purple,
+      fontSize: FS.small,
+      onClick: () => {
+        m.close();
+        openPrestige(scene);
+      },
+    });
+    scene.mark('space_prestige', p);
+    m.content.add(p);
+  }
   const need = dysonNeeds(s);
   if (need && (st === 'short' || st === 'available')) {
     const lines: Array<[string, number, number, number]> = [

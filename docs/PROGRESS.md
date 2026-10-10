@@ -1,7 +1,8 @@
 # Thrift Flip — Progress log
 
 ## Decisions agreed with the owner
-- **Audience:** kid-friendly *all ages* presentation (bright cartoon art, simple words, big buttons), but
+
+- **Audience:** kid-friendly _all ages_ presentation (bright cartoon art, simple words, big buttons), but
   officially a **general-audience** game that is not "made for kids". YouTube Playables bans games
   made for kids (13+ only), and Apple's Kids Category bans third-party ads such as AdMob. This choice keeps
   both builds and the ad/IAP plan. Store metadata must not market the game as being for children.
@@ -14,22 +15,24 @@
   pressure to buy, ads during mini-games, and punishing streaks.
 
 ## Package versions (checked on npm, 2026-10-02)
-| Package | Version | Note |
-|---|---|---|
-| phaser | 4.2.1 | Latest stable major (v4). The Canvas renderer is deprecated in v4 but still available; we use `Phaser.AUTO` (WebGL with Canvas fallback). |
-| vite | 8.3.2 | Rolldown-based; uses `build.rolldownOptions.output.codeSplitting` instead of `manualChunks`. |
-| typescript | 6.0.3 | TS 7.0.2 (native) is "latest", but typescript-eslint 8.71 supports `<6.1`, so we pin 6.0.x. |
-| vitest / @vitest/coverage-v8 | 5.0.3 | |
-| @playwright/test | 1.56.1 | Pinned to match the Chromium build pre-installed in the CI container (latest is 1.63.0). |
-| eslint / typescript-eslint | 10.11.0 / 8.71.0 | |
-| prettier | 3.9.9 | |
-| @fontsource/fredoka | 5.3.0 | OFL-1.1 font, bundled locally (no CDN). |
-| fflate | latest | Builds the YouTube zip. |
-| @capacitor/* | 8.5.x | Phase 7 |
-| @capacitor-community/admob | 8.1.0 | Phase 7 |
-| @revenuecat/purchases-capacitor | 13.7.0 | Phase 7 |
+
+| Package                         | Version          | Note                                                                                                                                      |
+| ------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| phaser                          | 4.2.1            | Latest stable major (v4). The Canvas renderer is deprecated in v4 but still available; we use `Phaser.AUTO` (WebGL with Canvas fallback). |
+| vite                            | 8.3.2            | Rolldown-based; uses `build.rolldownOptions.output.codeSplitting` instead of `manualChunks`.                                              |
+| typescript                      | 6.0.3            | TS 7.0.2 (native) is "latest", but typescript-eslint 8.71 supports `<6.1`, so we pin 6.0.x.                                               |
+| vitest / @vitest/coverage-v8    | 5.0.3            |                                                                                                                                           |
+| @playwright/test                | 1.56.1           | Pinned to match the Chromium build pre-installed in the CI container (latest is 1.63.0).                                                  |
+| eslint / typescript-eslint      | 10.11.0 / 8.71.0 |                                                                                                                                           |
+| prettier                        | 3.9.9            |                                                                                                                                           |
+| @fontsource/fredoka             | 5.3.0            | OFL-1.1 font, bundled locally (no CDN).                                                                                                   |
+| fflate                          | latest           | Builds the YouTube zip.                                                                                                                   |
+| @capacitor/*                    | 8.5.x            | Phase 7                                                                                                                                   |
+| @capacitor-community/admob      | 8.1.0            | Phase 7                                                                                                                                   |
+| @revenuecat/purchases-capacitor | 13.7.0           | Phase 7                                                                                                                                   |
 
 ## Where the brief and current docs differ (or need a note)
+
 - **Phaser** registers a `visibilitychange` listener in its core (`VisibilityHandler`). It also feature-detects
   `localStorage` and has a `new Function` fallback in its webpack runtime. YouTube forbids the Page
   Visibility API and storage APIs. A Vite build plugin (`phaserSanitize` in `vite.config.ts`) removes all
@@ -47,6 +50,7 @@
   (listed in HUMAN_TODO).
 
 ## Phase 1 — Foundation ✅
+
 - Vite + TS (strict) + Phaser 4. One codebase, and the platform adapter is chosen at build time through
   the `@platform-impl` alias (`--mode youtube|ios|web`).
 - `Platform` interface plus `WebDevPlatform` (localStorage, simulated ads/IAP) and `YouTubePlatform`
@@ -63,6 +67,7 @@
 Next: Phase 2, which brings the pure core logic with full unit tests and the balance simulation.
 
 ## Phase 2 — Core logic ✅
+
 - Pure TS in `src/core` (no Phaser, no DOM; enforced by lint):
   - seeded PRNG (mulberry32) and data schemas
   - economy: value formula, asking price, estimates, haggling, customer decisions, price snapping
@@ -83,6 +88,7 @@ Next: Phase 2, which brings the pure core logic with full unit tests and the bal
 Next: Phase 3, the playable core loop in Phaser.
 
 ## Phase 3 — The core loop, playable ✅
+
 - Scenes: Main Menu, Market (cards, detail card, one-shot haggle slider, Appraiser's Tip, trends,
   market switch, reroll), Workshop (step chips, optional bonus steps with Skip, per-step stars,
   before/after split-slider reveal with an auto-sweep and a value pop-up), Shop (customers with persona looks
@@ -99,6 +105,7 @@ Next: Phase 3, the playable core loop in Phaser.
   15–20 fps here, so each loop test takes about 6 min. JS profiling showed under 10% of frame time in game code.
 
 ## Phase 4 — All mini-games and content ✅
+
 - All 8 mini-games: Scrub, Rust (2–3 hardness levels), Sticker Peel (too fast tears it, leaving residue that
   becomes extra grime), Glue (path tracing), Sand (coverage × evenness), Paint (palette with
   shape symbols, overspray penalty, trend-colour bonus, colour-blind palette), Polish
@@ -114,6 +121,7 @@ Next: Phase 3, the playable core loop in Phaser.
 - Soft-lock guard: a broke player with an empty inventory always gets one affordable offer.
 
 ## Phase 5 — Polish ✅ (with environment caveats)
+
 - Art: each shop tier has its own look (awning stripes, wall and background colours, name sign). Dirt was
   toned down so items stay recognisable. Market card badges fixed.
 - `src/assets/manifest.json` + `game/art/manifest.ts`: hand-made art can replace any generated
@@ -136,6 +144,7 @@ Next: Phase 3, the playable core loop in Phaser.
   software rasterisation. Listed in HUMAN_TODO as an on-device check.
 
 ## Phase 6 — YouTube Playables build ✅
+
 - `npm run build:youtube` produces `dist-youtube/` (7 files, ~1.6 MiB) and `thrift-flip-youtube.zip` (~460 KiB). The bundle checker passes
   (the only warning is the 1.34 MiB Phaser chunk vs the 512 KiB SHOULD target).
 - YouTube ads are wired through `ytgame.ads` in the adapter. New e2e `youtube.spec.ts` covers: rewarded grants only on
@@ -147,6 +156,7 @@ Next: Phase 3, the playable core loop in Phaser.
   (1320×2868, 2064×2752) and YouTube key art (16:9, 1:1, 9:16) into `dist-store/`.
 
 ## Phase 7 — iOS build ✅ (Xcode build is a human step)
+
 - Capacitor 8.5 iOS project (Swift Package Manager; no CocoaPods), web assets bundled in the app (no
   `server.url`). `npm run build:ios` runs the Vite iOS build, `scripts/check-ios-bundle.ts` (no YouTube SDK, no remote URL),
   then `cap sync ios`. Bundle isolation is checked both ways (the YouTube checker rejects any Capacitor, AdMob or IAP code).
@@ -172,6 +182,7 @@ Next: Phase 3, the playable core loop in Phaser.
 - **Not possible here:** building in Xcode for the simulator. This is a Linux container without Xcode (HUMAN_TODO).
 
 ## Phase 8 — Release prep ✅
+
 - `docs/SUBMISSION_IOS.md`: toolchain (Xcode 26 / iOS 26 SDK, required since 2026-04-28), identity and signing,
   App Store Connect record, the 9 IAP products, age-rating answers (not Kids Category; no simulated gambling),
   the App Privacy label derived from AdMob + RevenueCat, reviewer notes (bundled assets, where IAP and ads are),
@@ -184,6 +195,7 @@ Next: Phase 3, the playable core loop in Phaser.
 - Version **1.0.0** (package.json, Xcode `MARKETING_VERSION`), tag `v1.0.0`.
 
 ## Playtest round 1 (owner feedback) ✅
+
 - **Polish froze on phones.** Erase games now batch pointer input per frame, stamp a pre-rendered brush,
   upload the texture once per frame, reuse one particle emitter, and cap damage layers at 512 px. Polish
   is also quicker: a bigger cloth, done at 85%, and circles are a bonus instead of a requirement.
@@ -194,6 +206,7 @@ Next: Phase 3, the playable core loop in Phaser.
   Balance re-run (BALANCE.md): about 4.8 real minutes per in-game day, with completion around 4 hours.
 
 ## Playtest round 2 ✅
+
 - **Game froze on the reveal screen (day 2, iPhone).** Root cause: the Workshop kept the pixel memory
   of every item's large canvases until Safari garbage-collected them (about 6 MB per item at 1×, much
   more at 3×), which hits iOS's canvas memory limit after roughly a day of play. Canvases are now freed
@@ -201,6 +214,7 @@ Next: Phase 3, the playable core loop in Phaser.
   single frame throws.
 
 ## Playtest round 3 ✅
+
 - **"Do it!" before bonus steps removed.** Bonus steps start straight away like every other step; a
   Skip button sits next to Done, and a short toast says it is a bonus step.
 - **"Lags out and goes back to the main screen".** That was the frame guard's last resort after a run
@@ -211,6 +225,7 @@ Next: Phase 3, the playable core loop in Phaser.
   fails, so the next report can name the cause.
 
 ## Art style: pixel art (owner feedback) ✅
+
 - The owner did not like the flat vector look and chose **pixel art**; everything looked too simple, and
   characters, screens, buttons and colours all needed work.
 - One pipeline (`game/art/pixel.ts`) turns all existing vector art into pixel art (items, characters,
@@ -224,14 +239,16 @@ Next: Phase 3, the playable core loop in Phaser.
   less speckled so items stay recognisable.
 
 ## Playtest round 4 ✅
+
 - **Error report from the owner's phone** (via the playtest error note): `Cannot read properties of null
-  (reading 'sourceSize') at setCropUVs`. Cause: pressing "Next item" while the reveal's before/after slider
+(reading 'sourceSize') at setCropUVs`. Cause: pressing "Next item" while the reveal's before/after slider
   was still sweeping. The old item's texture was removed, but the sweep tween kept cropping the destroyed
   image on every frame, which caused the lag and, after 20 failing frames, the scene restart (the earlier
   "lags out and goes back to the main screen"). Fix: the sweep tween is stopped when the item is cleaned up,
   and the slider never touches destroyed objects. A new e2e test reproduces the exact error on the old code.
 
 ## Realistic objects + real wiring repair (owner request) ✅
+
 - **Objects are smooth and realistic again** (the owner asked for "a bit more realistic and smooth on the
   objects"): items are drawn at full resolution with soft top-left lighting, shaded bottoms, specular
   spots on glass and metal, thin natural edges and soft contact shadows. The workshop uses smooth,
@@ -243,6 +260,7 @@ Next: Phase 3, the playable core loop in Phaser.
   layouts; the e2e bot plays the new flow.
 
 ## Computers, cars, detailed repairs and workshops (owner request) ✅
+
 - **New late-game categories:** Computers & Games (tier 3) and Cars & Bikes (tier 4), 30 items worth far
   more than flea-market finds, with two new customers (Gamer Gabe, Racer Rita).
 - **Repair step, done for real and in detail:** repairs are now a list of hands-on tasks, each its own
@@ -256,6 +274,7 @@ Next: Phase 3, the playable core loop in Phaser.
   categories had pulled it to day 29; it is now day 37 again).
 
 ## Business empire, phase 1: company name and business ladder ✅
+
 - **Name your company** on first play: spin three word wheels or type a name on an in-game keyboard; a
   word filter keeps names kid-friendly. The name is on the shop sign, the main menu, the business ladder
   and job cards, and can be changed from Settings.
@@ -272,6 +291,7 @@ Next: Phase 3, the playable core loop in Phaser.
   customer's phone, and a PC rebuild at Computer Repair.
 
 ## Business empire, phase 2: marketing and contracts ✅
+
 - **Marketing:** six campaigns from flyers to satellite ads, unlocked by your businesses. They grow your
   brand, which brings more shop customers and more contracts, with diminishing returns; the brand fades
   a little every day.
@@ -287,6 +307,7 @@ Next: Phase 3, the playable core loop in Phaser.
   running ads and completing a design contract.
 
 ## Business empire, phase 3: managers and branches ✅
+
 - **Managers** (from Rocket Repair on): hire a manager for any of your businesses; they run it while you
   work somewhere else and pay its takings at the end of each day (minus a small wage). Train them through
   five levels, from 50% to 110% efficiency.
@@ -297,6 +318,7 @@ Next: Phase 3, the playable core loop in Phaser.
   payout (not at the business you work at), migration; e2e: hire, train, open a branch, earn.
 
 ## Business empire, phase 4: global expansion ✅
+
 - **World expansion** (from Rocket Repair on): a world map with seven regions. Open an office in a region,
   then deliver its flagship contract (a big custom design job for a famous client, such as the Tokyo
   Robot Expo) to conquer it. A flag goes up on the map.
@@ -308,6 +330,7 @@ Next: Phase 3, the playable core loop in Phaser.
   region bonuses, regional markets, migration; e2e: open North America, deliver the flagship, conquer.
 
 ## Business empire, phase 5: space and the Dyson project ✅
+
 - **Space program** (after conquering every Earth region): research space technology on Earth (each
   takes a few days), found colonies on the Moon (optional), Mars, the asteroid belt, Europa, Titan and
   Mercury. Each colony harvests its own material and earns coins every day, and sends rover and lander
@@ -321,12 +344,34 @@ Next: Phase 3, the playable core loop in Phaser.
   timing, colony requirements, harvest and income, colony contracts, Dyson stages, migration; e2e:
   research, found Mars, harvest, build a Dyson stage.
 
+## Business empire, phase 6: prestige and the legacy tree ✅
+
+- **Design contracts are built, not repaired** (owner feedback): Design → **Build** → Polish. The Build
+  step starts from an open, empty frame: fit each part into its empty mount, bolt it, plug in the cables,
+  fill it, then the cover and screws go on. Build rigs for PCs, cars, robots and rockets.
+- **Realistic wiring** (owner request): real connectors and cables (ATX 24-pin, EPS/PCIe, SATA, front
+  panel pairs, phone flex ribbons, servo leads, IDC ribbon, XT60, hoses with clamps, braided rocket lines
+  with AN fittings), stripped multicore sheath, twisted copper and crimped ring terminals on a barrier
+  strip, a detailed motherboard, and flat Li-ion pouch batteries in phones.
+- **Prestige:** once the whole Sun is harvested, prestige from the Dyson screen or the Legacy tree. The
+  n-th prestige gives n tokens (1, 2, 3...). A new run keeps the company name, the tree and tokens, the
+  catalog, decorations, purchases and lifetime stats; coins, shops, businesses, regions and space reset.
+- **Legacy tree:** 22 nodes in five branches (Money, Growth, Brand, Team, Space) with prerequisites, all in
+  `balance.json` → `empire.prestige`: more income and contract pay, discounts on unlock costs, a head start
+  (coins and businesses), stronger marketing, better managers, faster research, bigger harvests and a
+  cheaper Dyson project. Upgrades → Legacy tree (shown after the first prestige or once it is possible).
+- **Pacing:** the balance bot's second run reaches the whole Sun in about 105 h, the third in about 94 h
+  (first: 117 h). Save v9. Tests: token math (n per prestige, n(n+1)/2 total), what resets and what is
+  kept, node prerequisites and costs, every bonus reaching the game, save round trip and v8 → v9; e2e:
+  prestige from the Dyson screen, spend the token, the tree survives a reload.
+
 ## Definition of done: status
-| Item | Status |
-|---|---|
-| `npm run check` (lint, typecheck, unit + coverage, YouTube build + bundle checks, e2e) | ✅ passes in this container (see the final run log in the commit message / PR) |
-| `thrift-flip-youtube.zip` meets every automatable MUST in §7 | ✅ automated; manual items listed in SUBMISSION_YOUTUBE.md |
-| iOS project builds in Xcode | ⏳ **human step**: no Xcode on Linux. `build:ios` + `cap sync` pass; IAP and ads are absent from the YouTube bundle (checked) |
-| Old-save migration tests | ✅ (v1–v8 fixtures; every migration tested) |
-| Docs complete | ✅ ARCHITECTURE, BALANCE, PROGRESS, HUMAN_TODO, SUBMISSION_IOS, SUBMISSION_YOUTUBE, PRIVACY_POLICY, STORE_LISTING |
-| HUMAN_TODO lists every required human step | ✅ |
+
+| Item                                                                                   | Status                                                                                                                        |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `npm run check` (lint, typecheck, unit + coverage, YouTube build + bundle checks, e2e) | ✅ passes in this container (see the final run log in the commit message / PR)                                                |
+| `thrift-flip-youtube.zip` meets every automatable MUST in §7                           | ✅ automated; manual items listed in SUBMISSION_YOUTUBE.md                                                                    |
+| iOS project builds in Xcode                                                            | ⏳ **human step**: no Xcode on Linux. `build:ios` + `cap sync` pass; IAP and ads are absent from the YouTube bundle (checked) |
+| Old-save migration tests                                                               | ✅ (v1–v9 fixtures; every migration tested)                                                                                   |
+| Docs complete                                                                          | ✅ ARCHITECTURE, BALANCE, PROGRESS, HUMAN_TODO, SUBMISSION_IOS, SUBMISSION_YOUTUBE, PRIVACY_POLICY, STORE_LISTING             |
+| HUMAN_TODO lists every required human step                                             | ✅                                                                                                                            |

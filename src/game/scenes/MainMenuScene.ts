@@ -166,7 +166,10 @@ export class MainMenuScene extends GameScene {
       this.version,
     ]);
     if (isContentComplete(s)) this.tagline.setText(t('menu.allDone'));
-    else if (s.flags.named) this.tagline.setText(s.company);
+    else if (s.flags.named)
+      this.tagline.setText(
+        s.prestige.n > 0 ? t('menu.prestiged', { company: s.company, n: s.prestige.n }) : s.company,
+      );
     this.markReady();
     session.audio.music('menu');
     if (session.loadOutcome.kind === 'corrupt') this.time.delayedCall(50, () => this.corruptSave());

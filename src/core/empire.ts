@@ -5,6 +5,7 @@
  * part of that capital. You choose each day which business to work at. Pure.
  */
 import { BALANCE } from './data';
+import { discounted } from './skilltree';
 import type { GameState } from './state';
 import type { BusinessDef } from './types';
 
@@ -34,19 +35,25 @@ export function needsMet(state: GameState, b: BusinessDef): boolean {
 export function businessStatus(state: GameState, b: BusinessDef): BusinessStatus {
   if (ownsBusiness(state, b.id)) return 'owned';
   if (!needsMet(state, b)) return 'locked';
-  if (state.coins < b.capital) return 'saving';
+  if (state.coins < capitalFor(state, b)) return 'saving';
   return 'available';
 }
 
+/** Savings needed before a business can open (less with the prestige discount). */
+export function capitalFor(state: GameState, b: BusinessDef): number {
+  return discounted(state, b.capital);
+}
+
 /** Coins spent to open a business (the rest of the capital stays with you as working money). */
-export function openCost(b: BusinessDef): number {
-  return Math.round(b.capital * b.spendPct);
+export function openCost(b: BusinessDef, state?: GameState): number {
+  const base = Math.round(b.capital * b.spendPct);
+  return state ? discounted(state, base) : base;
 }
 
 export function openBusiness(state: GameState, id: string): boolean {
   const b = business(id);
   if (!b || businessStatus(state, b) !== 'available') return false;
-  state.coins -= openCost(b);
+  state.coins -= openCost(b, state);
   state.biz.own.push(id);
   return true;
 }
@@ -74,8 +81,8 @@ export function nextBusinessGoal(state: GameState): BusinessGoal | null {
     id: b.id,
     status,
     coins: state.coins,
-    capital: b.capital,
-    progress: b.capital > 0 ? Math.min(1, state.coins / b.capital) : 1,
+    capital: capitalFor(state, b),
+    progress: b.capital > 0 ? Math.min(1, state.coins / capitalFor(state, b)) : 1,
   };
 }
 

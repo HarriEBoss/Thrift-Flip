@@ -18,6 +18,8 @@ export class Session {
   currentScene = '';
   loadOutcome: LoadOutcome = { kind: 'fresh' };
   gameReadySent = false;
+  /** Just prestiged: show the legacy tree when the new run's first scene opens. */
+  openTreeNext = false;
   private pauseListeners: Array<(paused: boolean) => void> = [];
 
   settings(): Settings {

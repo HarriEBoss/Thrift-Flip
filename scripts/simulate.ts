@@ -68,6 +68,8 @@ import {
 } from '../src/core/managers';
 import { BUSINESSES, businessStatus, openBusiness, openCost, setCurrentBusiness } from '../src/core/empire';
 import { isContentComplete } from '../src/core/complete';
+import { prestige } from '../src/core/prestige';
+import { buyNode } from '../src/core/skilltree';
 import { snapPrice } from '../src/core/economy';
 import { marketSlots, shelfCapacity } from '../src/core/perks';
 import { nextBid, playerBid, playerWon, startAuction, tickAuction } from '../src/core/auction';
@@ -105,6 +107,8 @@ interface BotResult {
   /** Day each colony was founded (-1 = never), and the Dyson project finished. */
   colonyDay: number[];
   dysonDay: number;
+  /** The state at the end (for the next run after a prestige). */
+  end: GameState;
 }
 
 /** Restores everything in the queue; finished customer jobs are paid. */
@@ -157,18 +161,19 @@ function playDay(g: GameState, rng: Rng, skill: number): number {
   }
   // Open the next business as soon as the savings allow (keeping a reserve for the shop).
   for (const b of BUSINESSES) {
-    if (businessStatus(g, b) === 'available' && g.coins - openCost(b) >= reserve * 0.5) openBusiness(g, b.id);
+    if (businessStatus(g, b) === 'available' && g.coins - openCost(b, g) >= reserve * 0.5)
+      openBusiness(g, b.id);
   }
   // Delegation: hire and train managers, open branches, keeping half the coins in hand.
   if (delegationUnlocked(g)) {
     for (let k = 0; k < 6; k++) {
       const opts = BUSINESSES.flatMap((b) => {
-        const mc = managerCost(b, managerLevel(g, b.id));
+        const mc = managerCost(b, managerLevel(g, b.id), g);
         const out: Array<{ cost: number; run: () => boolean }> = [];
         if (mc !== null && managerStatus(g, b) === 'available')
           out.push({ cost: mc, run: () => hireOrTrain(g, b.id) });
         if (managerLevel(g, b.id) > 0 && branchStatus(g, b) === 'available')
-          out.push({ cost: branchCost(b, branchCount(g, b.id)), run: () => openBranch(g, b.id) });
+          out.push({ cost: branchCost(b, branchCount(g, b.id), g), run: () => openBranch(g, b.id) });
         return out;
       }).filter((o) => o.cost <= g.coins * 0.5);
       if (!opts.length) break;
@@ -275,8 +280,8 @@ function playDay(g: GameState, rng: Rng, skill: number): number {
   return sec;
 }
 
-function runBot(seed: number, days = DAYS): BotResult {
-  const g = newGame(seed);
+function runBot(seed: number, days = DAYS, start?: GameState): BotResult {
+  const g = start ?? newGame(seed);
   const rng = new Rng(seed ^ 0x9e3779b9);
   const skill = rng.range(0.78, 0.92);
   const res: BotResult = {
@@ -289,6 +294,7 @@ function runBot(seed: number, days = DAYS): BotResult {
     worldDay: -1,
     colonyDay: BODIES.map(() => -1),
     dysonDay: -1,
+    end: g,
   };
   let total = 0;
   for (let d = 1; d <= days; d++) {
@@ -326,6 +332,9 @@ const results = Array.from({ length: BOTS }, (_, i) => runBot(1000 + i * 7919));
 // The long game (empire, world, space, Dyson): fewer bots, many more days.
 const LONG_DAYS = Number(process.env.LONG_DAYS ?? 1500);
 const LONG_BOTS = Number(process.env.LONG_BOTS ?? 6);
+const PRESTIGE_RUNS = Number(process.env.PRESTIGE_RUNS ?? 2);
+/** The order a bot buys legacy tree nodes in (as tokens allow). */
+const PRESTIGE_PICKS = ['cash1', 'deals1', 'cash2', 'boss1', 'brand1', 'deals2', 'lab1', 'seed1'];
 const longRuns = Array.from({ length: LONG_BOTS }, (_, i) => runBot(5000 + i * 104729, LONG_DAYS));
 const lines: string[] = [];
 const out = (s = '') => lines.push(s);
@@ -425,6 +434,35 @@ BUSINESSES.forEach((b, i) => milestone(`Business: ${b.id}`, (r) => r.bizDay[i]))
 milestone('All Earth regions', (r) => r.worldDay);
 BODIES.forEach((b, i) => milestone(`Colony: ${b.id}`, (r) => r.colonyDay[i]));
 milestone('Dyson project done (whole Sun)', (r) => r.dysonDay);
+out();
+out('### Prestige runs');
+out();
+out(
+  'Each bot that harvested the Sun prestiges and plays again, spending its tokens on the legacy tree in this order: ' +
+    `${PRESTIGE_PICKS.join(', ')}. It keeps its catalog. Run n+1 starts with n(n+1)/2 tokens in total.`,
+);
+out();
+out('| Run | Tree nodes | Median days to the whole Sun | Median play time (h) | Bots finishing |');
+out('|---|---|---|---|---|');
+const hoursTo = (r: BotResult) => (r.dysonDay > 0 ? r.playSec[r.dysonDay - 1] / 3600 : -1);
+out(
+  `| 1 | 0 | ${median(longRuns.map((r) => r.dysonDay))} | ${median(longRuns.map(hoursTo)).toFixed(1)} | ${longRuns.filter((r) => r.dysonDay > 0).length}/${LONG_BOTS} |`,
+);
+let prev = longRuns;
+for (let run = 2; run <= PRESTIGE_RUNS + 1; run++) {
+  const next = prev
+    .filter((r) => r.dysonDay > 0)
+    .map((r, i) => {
+      const g = prestige(r.end)!;
+      for (const id of PRESTIGE_PICKS) buyNode(g, id);
+      return runBot(9000 + run * 31 + i, LONG_DAYS, g);
+    });
+  if (!next.length) break;
+  out(
+    `| ${run} | ${median(next.map((r) => r.end.prestige.nodes.length))} | ${median(next.map((r) => r.dysonDay))} | ${median(next.map(hoursTo)).toFixed(1)} | ${next.filter((r) => r.dysonDay > 0).length}/${next.length} |`,
+  );
+  prev = next;
+}
 const report = lines.join('\n') + '\n';
 console.log(report);
 if (process.argv.includes('--write')) writeFileSync('docs/BALANCE.md', report);

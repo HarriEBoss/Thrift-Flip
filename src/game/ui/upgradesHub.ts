@@ -17,12 +17,16 @@ import {
   expansionUnlocked,
   openRegion,
   openableRegions,
+  regionCost,
   regionStatus,
   regionsWon,
 } from '../../core/regions';
 import { MARKETS } from '../../core/data';
 import { spaceActions, spaceUnlocked, sunHarvested } from '../../core/space';
 import { openSpace } from './spaceMenus';
+import { openSkillTree } from './prestigeMenus';
+import { canPrestige, nextPrestigeTokens } from '../../core/prestige';
+import { buyableNodes } from '../../core/skilltree';
 import {
   branchCost,
   branchStatus,
@@ -42,6 +46,7 @@ import {
 import {
   BUSINESSES,
   businessStatus,
+  capitalFor,
   nextBusinessGoal,
   openBusiness,
   openCost,
@@ -63,7 +68,9 @@ export function upgradesAvailable(): number {
     affordableDecor(s) +
     skillPoints(s) +
     openableBusinesses(s) +
-    delegationActions(s)
+    delegationActions(s) +
+    buyableNodes(s) +
+    (canPrestige(s) ? 1 : 0)
   );
 }
 
@@ -143,6 +150,16 @@ export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
       open: () => openSpace(scene, after),
     },
     {
+      id: 'hub_legacy',
+      label: t('hub.legacy'),
+      sub: canPrestige(s)
+        ? t('hub.legacyReady', { n: nextPrestigeTokens(s) })
+        : t('hub.legacySub', { n: s.prestige.tokens, p: s.prestige.n }),
+      color: C.purple,
+      badge: canPrestige(s) ? '!' : buyableNodes(s) ? String(buyableNodes(s)) : null,
+      open: () => openSkillTree(scene, after),
+    },
+    {
       id: 'hub_tools',
       label: t('hub.tools'),
       sub: t('hub.toolsSub'),
@@ -161,9 +178,12 @@ export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
   ];
   // The late-game rows (managers, world, space) appear once you own the top business.
   const late = ['hub_managers', 'hub_world', 'hub_space'];
-  const shown = rows.filter((r) => !late.includes(r.id) || delegationUnlocked(s));
-  const step = shown.length > 6 ? 82 : 104;
-  const bh = shown.length > 6 ? 74 : 92;
+  const legacy = s.prestige.n > 0 || canPrestige(s);
+  const shown = rows.filter(
+    (r) => (!late.includes(r.id) || delegationUnlocked(s)) && (r.id !== 'hub_legacy' || legacy),
+  );
+  const step = shown.length > 9 ? 76 : shown.length > 6 ? 82 : 104;
+  const bh = shown.length > 9 ? 68 : shown.length > 6 ? 74 : 92;
   function after(): void {
     refresh(scene);
     onChange?.();
@@ -377,7 +397,7 @@ export function openEmpire(scene: BaseScene, onChange?: () => void): void {
           ? t('empire.needsBiz', { biz: t(`biz.${n.business}`) })
           : t('upgrades.needTier', { tier: t(`tier.${BALANCE.tiers[n.shopTier ?? 0].id}`) });
     } else if (st === 'saving' || st === 'available')
-      sub = t('empire.capital', { n: b.capital, cost: openCost(b) });
+      sub = t('empire.capital', { n: capitalFor(s, b), cost: openCost(b, s) });
     const desc = makeText(scene, -218, 8, sub, FS.tiny, C.inkSoft, { align: 'left', bold: false, wrap: 330 });
     row.add([g, art, name, desc]);
     if (st === 'saving' && goal?.id === b.id) {
@@ -553,7 +573,7 @@ export function openManagers(scene: BaseScene, onChange?: () => void): void {
       makeText(scene, -240, 30, earn, FS.tiny, lvl > 0 ? C.leafDark : C.inkSoft, { align: 'left' }),
     ]);
     const ms = managerStatus(s, b);
-    const mc = managerCost(b, lvl);
+    const mc = managerCost(b, lvl, s);
     const hire = new Button(scene, 230, -27, {
       w: 160,
       h: 50,
@@ -569,7 +589,7 @@ export function openManagers(scene: BaseScene, onChange?: () => void): void {
     const branch = new Button(scene, 230, 31, {
       w: 160,
       h: 50,
-      label: t('mgr.branch', { n: branchCost(b, n - 1) }),
+      label: t('mgr.branch', { n: branchCost(b, n - 1, s) }),
       color: bs === 'available' ? C.sky : C.inkSoft,
       fontSize: FS.tiny,
       onClick: () => {
@@ -696,7 +716,7 @@ export function openWorld(scene: BaseScene, onChange?: () => void): void {
           ? t('world.open')
           : st === 'locked'
             ? t('decor.locked')
-            : String(r.cost);
+            : String(regionCost(s, r));
     const b = new Button(scene, 220, 0, {
       w: 150,
       h: 60,

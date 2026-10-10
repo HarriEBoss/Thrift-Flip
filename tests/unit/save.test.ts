@@ -237,6 +237,17 @@ describe('migrations', () => {
     expect(v8.space.mat).toEqual({ helium3: 8, regolith: 15 });
   });
 
+  it('v8 -> v9: no prestige yet; v9 keeps the prestige count, tokens and skill tree', () => {
+    const v8 = JSON.parse(readFileSync(new URL('v8-midgame.json', FIXTURES), 'utf8'));
+    expect(migrate(v8)).toMatchObject({ v: 9, pr: [0, 0, [], 0] });
+    const g8 = deserialize(JSON.stringify(v8));
+    expect(g8.prestige).toEqual({ n: 0, tokens: 0, nodes: [], best: 0 });
+    expect(g8.space.colonies).toEqual(['moon', 'mars']);
+    const v9 = deserialize(readFileSync(new URL('v9-midgame.json', FIXTURES), 'utf8'));
+    expect(v9.prestige).toEqual({ n: 2, tokens: 1, nodes: ['cash1', 'deals1'], best: 612 });
+    expect(v9.space.colonies).toEqual(['moon', 'mars']);
+  });
+
   it('migrate is a no-op at the current version and validates chain', () => {
     const obj = { v: CURRENT_VERSION, a: 1 };
     expect(migrate(obj)).toBe(obj);

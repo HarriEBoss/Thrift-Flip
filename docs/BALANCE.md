@@ -80,3 +80,13 @@ Purchases are not needed: these bots never buy anything or watch ads.
 | Colony: titan | 465 | 74.6 | 6/6 |
 | Colony: mercury | 522 | 87.1 | 6/6 |
 | Dyson project done (whole Sun) | 651 | 117.4 | 6/6 |
+
+### Prestige runs
+
+Each bot that harvested the Sun prestiges and plays again, spending its tokens on the legacy tree in this order: cash1, deals1, cash2, boss1, brand1, deals2, lab1, seed1. It keeps its catalog. Run n+1 starts with n(n+1)/2 tokens in total.
+
+| Run | Tree nodes | Median days to the whole Sun | Median play time (h) | Bots finishing |
+|---|---|---|---|---|
+| 1 | 0 | 651 | 117.4 | 6/6 |
+| 2 | 1 | 578 | 105.4 | 6/6 |
+| 3 | 3 | 516 | 94.3 | 6/6 |

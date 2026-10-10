@@ -54,6 +54,18 @@ export interface SpaceState {
   dyson: number;
 }
 
+/** Prestige: kept when a run is reset. */
+export interface PrestigeState {
+  /** Prestiges done. */
+  n: number;
+  /** Tokens not spent yet. */
+  tokens: number;
+  /** Skill tree nodes bought. */
+  nodes: string[];
+  /** Fewest in-game days a run took to harvest the whole Sun (0 = never). */
+  best: number;
+}
+
 export interface CustomerRequest {
   /** Request template id. */
   t: string;
@@ -179,6 +191,8 @@ export interface GameState {
   regions: Record<string, number>;
   /** Space program. */
   space: SpaceState;
+  /** Prestige count, tokens and the permanent skill tree. */
+  prestige: PrestigeState;
   /** One char per item: '0' unseen, '1' found, '2' perfectly restored. */
   catalog: string;
   requests: CustomerRequest[];
@@ -276,6 +290,7 @@ export function newGame(seed: number): GameState {
     branches: {},
     regions: {},
     space: { techs: [], research: null, colonies: [], mat: {}, dyson: 0 },
+    prestige: { n: 0, tokens: 0, nodes: [], best: 0 },
     catalog: '0'.repeat(ITEMS.length),
     requests: [],
     stats: {

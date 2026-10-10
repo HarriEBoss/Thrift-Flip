@@ -10,6 +10,7 @@ import { BALANCE } from './data';
 import { BUSINESSES, business, ownsBusiness } from './empire';
 import { brandFlow } from './marketing';
 import { regionFx } from './regions';
+import { discounted, prestigeFx } from './skilltree';
 import { hashSeed } from './prng';
 import namesJson from '../data/names.json';
 import type { GameState } from './state';
@@ -51,15 +52,18 @@ export function managerName(state: GameState, id: string): string {
 }
 
 /** Cost to hire (level 0 -> 1) or train (level n -> n + 1); null at the top level. */
-export function managerCost(b: BusinessDef, level: number): number | null {
+export function managerCost(b: BusinessDef, level: number, state?: GameState): number | null {
   if (level >= M().efficiency.length) return null;
   const hire = Math.max(500, b.capital) * M().hireCost;
-  return Math.round((hire * Math.pow(M().upgradeGrowth, level)) / 10) * 10;
+  const cost = Math.round((hire * Math.pow(M().upgradeGrowth, level)) / 10) * 10;
+  return state ? discounted(state, cost) : cost;
 }
 
 /** Cost of the next branch of a business. */
-export function branchCost(b: BusinessDef, have: number): number {
-  return Math.round((Math.max(500, b.capital) * M().branchCost * Math.pow(M().branchGrowth, have)) / 10) * 10;
+export function branchCost(b: BusinessDef, have: number, state?: GameState): number {
+  const cost =
+    Math.round((Math.max(500, b.capital) * M().branchCost * Math.pow(M().branchGrowth, have)) / 10) * 10;
+  return state ? discounted(state, cost) : cost;
 }
 
 export type DelegationStatus = 'locked' | 'notOwned' | 'max' | 'poor' | 'available';
@@ -67,7 +71,7 @@ export type DelegationStatus = 'locked' | 'notOwned' | 'max' | 'poor' | 'availab
 export function managerStatus(state: GameState, b: BusinessDef): DelegationStatus {
   if (!delegationUnlocked(state)) return 'locked';
   if (!ownsBusiness(state, b.id)) return 'notOwned';
-  const cost = managerCost(b, managerLevel(state, b.id));
+  const cost = managerCost(b, managerLevel(state, b.id), state);
   if (cost === null) return 'max';
   return state.coins < cost ? 'poor' : 'available';
 }
@@ -75,14 +79,14 @@ export function managerStatus(state: GameState, b: BusinessDef): DelegationStatu
 export function branchStatus(state: GameState, b: BusinessDef): DelegationStatus {
   if (!delegationUnlocked(state)) return 'locked';
   if (!ownsBusiness(state, b.id)) return 'notOwned';
-  return state.coins < branchCost(b, branchCount(state, b.id)) ? 'poor' : 'available';
+  return state.coins < branchCost(b, branchCount(state, b.id), state) ? 'poor' : 'available';
 }
 
 /** Hires a manager, or trains the current one to the next level. */
 export function hireOrTrain(state: GameState, id: string): boolean {
   const b = business(id);
   if (!b || managerStatus(state, b) !== 'available') return false;
-  state.coins -= managerCost(b, managerLevel(state, id))!;
+  state.coins -= managerCost(b, managerLevel(state, id), state)!;
   state.managers[id] = managerLevel(state, id) + 1;
   return true;
 }
@@ -90,7 +94,7 @@ export function hireOrTrain(state: GameState, id: string): boolean {
 export function openBranch(state: GameState, id: string): boolean {
   const b = business(id);
   if (!b || branchStatus(state, b) !== 'available') return false;
-  state.coins -= branchCost(b, branchCount(state, id));
+  state.coins -= branchCost(b, branchCount(state, id), state);
   state.branches[id] = branchCount(state, id) + 1;
   return true;
 }
@@ -100,8 +104,17 @@ export function dailyIncome(state: GameState, b: BusinessDef): { gross: number; 
   const lvl = managerLevel(state, b.id);
   if (lvl <= 0 || !ownsBusiness(state, b.id)) return { gross: 0, wage: 0, net: 0 };
   const region = 1 + regionFx(state).income;
-  const gross = Math.round(b.income * shops(state, b.id) * efficiency(lvl) * brandFlow(state.brand) * region);
-  const wage = Math.round(gross * M().wagePct);
+  const fx = prestigeFx(state);
+  const gross = Math.round(
+    b.income *
+      shops(state, b.id) *
+      efficiency(lvl) *
+      brandFlow(state.brand) *
+      region *
+      (1 + fx.income) *
+      (1 + fx.managers),
+  );
+  const wage = Math.round(gross * M().wagePct * (1 - fx.wages));
   return { gross, wage, net: gross - wage };
 }
 

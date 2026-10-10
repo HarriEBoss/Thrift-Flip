@@ -8,6 +8,7 @@ import { BALANCE } from './data';
 import { ownsBusiness } from './empire';
 import type { GameState } from './state';
 import type { CampaignDef } from './types';
+import { prestigeFx } from './skilltree';
 
 const M = () => BALANCE.empire.marketing;
 
@@ -35,13 +36,14 @@ export function runCampaign(state: GameState, id: string): number {
   state.coins -= c.cost;
   state.day.stats.spent += c.cost;
   state.day.ads.push(id);
-  state.brand += c.brand;
-  return c.brand;
+  const gain = Math.round(c.brand * (1 + prestigeFx(state).marketing) * 10) / 10;
+  state.brand += gain;
+  return gain;
 }
 
 /** Overnight, the brand fades a little (call once per new day). */
 export function fadeBrand(state: GameState): void {
-  state.brand = Math.round(state.brand * (1 - M().decay) * 10) / 10;
+  state.brand = Math.round(state.brand * (1 - M().decay * (1 - prestigeFx(state).loyal)) * 10) / 10;
 }
 
 /** Extra shop customers a day from the brand (half of the flow bonus, rounded down). */

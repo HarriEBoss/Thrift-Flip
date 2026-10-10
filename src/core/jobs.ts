@@ -15,6 +15,7 @@ import { brandFlow } from './marketing';
 import { designFor } from './design';
 import { starsFor } from './economy';
 import { conquerRegion, flagshipsAt, regionFx } from './regions';
+import { prestigeFx } from './skilltree';
 import { BODIES, body, colonyReward } from './space';
 import namesJson from '../data/names.json';
 import type { JobKind } from './repair';
@@ -85,7 +86,8 @@ export function businessOffers(state: GameState, id: string): JobOffer[] {
   const top = topIndex(state);
   const bonus = top > bi ? 1 : 0;
   const flow = brandFlow(state.brand);
-  const boost = 1 + regionFx(state).contracts;
+  const pfx = prestigeFx(state);
+  const boost = (1 + regionFx(state).contracts) * (1 + pfx.income + pfx.fees);
   const rng = new Rng(hashSeed(state.seed, 'jobs', state.day.n, id));
   const out: JobOffer[] = [];
   let slot = 0;

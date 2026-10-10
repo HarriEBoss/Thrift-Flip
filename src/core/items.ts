@@ -8,6 +8,7 @@ import { trendFor } from './trends';
 import { catalogBonusFor } from './catalog';
 import { decorFx } from './decor';
 import { regionFx } from './regions';
+import { prestigeFx } from './skilltree';
 import type { JobKind } from './repair';
 
 export interface RecipeStep {
@@ -107,7 +108,11 @@ export function instanceValue(state: GameState, inst: ItemInstance): number {
   const q = inst.q >= 0 ? inst.q : 0;
   const trend = trendFor(state, arch.cat);
   const rareSale = inst.r >= 2 ? 1 + decorFx(state).rareSale : 1;
-  const bonus = catalogBonusFor(state, arch.cat) * rareSale * (1 + regionFx(state).price);
+  const bonus =
+    catalogBonusFor(state, arch.cat) *
+    rareSale *
+    (1 + regionFx(state).price) *
+    (1 + prestigeFx(state).income);
   return itemValue(arch.base, inst.r, q, trend, bonus);
 }
 

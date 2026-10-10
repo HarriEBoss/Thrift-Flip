@@ -55,6 +55,10 @@ describe('i18n', () => {
       keys.push(`store.${p.id}`, `store.${p.id}.d`);
       if (p.badge) keys.push(`store.badge.${p.badge}`);
     }
+    for (const n of BALANCE.empire.prestige.nodes) {
+      keys.push(`node.${n.id}`, `branch.${n.branch}`);
+      for (const k of Object.keys(n.fx)) keys.push(`fx.${k}`);
+    }
     for (const mood of ['happy', 'think', 'sad']) keys.push(`shop.mood.${mood}`);
     keys.push('mg.paintPick', 'tut.scrub', 'tut.polish');
     expect(keys.filter((k) => !(k in table))).toEqual([]);

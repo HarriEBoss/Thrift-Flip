@@ -9,6 +9,7 @@ import { BALANCE } from './data';
 import { allRegionsWon } from './regions';
 import type { GameState } from './state';
 import type { BodyDef, TechDef } from './types';
+import { discounted, prestigeFx } from './skilltree';
 
 const S = () => BALANCE.empire.space;
 export const TECHS: TechDef[] = BALANCE.empire.space.tech;
@@ -39,15 +40,30 @@ export function techStatus(state: GameState, t: TechDef): TechStatus {
   if (!spaceUnlocked(state)) return 'locked';
   if (!t.needs.every((n) => hasTech(state, n))) return 'needs';
   if (state.space.research) return 'busy';
-  return state.coins < t.cost ? 'poor' : 'available';
+  return state.coins < techCost(state, t) ? 'poor' : 'available';
+}
+
+/** Research cost and days (less with the prestige lab nodes). */
+export function techCost(state: GameState, t: TechDef): number {
+  const r = prestigeFx(state).research;
+  return r > 0 ? Math.round((t.cost * (1 - r)) / 10) * 10 : t.cost;
+}
+
+export function techDays(state: GameState, t: TechDef): number {
+  return Math.max(1, Math.round(t.days * (1 - prestigeFx(state).research)));
+}
+
+/** Coins to found a colony (less with the prestige discount). */
+export function colonyCost(state: GameState, b: BodyDef): number {
+  return discounted(state, b.cost);
 }
 
 /** Starts researching a technology (one at a time). */
 export function startResearch(state: GameState, id: string): boolean {
   const t = tech(id);
   if (!t || techStatus(state, t) !== 'available') return false;
-  state.coins -= t.cost;
-  state.space.research = { id, left: t.days };
+  state.coins -= techCost(state, t);
+  state.space.research = { id, left: techDays(state, t) };
   return true;
 }
 
@@ -58,13 +74,13 @@ export function colonyStatus(state: GameState, b: BodyDef): ColonyStatus {
   if (!spaceUnlocked(state)) return 'locked';
   if (!b.techs.every((t) => hasTech(state, t))) return 'needs';
   if (b.body && !state.space.colonies.includes(b.body)) return 'needs';
-  return state.coins < b.cost ? 'poor' : 'available';
+  return state.coins < colonyCost(state, b) ? 'poor' : 'available';
 }
 
 export function foundColony(state: GameState, id: string): boolean {
   const b = body(id);
   if (!b || colonyStatus(state, b) !== 'available') return false;
-  state.coins -= b.cost;
+  state.coins -= colonyCost(state, b);
   state.space.colonies.push(id);
   return true;
 }
@@ -72,14 +88,15 @@ export function foundColony(state: GameState, id: string): boolean {
 /** Materials and coins each colony sends home a day, plus the Dyson project's energy sales. */
 export function spaceIncome(state: GameState): { coins: number; mat: Record<string, number> } {
   const mat: Record<string, number> = {};
+  const fx = prestigeFx(state);
   let coins = state.space.dyson * S().dyson.energy;
   for (const id of state.space.colonies) {
     const b = body(id);
     if (!b) continue;
-    mat[b.material] = (mat[b.material] ?? 0) + b.rate;
+    mat[b.material] = (mat[b.material] ?? 0) + Math.round(b.rate * (1 + fx.harvest));
     coins += b.income;
   }
-  return { coins, mat };
+  return { coins: Math.round(coins * (1 + fx.income)), mat };
 }
 
 /** End of day: research moves on a day, colonies harvest and pay, the Dyson project sells energy. */
@@ -110,9 +127,10 @@ export function dysonNeeds(state: GameState): { coins: number; mat: Record<strin
   const d = S().dyson;
   const n = state.space.dyson + 1;
   if (n > d.stages) return null;
+  const cut = 1 - prestigeFx(state).dyson;
   const mat: Record<string, number> = {};
-  for (const [m, k] of Object.entries(d.materials)) mat[m] = k * n;
-  return { coins: d.coins * n, mat };
+  for (const [m, k] of Object.entries(d.materials)) mat[m] = Math.ceil(k * n * cut);
+  return { coins: Math.round((d.coins * n * cut) / 10) * 10, mat };
 }
 
 export type DysonStatus = 'locked' | 'needs' | 'short' | 'available' | 'done';

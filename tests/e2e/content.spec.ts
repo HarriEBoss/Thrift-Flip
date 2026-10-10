@@ -429,3 +429,79 @@ test('space: research rockets, found a colony on Mars, harvest, and build a Dyso
   await page.waitForTimeout(300);
   expect((await space()).dyson).toBe(1);
 });
+
+test('prestige: harvest the whole Sun, prestige for a token, spend it, and the new run keeps it', async ({
+  page,
+}) => {
+  test.setTimeout(240_000);
+  await page.setViewportSize({ width: 405, height: 720 });
+  await setupPage(page);
+  await page.goto('/');
+  await waitForScene(page, 'MainMenu');
+  type Pr = { n: number; tokens: number; nodes: string[]; best: number };
+  type St = {
+    coins: number;
+    company: string;
+    day: { n: number };
+    biz: { own: string[] };
+    regions: Record<string, number>;
+    space: { techs: string[]; dyson: number };
+    prestige: Pr;
+  };
+  type Tf = { setup(p: object): void; goto(k: string): void; state(): St };
+  await page.evaluate(() => {
+    const tf = (window as unknown as { __tf: Tf }).__tf;
+    tf.setup({
+      tutorialDone: true,
+      tier: 4,
+      coins: 900_000_000,
+      day: 600,
+      phase: 'market',
+      named: true,
+      company: 'Sparkle Fix Co.',
+      businesses: ['phone', 'computer', 'mechanic', 'robotics', 'rocket'],
+      business: 'rocket',
+    });
+    const st = tf.state();
+    for (const r of ['namerica', 'samerica', 'europe', 'africa', 'asia', 'oceania', 'antarctica'])
+      st.regions[r] = 2;
+    st.space.techs.push('rockets', 'dyson');
+    st.space.dyson = 10;
+    tf.goto('Market');
+  });
+  await waitForScene(page, 'Market');
+  const state = () => tf(page, (t) => t.state() as unknown as St);
+  // The finished Dyson project offers the prestige.
+  await press(page, 'mouse', 'upgrades');
+  await press(page, 'mouse', 'hub_space');
+  await press(page, 'mouse', 'space_dyson');
+  await press(page, 'mouse', 'space_prestige');
+  await press(page, 'mouse', 'prestige_go');
+  await waitForScene(page, 'Market');
+  await page.waitForTimeout(600);
+  let s = await state();
+  expect(s.prestige).toEqual({ n: 1, tokens: 1, nodes: [], best: 600 });
+  expect(s.company).toBe('Sparkle Fix Co.');
+  expect(s.day.n).toBe(1);
+  expect(s.biz.own).toEqual(['reselling']);
+  expect(s.space.dyson).toBe(0);
+  expect(s.coins).toBeLessThan(1000);
+  // The legacy tree opens on its own: buy Smart Pricing with the token.
+  await press(page, 'mouse', 'node_cash1');
+  await page.waitForTimeout(300);
+  s = await state();
+  expect(s.prestige.nodes).toEqual(['cash1']);
+  expect(s.prestige.tokens).toBe(0);
+  await closeModals(page, 'mouse');
+  // It is still there after a reload of the save.
+  await page.evaluate(() =>
+    (window as unknown as { __tf: { session: { save(f: boolean): Promise<void> } } }).__tf.session.save(true),
+  );
+  const save = await page.evaluate(() => (window as unknown as { __ytMock: { save: string } }).__ytMock.save);
+  const page2 = await page.context().newPage();
+  await setupPage(page2, { initialSave: save });
+  await page2.goto('/');
+  await waitForScene(page2, 'MainMenu');
+  const again = await page2.evaluate(() => (window as unknown as { __tf: Tf }).__tf.state().prestige);
+  expect(again).toEqual({ n: 1, tokens: 0, nodes: ['cash1'], best: 600 });
+});
