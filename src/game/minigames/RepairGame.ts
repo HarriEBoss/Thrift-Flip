@@ -58,8 +58,11 @@ interface Screw {
 export class RepairGame extends MiniGame {
   constructor(
     ctx: ConstructorParameters<typeof MiniGame>[0],
-    /** 'wire': reconnect the wiring. 'fix': the item's full repair (or a customer's big job). */
-    private mode: 'wire' | 'fix' = 'wire',
+    /**
+     * 'wire': reconnect the wiring. 'fix': the item's full repair (or a customer's big job).
+     * 'build': put a new custom design together from an empty frame.
+     */
+    private mode: 'wire' | 'fix' | 'build' = 'wire',
   ) {
     super(ctx);
   }
@@ -157,7 +160,7 @@ export class RepairGame extends MiniGame {
     const layer = sc.add.container(0, 0);
     const engine = sc.add.container(0, 0);
     layer.add(engine);
-    if (this.rig.inside === 'bay') {
+    if (this.rig.inside === 'bay' && !this.rig.build) {
       // Engine swap: the old engine sits in the bay until it is hoisted out.
       const hl = hoistLayout(this.rig);
       const w = Math.round(hl.w * STAGE * 1.3);
@@ -238,7 +241,21 @@ export class RepairGame extends MiniGame {
     this.driver.setVisible(false);
     this.closeup.add(this.driver);
     this.closeup.setAlpha(0);
+    if (this.rig.build) {
+      // A new build starts open: the cover and its screws wait at the side until the end.
+      this.cover.setAlpha(0);
+      this.screws.forEach((s, i) => {
+        s.out = true;
+        s.img.setPosition(STAGE * 0.42 - i * STAGE * 0.07, -STAGE * 0.44);
+      });
+      // The item is still only a blueprint.
+      this.itemView.list.forEach((o) => (o as Phaser.GameObjects.Image).setTint(0x8fc1ff).setAlpha(0.55));
+    }
     this.drawDetails();
+    if (this.rig.build) {
+      this.playTurn(false, () => this.startTask(0));
+      return;
+    }
     this.playTurn(false, () => {
       this.phase =
         this.rig.lid === 'twist'
@@ -380,7 +397,7 @@ export class RepairGame extends MiniGame {
     switch (this.phase) {
       case 'turn':
         // Between two jobs, keep showing the one just finished.
-        return this.tasks[this.cur]?.instruction() ?? 'mg.rep.turn';
+        return this.tasks[this.cur]?.instruction() ?? (this.rig.build ? 'mg.rep.build' : 'mg.rep.turn');
       case 'screws':
         return 'mg.rep.screws';
       case 'twist':
@@ -734,6 +751,8 @@ export class RepairGame extends MiniGame {
             },
           });
         });
+        if (this.rig.build)
+          this.itemView.list.forEach((o) => (o as Phaser.GameObjects.Image).clearTint().setAlpha(1));
         this.ctx.scene.time.delayedCall(d(260 + this.screws.length * 70 + 120), () =>
           this.playTurn(true, () => {
             this.restore();

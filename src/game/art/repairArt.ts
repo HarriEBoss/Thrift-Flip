@@ -257,48 +257,180 @@ export function drawCompartment(
   const by = t0.v * s;
   switch (rig.inside) {
     case 'pc': {
-      // Computer insides: motherboard, CPU cooler, memory slots and a drive cage.
+      // Computer insides: a real-looking motherboard. CPU socket with its lever and VRM heatsinks,
+      // memory slots with latches, the graphics slot, rear I/O, chipset heatsink, coin battery.
       const pw = g.rx * s * 1.7;
       const ph = g.ry * s * 1.6;
       const px = g.cx * s - pw / 2;
       const py = g.cy * s - ph / 2;
       const mb = x.createLinearGradient(0, py, 0, py + ph);
-      mb.addColorStop(0, '#2a7a52');
-      mb.addColorStop(1, '#16492f');
+      mb.addColorStop(0, '#2b3036');
+      mb.addColorStop(1, '#171a1e');
       x.fillStyle = mb;
-      roundRectPath(x, px, py, pw, ph, s * 0.012);
+      roundRectPath(x, px, py, pw, ph, s * 0.008);
       x.fill();
-      x.strokeStyle = 'rgba(232,196,90,0.6)';
-      x.lineWidth = s * 0.003;
-      for (let i = 0; i < 18; i++) {
+      // Copper traces under the solder mask, and white silk-screen outlines.
+      x.strokeStyle = 'rgba(150,170,180,0.16)';
+      x.lineWidth = s * 0.0025;
+      for (let i = 0; i < 34; i++) {
         const sx = px + rng.next() * pw;
         const sy = py + rng.next() * ph;
+        const dx = rng.range(-0.08, 0.08) * s;
         x.beginPath();
         x.moveTo(sx, sy);
-        x.lineTo(sx + rng.range(-0.1, 0.1) * s, sy);
+        x.lineTo(sx + dx, sy);
+        x.lineTo(sx + dx + Math.sign(dx) * s * 0.02, sy + s * 0.02);
         x.stroke();
       }
-      // CPU in its socket (top left), memory slots (top right), long graphics slot (middle).
+      // Mounting holes (standoff screws).
+      for (const [fx, fy] of [
+        [0.03, 0.04],
+        [0.97, 0.04],
+        [0.03, 0.96],
+        [0.97, 0.96],
+        [0.5, 0.04],
+        [0.5, 0.96],
+      ]) {
+        x.fillStyle = '#c9ccd3';
+        x.beginPath();
+        x.arc(px + pw * fx, py + ph * fy, s * 0.012, 0, Math.PI * 2);
+        x.fill();
+        x.fillStyle = '#3a3d44';
+        x.beginPath();
+        x.arc(px + pw * fx, py + ph * fy, s * 0.006, 0, Math.PI * 2);
+        x.fill();
+      }
+      // Rear I/O stack along the left edge.
+      for (let i = 0; i < 3; i++) {
+        const iy = py + ph * (0.3 + i * 0.13);
+        const ig = x.createLinearGradient(px, 0, px + s * 0.05, 0);
+        ig.addColorStop(0, '#8d939d');
+        ig.addColorStop(1, '#d4d8de');
+        x.fillStyle = ig;
+        x.fillRect(px - s * 0.004, iy, s * 0.05, ph * 0.1);
+        x.fillStyle = '#2a63c8';
+        x.fillRect(px + s * 0.008, iy + ph * 0.02, s * 0.03, ph * 0.02);
+        x.fillStyle = '#16161a';
+        x.fillRect(px + s * 0.008, iy + ph * 0.06, s * 0.03, ph * 0.02);
+      }
+      // CPU socket: steel load plate and lever round the gold contact grid.
       const cpu = zonePt(rig, 'tl');
-      x.fillStyle = '#c9ccd3';
-      x.fillRect(cpu.u * s - s * 0.07, cpu.v * s - s * 0.07, s * 0.14, s * 0.14);
-      const cg = x.createLinearGradient(cpu.u * s - s * 0.05, 0, cpu.u * s + s * 0.05, 0);
-      cg.addColorStop(0, '#f2f4f8');
-      cg.addColorStop(1, '#a3a9b4');
-      x.fillStyle = cg;
-      x.fillRect(cpu.u * s - s * 0.05, cpu.v * s - s * 0.05, s * 0.1, s * 0.1);
+      const cx0 = cpu.u * s;
+      const cy0 = cpu.v * s;
+      const hs = s * 0.075;
+      // VRM heatsinks above and to the left of the socket.
+      const fin = (l: number, t: number, w: number, h: number, vertical: boolean) => {
+        const hg = x.createLinearGradient(l, t, l + w, t + h);
+        hg.addColorStop(0, '#6d7480');
+        hg.addColorStop(1, '#353a42');
+        x.fillStyle = hg;
+        x.fillRect(l, t, w, h);
+        x.strokeStyle = 'rgba(0,0,0,0.45)';
+        x.lineWidth = s * 0.003;
+        const n = 7;
+        for (let i = 1; i < n; i++) {
+          x.beginPath();
+          if (vertical) {
+            x.moveTo(l, t + (h * i) / n);
+            x.lineTo(l + w, t + (h * i) / n);
+          } else {
+            x.moveTo(l + (w * i) / n, t);
+            x.lineTo(l + (w * i) / n, t + h);
+          }
+          x.stroke();
+        }
+      };
+      fin(cx0 - hs, cy0 - hs - s * 0.045, hs * 2.2, s * 0.032, false);
+      fin(cx0 - hs - s * 0.045, cy0 - hs, s * 0.032, hs * 2, true);
+      x.fillStyle = '#9aa0ab';
+      x.fillRect(cx0 - hs, cy0 - hs, hs * 2, hs * 2);
+      x.fillStyle = '#c9ced6';
+      x.fillRect(cx0 - hs * 0.86, cy0 - hs * 0.86, hs * 1.72, hs * 1.72);
+      x.fillStyle = '#3a2f22';
+      x.fillRect(cx0 - hs * 0.66, cy0 - hs * 0.66, hs * 1.32, hs * 1.32);
+      x.fillStyle = 'rgba(226,190,90,0.85)';
+      for (let i = 0; i < 12; i++)
+        for (let j = 0; j < 12; j++)
+          x.fillRect(cx0 - hs * 0.6 + i * hs * 0.1, cy0 - hs * 0.6 + j * hs * 0.1, s * 0.0035, s * 0.0035);
+      // The socket lever along the right side.
+      x.strokeStyle = '#d9dde4';
+      x.lineWidth = s * 0.006;
+      x.beginPath();
+      x.moveTo(cx0 + hs * 1.12, cy0 + hs);
+      x.lineTo(cx0 + hs * 1.12, cy0 - hs * 0.9);
+      x.lineTo(cx0 + hs * 0.9, cy0 - hs * 0.9);
+      x.stroke();
+      // Solid capacitors round the socket.
+      for (let i = 0; i < 5; i++) {
+        const ccx = cx0 + hs * 1.35;
+        const ccy = cy0 - hs * 0.7 + i * hs * 0.36;
+        x.fillStyle = '#b9bfc9';
+        x.beginPath();
+        x.arc(ccx, ccy, s * 0.008, 0, Math.PI * 2);
+        x.fill();
+        x.fillStyle = '#5b2a8a';
+        x.beginPath();
+        x.arc(ccx, ccy, s * 0.004, 0, Math.PI * 2);
+        x.fill();
+      }
+      // Four memory slots with their white latches.
+      const ram = zonePt(rig, 'tr');
+      for (let i = 0; i < 4; i++) {
+        const ry = ram.v * s - s * 0.05 + i * s * 0.028;
+        x.fillStyle = i % 2 ? '#2b2d33' : '#121216';
+        x.fillRect(ram.u * s - s * 0.13, ry, s * 0.26, s * 0.014);
+        x.fillStyle = '#e8e6df';
+        x.fillRect(ram.u * s - s * 0.14, ry - s * 0.002, s * 0.012, s * 0.018);
+        x.fillRect(ram.u * s + s * 0.128, ry - s * 0.002, s * 0.012, s * 0.018);
+      }
+      // PCIe x16 slot (steel reinforced) for the graphics card, a short x1 slot, an M.2 slot.
+      const pci = zonePt(rig, 'c');
+      const sy0 = pci.v * s + s * 0.05;
+      x.fillStyle = '#9aa0ab';
+      x.fillRect(pci.u * s - s * 0.205, sy0 - s * 0.004, s * 0.37, s * 0.024);
+      x.fillStyle = '#121216';
+      x.fillRect(pci.u * s - s * 0.2, sy0, s * 0.36, s * 0.016);
+      x.fillStyle = '#e8e6df';
+      x.fillRect(pci.u * s + s * 0.165, sy0 - s * 0.004, s * 0.014, s * 0.024);
+      x.fillStyle = '#121216';
+      x.fillRect(pci.u * s - s * 0.2, sy0 + s * 0.05, s * 0.07, s * 0.014);
+      x.fillStyle = '#3a3e46';
+      x.fillRect(pci.u * s - s * 0.08, sy0 + s * 0.045, s * 0.2, s * 0.024);
+      x.fillStyle = '#b9bfc9';
+      x.beginPath();
+      x.arc(pci.u * s + s * 0.13, sy0 + s * 0.057, s * 0.006, 0, Math.PI * 2);
+      x.fill();
+      // Chipset heatsink and the coin-cell battery.
+      const chx = px + pw * 0.66;
+      const chy = py + ph * 0.8;
+      const hg = x.createLinearGradient(chx, chy, chx + s * 0.08, chy + s * 0.08);
+      hg.addColorStop(0, '#8d949f');
+      hg.addColorStop(1, '#3e434b');
+      x.fillStyle = hg;
+      x.fillRect(chx, chy, s * 0.075, s * 0.075);
+      x.strokeStyle = 'rgba(255,255,255,0.25)';
+      x.lineWidth = s * 0.003;
+      x.strokeRect(chx + s * 0.012, chy + s * 0.012, s * 0.051, s * 0.051);
+      const cb = x.createRadialGradient(
+        px + pw * 0.4 - s * 0.006,
+        py + ph * 0.86 - s * 0.006,
+        0,
+        px + pw * 0.4,
+        py + ph * 0.86,
+        s * 0.025,
+      );
+      cb.addColorStop(0, '#f2f4f8');
+      cb.addColorStop(1, '#8d939d');
+      x.fillStyle = cb;
+      x.beginPath();
+      x.arc(px + pw * 0.4, py + ph * 0.86, s * 0.024, 0, Math.PI * 2);
+      x.fill();
       x.fillStyle = '#5b606a';
-      x.font = `bold ${Math.round(s * 0.024)}px sans-serif`;
+      x.font = `bold ${Math.round(s * 0.022)}px sans-serif`;
       x.textAlign = 'center';
       x.textBaseline = 'middle';
-      x.fillText('CPU', cpu.u * s, cpu.v * s);
-      const ram = zonePt(rig, 'tr');
-      x.fillStyle = '#121216';
-      for (let i = 0; i < 3; i++)
-        x.fillRect(ram.u * s - s * 0.13, ram.v * s - s * 0.05 + i * s * 0.04, s * 0.26, s * 0.016);
-      const pci = zonePt(rig, 'c');
-      x.fillRect(pci.u * s - s * 0.2, pci.v * s + s * 0.05, s * 0.36, s * 0.016);
-      for (let i = 0; i < 3; i++) chip(x, px + pw * (0.2 + i * 0.25), py + ph * 0.86, s * 0.07, s * 0.045);
+      x.fillText('+', px + pw * 0.4, py + ph * 0.86);
+      for (let i = 0; i < 2; i++) chip(x, px + pw * (0.16 + i * 0.12), py + ph * 0.86, s * 0.05, s * 0.04);
       break;
     }
     case 'engine': {
@@ -410,6 +542,50 @@ export function drawCompartment(
       for (let i = 0; i < 3; i++)
         roundRectPath(x, px + pw * (0.08 + i * 0.3), py + ph * 0.09, pw * 0.22, ph * 0.18, s * 0.008);
       x.fill();
+      // Shield cans get a stamped edge and a grid of vent dots.
+      x.fillStyle = 'rgba(80,86,96,0.6)';
+      for (let i = 0; i < 3; i++)
+        for (let r = 0; r < 3; r++)
+          for (let c2 = 0; c2 < 5; c2++) {
+            x.beginPath();
+            x.arc(
+              px + pw * (0.1 + i * 0.3) + c2 * pw * 0.04,
+              py + ph * 0.13 + r * ph * 0.05,
+              s * 0.003,
+              0,
+              Math.PI * 2,
+            );
+            x.fill();
+          }
+      // Tiny tri-point screws, the vibration motor and the loudspeaker grille at the bottom.
+      for (const [fx, fy] of [
+        [0.06, 0.06],
+        [0.94, 0.06],
+        [0.06, 0.94],
+        [0.94, 0.94],
+        [0.5, 0.37],
+      ]) {
+        x.fillStyle = '#c9ccd3';
+        x.beginPath();
+        x.arc(px + pw * fx, py + ph * fy, s * 0.008, 0, Math.PI * 2);
+        x.fill();
+        x.fillStyle = '#3a3d44';
+        x.beginPath();
+        x.arc(px + pw * fx, py + ph * fy, s * 0.003, 0, Math.PI * 2);
+        x.fill();
+      }
+      x.fillStyle = '#6d727c';
+      roundRectPath(x, px + pw * 0.08, py + ph * 0.8, pw * 0.2, ph * 0.1, s * 0.006);
+      x.fill();
+      x.fillStyle = '#14141a';
+      roundRectPath(x, px + pw * 0.66, py + ph * 0.84, pw * 0.26, ph * 0.08, s * 0.006);
+      x.fill();
+      x.fillStyle = '#4a4d55';
+      for (let i = 0; i < 9; i++) {
+        x.beginPath();
+        x.arc(px + pw * (0.68 + i * 0.027), py + ph * 0.88, s * 0.003, 0, Math.PI * 2);
+        x.fill();
+      }
       x.strokeStyle = 'rgba(232,196,90,0.55)';
       x.lineWidth = s * 0.003;
       for (let i = 0; i < 12; i++) {
@@ -665,6 +841,20 @@ export function drawCompartment(
   x.strokeStyle = 'rgba(0,0,0,0.25)';
   x.lineWidth = s * 0.003;
   x.stroke();
+  // A barrier strip: a nickel plate under each screw, raised walls between the terminals.
+  lay.terminals.forEach((tp, i) => {
+    const pg = x.createLinearGradient(0, tp.v * s - s * 0.028, 0, tp.v * s + s * 0.028);
+    pg.addColorStop(0, '#eef0f3');
+    pg.addColorStop(1, '#9aa0ab');
+    x.fillStyle = pg;
+    x.fillRect(tp.u * s - s * 0.028, tp.v * s - s * 0.03, s * 0.056, s * 0.06);
+    if (i === 0) return;
+    const mx = ((lay.terminals[i - 1].u + tp.u) / 2) * s;
+    x.fillStyle = motor ? '#141318' : '#b9b5aa';
+    x.fillRect(mx - s * 0.005, by - s * 0.052, s * 0.01, s * 0.104);
+    x.fillStyle = motor ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.8)';
+    x.fillRect(mx - s * 0.005, by - s * 0.052, s * 0.003, s * 0.104);
+  });
   // Cable grommet where the wires come in.
   const e = lay.entry;
   const gr = x.createRadialGradient(e.u * s, e.v * s, 0, e.u * s, e.v * s, s * 0.05);
@@ -920,6 +1110,33 @@ export function drawPart(kind: PartKind, broken: boolean, px = 400): HTMLCanvasE
       x.fillStyle = '#c9ccd3';
       x.fillRect(w * 0.94, h * 0.3, w * 0.06, h * 0.4);
       break;
+    case 'pouch': {
+      // Flat lithium-ion pouch: silver-black foil wrap, label, flex tail on top, pull tabs below.
+      x.fillStyle = lin('#3c3f46', '#1e2025', false);
+      roundRectPath(x, 0, h * 0.1, w, h * 0.84, w * 0.05);
+      x.fill();
+      x.fillStyle = 'rgba(255,255,255,0.1)';
+      x.fillRect(w * 0.05, h * 0.13, w * 0.12, h * 0.78);
+      x.fillStyle = '#e9e7e1';
+      x.fillRect(w * 0.14, h * 0.32, w * 0.72, h * 0.26);
+      x.fillStyle = '#4a4d55';
+      x.font = `bold ${Math.round(h * 0.07)}px sans-serif`;
+      x.textAlign = 'center';
+      x.textBaseline = 'middle';
+      x.fillText('Li-ion', w / 2, h * 0.39);
+      x.font = `${Math.round(h * 0.055)}px sans-serif`;
+      x.fillText('3.85V', w / 2, h * 0.5);
+      // Battery flex and its connector.
+      x.fillStyle = '#d98a1c';
+      x.fillRect(w * 0.62, 0, w * 0.18, h * 0.14);
+      x.fillStyle = '#16161a';
+      x.fillRect(w * 0.6, 0, w * 0.22, h * 0.06);
+      // Black adhesive pull tabs.
+      x.fillStyle = '#111114';
+      x.fillRect(w * 0.18, h * 0.92, w * 0.16, h * 0.08);
+      x.fillRect(w * 0.66, h * 0.92, w * 0.16, h * 0.08);
+      break;
+    }
     case 'cooler': {
       // Heat-sink fins under a round fan.
       const fg = lin('#eef1f5', '#8d94a1', false);

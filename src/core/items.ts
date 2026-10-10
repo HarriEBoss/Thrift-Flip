@@ -70,7 +70,7 @@ function jobRecipe(cat: CategoryId, k: JobKind): RecipeStep[] {
   if (k === 'design')
     return [
       { k: 'design', req: true },
-      { k: 'fix', req: true },
+      { k: 'build', req: true },
       { k: 'polish', req: false },
     ];
   const fix = k !== 'service' || RECIPES[cat].some((s) => s.k === 'fix');

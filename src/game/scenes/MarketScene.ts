@@ -44,6 +44,7 @@ export const HINT_KEYS: Record<StepKind, string> = {
   glue: 'hint.glue',
   wire: 'hint.wire',
   design: 'hint.design',
+  build: 'hint.build',
   fix: 'hint.fix',
   paint: 'hint.paint',
   polish: 'hint.polish',

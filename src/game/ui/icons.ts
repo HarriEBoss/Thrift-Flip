@@ -109,6 +109,23 @@ function v_drawStepIcon(g: Pen, kind: StepKind, s: number): void {
       g.fillPoints([V(8 * k, 14 * k), V(17 * k, -6 * k), V(20 * k, -4 * k), V(11 * k, 16 * k)], true);
       g.strokePoints([V(8 * k, 14 * k), V(17 * k, -6 * k), V(20 * k, -4 * k), V(11 * k, 16 * k)], true);
       break;
+    case 'build': // stacked blocks and a hammer
+      g.fillStyle(C.sky, 1);
+      g.fillRect(-16 * k, 4 * k, 14 * k, 12 * k);
+      g.strokeRect(-16 * k, 4 * k, 14 * k, 12 * k);
+      g.fillStyle(C.leaf, 1);
+      g.fillRect(-2 * k, 4 * k, 14 * k, 12 * k);
+      g.strokeRect(-2 * k, 4 * k, 14 * k, 12 * k);
+      g.fillStyle(C.terracotta, 1);
+      g.fillRect(-9 * k, -8 * k, 14 * k, 12 * k);
+      g.strokeRect(-9 * k, -8 * k, 14 * k, 12 * k);
+      g.fillStyle(0xb5773f, 1);
+      g.fillPoints([V(8 * k, -4 * k), V(11 * k, -6 * k), V(19 * k, 8 * k), V(16 * k, 10 * k)], true);
+      g.strokePoints([V(8 * k, -4 * k), V(11 * k, -6 * k), V(19 * k, 8 * k), V(16 * k, 10 * k)], true);
+      g.fillStyle(0xc0cbdc, 1);
+      g.fillPoints([V(3 * k, -10 * k), V(13 * k, -16 * k), V(16 * k, -11 * k), V(6 * k, -5 * k)], true);
+      g.strokePoints([V(3 * k, -10 * k), V(13 * k, -16 * k), V(16 * k, -11 * k), V(6 * k, -5 * k)], true);
+      break;
     case 'fix': // spanner over a gear
       g.fillStyle(C.mustard, 1);
       g.fillCircle(6 * k, 6 * k, 9 * k);

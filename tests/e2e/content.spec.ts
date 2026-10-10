@@ -243,7 +243,7 @@ test('marketing and a custom design contract: run ads, design to the spec, build
   const steps = await page.evaluate(
     () => (window as unknown as { __tf: { ws(): { steps: string[] } } }).__tf.ws().steps,
   );
-  expect(steps).toEqual(['design', 'fix', 'polish']);
+  expect(steps).toEqual(['design', 'build', 'polish']);
   const before = (await state()).coins;
   await playWorkshop(page, 'mouse');
   await waitForScene(page, 'Summary');

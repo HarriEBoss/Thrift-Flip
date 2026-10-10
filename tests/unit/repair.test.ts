@@ -185,3 +185,28 @@ describe('big repairs (computers, cars, workshop jobs)', () => {
     expect(pourScore(0.5, PASTE_BAND)).toBe(1);
   });
 });
+
+describe('building a custom design', () => {
+  it('starts from an empty frame: every part is fitted, nothing is pulled out or unbolted', () => {
+    for (const cat of ['tech', 'vehicles', 'robots', 'rockets'] as const) {
+      const r = repairRig('build', cat, 0, 'design');
+      expect(r.build, cat).toBe(true);
+      const swaps = r.tasks.filter((t) => t.k === 'swap');
+      expect(swaps.length, cat).toBeGreaterThan(0);
+      for (const t of swaps) expect(t.k === 'swap' && t.fit, cat).toBe(true);
+      for (const t of r.tasks) {
+        expect(t.k === 'bolts' && t.dir === 'out', cat).toBe(false);
+        expect(t.k === 'hoist' && t.dir === 'out', cat).toBe(false);
+        expect(t.k, cat).not.toBe('drain');
+        expect(t.k, cat).not.toBe('dust');
+      }
+    }
+  });
+
+  it('phones get a flat pouch battery, not a round cell', () => {
+    for (let shape = 0; shape < 5; shape++) {
+      const parts = fixRigFor('phones', shape).tasks.flatMap((t) => (t.k === 'swap' ? [t.part] : []));
+      expect(parts).not.toContain('cell');
+    }
+  });
+});

@@ -209,7 +209,7 @@ export async function solveStep(page: Page, mode: Mode): Promise<void> {
     const path = info.path.map((p) => unit(info!, p.x, p.y));
     for (let i = 0; i + 1 < path.length; i++) pts.push(...lerpPath(path[i], path[i + 1], 6));
     await drag(page, mode, pts, 6);
-  } else if ((kind === 'wire' || kind === 'fix' || kind === 'design') && info.repair) {
+  } else if ((kind === 'wire' || kind === 'fix' || kind === 'build' || kind === 'design') && info.repair) {
     // The repair tells the bot what to do next (hold a screw, drag a part, pour to a level...).
     for (let guard = 0; guard < 160 && (await stillHere()); guard++) {
       const now = await ws(page);

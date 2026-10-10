@@ -31,7 +31,7 @@ export const CATEGORY_IDS: readonly CategoryId[] = [
 ];
 
 export type StepKind =
-  'sticker' | 'scrub' | 'rust' | 'sand' | 'glue' | 'design' | 'wire' | 'fix' | 'paint' | 'polish';
+  'sticker' | 'scrub' | 'rust' | 'sand' | 'glue' | 'design' | 'build' | 'wire' | 'fix' | 'paint' | 'polish';
 /** Canonical order steps are performed in. */
 export const STEP_ORDER: readonly StepKind[] = [
   'sticker',
@@ -40,6 +40,7 @@ export const STEP_ORDER: readonly StepKind[] = [
   'sand',
   'glue',
   'design',
+  'build',
   'wire',
   'fix',
   'paint',

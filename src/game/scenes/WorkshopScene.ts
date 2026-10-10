@@ -506,6 +506,9 @@ export class WorkshopScene extends GameScene {
       case 'fix':
         this.mini = new RepairGame(ctx, 'fix');
         break;
+      case 'build':
+        this.mini = new RepairGame(ctx, 'build');
+        break;
       case 'design':
         this.mini = new DesignGame(ctx);
         break;

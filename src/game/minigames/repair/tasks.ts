@@ -38,6 +38,7 @@ import {
   drawScrew,
 } from '../../art/repairArt';
 import { makeText } from '../../ui/widgets';
+import { cableLook, cableThickness, drawCableBody, drawPlug, drawSocket, strokeWire } from './cableArt';
 import { C, FS } from '../../theme';
 import { STAGE } from '../MiniGame';
 import {
@@ -239,49 +240,81 @@ export class WiresTask extends RepairTask {
     );
   }
 
-  /** Insulated wires with stripped copper ends, from the cable entry to their ends. */
+  /**
+   * Like real wiring: a multicore cable comes in through the grommet, its outer sheath stripped back,
+   * and the insulated cores fan out. Mains cores end in twisted bare copper; low-voltage and vehicle
+   * wiring ends in crimped ring terminals that go under the terminal screws.
+   */
   private redraw(): void {
     const g = this.g;
     g.clear();
     const e = at(this.lay.entry);
+    const mains = this.h.rig.mains;
+    const sheathW = 12 + this.n * 7;
+    const top = e.y - STAGE * 0.07;
     for (let l = 0; l < this.n; l++) {
       let end: Pt = this.lay.loose[l];
-      if (this.puzzle.connected[l]) end = this.lay.terminals[this.puzzle.rightOrder.indexOf(l)];
+      const on = this.puzzle.connected[l];
+      if (on) end = this.lay.terminals[this.puzzle.rightOrder.indexOf(l)];
       else if (this.drag?.l === l) end = { u: this.drag.u, v: this.drag.v };
       const p = at(end);
+      // Connected cores come up under the screw from below; loose ones end a little short of the tip.
+      const tip = { x: p.x, y: on ? p.y + 4 : p.y };
       const sx = e.x + (l - (this.n - 1) / 2) * 7;
       const pts = bezier(
-        { x: sx, y: e.y },
-        { x: sx, y: e.y - STAGE * 0.16 },
-        { x: p.x, y: p.y + STAGE * 0.14 },
-        p,
+        { x: sx, y: top },
+        { x: sx, y: top - STAGE * 0.12 },
+        { x: tip.x, y: tip.y + STAGE * 0.14 },
+        { x: tip.x, y: tip.y + (mains ? 16 : 22) },
       );
-      g.lineStyle(16, 0x15121b, 0.9);
-      g.strokePoints(pts, false);
-      g.lineStyle(11, this.colors[l], 1);
-      g.strokePoints(pts, false);
-      if (this.h.rig.mains && l === 2) {
-        // Green-yellow earth: yellow stripes.
-        g.lineStyle(11, 0xf2d43a, 1);
-        for (let i = 0; i + 1 < pts.length; i += 2)
+      strokeWire(g, pts, 10, this.colors[l]);
+      if (mains && l === 2) {
+        // Green-yellow earth: yellow stripes along the green.
+        for (let i = 0; i + 1 < pts.length; i += 2) {
+          g.lineStyle(10, 0xf2d43a, 1);
           g.lineBetween(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y);
+        }
       }
-      g.lineStyle(3, 0xffffff, 0.35);
-      g.strokePoints(
-        pts.map((q) => new Phaser.Math.Vector2(q.x - 2, q.y - 2)),
-        false,
-      );
-      // Stripped copper end pointing along the wire.
       const last = pts[pts.length - 1];
-      const prev = pts[pts.length - 3];
-      const dx = last.x - prev.x;
-      const dy = last.y - prev.y;
-      const len = Math.max(0.001, Math.hypot(dx, dy));
-      g.lineStyle(7, 0xd9a63a, 1);
-      g.lineBetween(last.x, last.y, last.x + (dx / len) * 14, last.y + (dy / len) * 14);
-      g.lineStyle(2, 0xfff1b8, 0.8);
-      g.lineBetween(last.x, last.y - 1, last.x + (dx / len) * 12, last.y + (dy / len) * 12 - 1);
+      if (mains) {
+        // Stripped end: a few twisted copper strands.
+        for (let k = -1; k <= 1; k++) {
+          g.lineStyle(2.4, k === 0 ? 0xe9b04a : 0xc98a2a, 1);
+          g.beginPath();
+          g.moveTo(last.x + k * 2, last.y);
+          for (let q = 1; q <= 4; q++) g.lineTo(last.x + k * 2 + Math.sin(q * 1.7 + k) * 1.6, last.y - q * 4);
+          g.strokePath();
+        }
+        g.fillStyle(0xfff1b8, 0.8);
+        g.fillCircle(last.x, last.y - 15, 1.5);
+      } else {
+        // Crimp terminal: an insulated barrel (colour by wire size) and the ring.
+        g.fillStyle(0x15121b, 1);
+        g.fillRoundedRect(last.x - 7, last.y - 14, 14, 16, 3);
+        g.fillStyle(l % 2 ? 0x2f6fd0 : 0xd8352a, 1);
+        g.fillRoundedRect(last.x - 6, last.y - 13, 12, 14, 3);
+        g.fillStyle(0xffffff, 0.3);
+        g.fillRect(last.x - 4, last.y - 12, 3, 12);
+        g.fillStyle(0xd0d4db, 1);
+        g.fillRect(last.x - 3, last.y - 20, 6, 7);
+        if (!on) {
+          g.lineStyle(4, 0xd0d4db, 1);
+          g.strokeCircle(last.x, last.y - 26, 6);
+          g.lineStyle(1, 0xffffff, 0.6);
+          g.strokeCircle(last.x - 1, last.y - 27, 5);
+        }
+      }
     }
+    // The cable's outer sheath, stripped back above the grommet.
+    const sheath = mains ? 0xdcdad3 : 0x232228;
+    g.fillStyle(0x000000, 0.35);
+    g.fillRoundedRect(e.x - sheathW / 2 + 2, top, sheathW, e.y - top + 4, 5);
+    g.fillStyle(sheath, 1);
+    g.fillRoundedRect(e.x - sheathW / 2, top - 2, sheathW, e.y - top + 4, 5);
+    g.fillStyle(0xffffff, mains ? 0.5 : 0.15);
+    g.fillRect(e.x - sheathW / 2 + 3, top, 3, e.y - top - 2);
+    g.lineStyle(1, 0x000000, 0.35);
+    g.lineBetween(e.x - sheathW / 2 + 2, top + 1, e.x + sheathW / 2 - 2, top + 1);
   }
 }
 
@@ -297,10 +330,11 @@ export class SwapTask extends RepairTask {
   private drag: { u: number; v: number; ox: number; oy: number } | null = null;
   private paste: PasteStage | null = null;
   private bin: Phaser.GameObjects.Graphics | null = null;
+  private socket: Phaser.GameObjects.Graphics | null = null;
 
   constructor(
     h: TaskHost,
-    private spec: { part: PartKind; zone?: Zone; paste?: boolean },
+    private spec: { part: PartKind; zone?: Zone; paste?: boolean; fit?: boolean },
   ) {
     super(h);
     this.sl = swapLayout(h.rig, spec);
@@ -309,8 +343,41 @@ export class SwapTask extends RepairTask {
   override init(): void {
     const sc = this.h.scene;
     const part = this.spec.part;
-    const key = this.h.shared(`repair_partx_${part}`, () => drawPart(part, true));
     const sp = at(this.sl.slot);
+    if (this.spec.fit) {
+      // Building: an empty mount with its screw holes, waiting for the part.
+      const g = this.put(sc.add.graphics());
+      const w = this.sl.w * STAGE;
+      const hh = this.sl.h * STAGE;
+      g.fillStyle(0x0c0a10, 0.35);
+      g.fillRoundedRect(sp.x - w / 2, sp.y - hh / 2, w, hh, 6);
+      g.lineStyle(3, 0xe8e4f0, 0.75);
+      const dash = 12;
+      for (let x = sp.x - w / 2; x < sp.x + w / 2; x += dash * 2) {
+        const e = Math.min(x + dash, sp.x + w / 2);
+        g.lineBetween(x, sp.y - hh / 2, e, sp.y - hh / 2);
+        g.lineBetween(x, sp.y + hh / 2, e, sp.y + hh / 2);
+      }
+      for (let y = sp.y - hh / 2; y < sp.y + hh / 2; y += dash * 2) {
+        const e = Math.min(y + dash, sp.y + hh / 2);
+        g.lineBetween(sp.x - w / 2, y, sp.x - w / 2, e);
+        g.lineBetween(sp.x + w / 2, y, sp.x + w / 2, e);
+      }
+      for (const [dx, dy] of [
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+        [1, 1],
+      ]) {
+        g.fillStyle(0x9aa0ab, 1);
+        g.fillCircle(sp.x + dx * (w / 2 - 9), sp.y + dy * (hh / 2 - 9), 5);
+        g.fillStyle(0x1a1720, 1);
+        g.fillCircle(sp.x + dx * (w / 2 - 9), sp.y + dy * (hh / 2 - 9), 2.5);
+      }
+      this.socket = g;
+      return;
+    }
+    const key = this.h.shared(`repair_partx_${part}`, () => drawPart(part, true));
     this.broken = this.put(
       sc.add.image(sp.x, sp.y, key).setDisplaySize(this.sl.w * STAGE, this.sl.h * STAGE),
     );
@@ -323,6 +390,20 @@ export class SwapTask extends RepairTask {
   }
 
   start(): void {
+    if (this.spec.fit) {
+      // Nothing to take out: paste first if it needs it, then the new part.
+      if (this.spec.paste) {
+        this.stage = 'paste';
+        this.paste = new PasteStage(this, this.h, this.sl.slot, () => {
+          this.stage = 'in';
+          this.showFresh();
+        });
+      } else {
+        this.stage = 'in';
+        this.showFresh();
+      }
+      return;
+    }
     this.stage = 'out';
     // Parts bin where the broken part goes.
     const b = at(this.sl.bin);
@@ -459,6 +540,7 @@ export class SwapTask extends RepairTask {
         this.h.sfx('ding');
         this.haptic('success');
         this.h.burst(sl.slot.u, sl.slot.v, 'p_spark', 10, [0xffffff, 0xffe08a], 140);
+        if (this.socket) this.tw({ targets: this.socket, alpha: 0, duration: 200 });
         this.finish();
       } else {
         const f0 = at(sl.fresh);
@@ -1040,34 +1122,14 @@ export class CablesTask extends RepairTask {
     const sockets = this.put(sc.add.graphics());
     for (const d of this.defs) {
       const s = at(d.socket);
-      const w = d.w * STAGE;
-      const hh = d.h * STAGE;
-      sockets.fillStyle(0x15121b, 0.95);
-      sockets.fillRoundedRect(s.x - w / 2 - 6, s.y - hh / 2 - 6, w + 12, hh + 12, 6);
-      sockets.fillStyle(cableStyle(this.set) === 'pins' ? 0xf4f1e8 : 0x8d939d, 1);
-      sockets.fillRoundedRect(s.x - w / 2 - 2, s.y - hh / 2 - 2, w + 4, hh + 4, 4);
-      sockets.fillStyle(0x2a2630, 1);
-      if (cableStyle(this.set) === 'pins') {
-        // Pin holes.
-        const cols = Math.max(2, Math.round(d.w / 0.012));
-        for (let c = 0; c < cols; c++)
-          for (let r = 0; r < 2; r++)
-            sockets.fillRect(
-              s.x - w / 2 + (c + 0.2) * (w / cols),
-              s.y - hh / 2 + (r + 0.2) * (hh / 2),
-              (w / cols) * 0.6,
-              (hh / 2) * 0.6,
-            );
-      } else {
-        sockets.fillCircle(s.x, s.y, Math.min(w, hh) * 0.36);
-      }
+      drawSocket(sockets, cableLook(this.set, d.id), s.x, s.y, d.w * STAGE, d.h * STAGE);
     }
     this.g = this.put(sc.add.graphics());
     // Socket labels go above the cables so a hose never hides them.
     const socketLabels = this.defs.map((d) => {
       const s = at(d.socket);
       return this.put(
-        makeText(sc, s.x, s.y - (d.h * STAGE) / 2 - 18, d.label, FS.tiny, C.white, {
+        makeText(sc, s.x, s.y - (d.h * STAGE) / 2 - 20, d.label, FS.tiny, C.white, {
           stroke: C.ink,
           strokeW: 5,
         }),
@@ -1160,52 +1222,25 @@ export class CablesTask extends RepairTask {
   private redraw(): void {
     const g = this.g;
     g.clear();
-    const hose = cableStyle(this.set) === 'hose';
     this.defs.forEach((d, i) => {
+      const look = cableLook(this.set, d.id);
       const p = at(this.plugAt(i));
       const a = at({ u: d.plug.u, v: this.bottom });
+      const w = d.w * STAGE;
+      const hh = d.h * STAGE;
       const pts = bezier(
         a,
         { x: a.x, y: a.y - STAGE * 0.05 },
         { x: p.x, y: p.y + STAGE * 0.12 },
-        { x: p.x, y: p.y + (d.h * STAGE) / 2 },
+        { x: p.x, y: p.y + hh / 2 },
       );
-      const thick = hose ? Math.max(16, d.w * STAGE * 0.5) : Math.max(8, d.w * STAGE * 0.45);
-      g.lineStyle(thick + 6, 0x15121b, 0.9);
-      g.strokePoints(pts, false);
-      g.lineStyle(thick, d.color, 1);
-      g.strokePoints(pts, false);
-      if (!hose) {
-        // Ribbon of coloured wires.
-        g.lineStyle(2, 0xf2c12e, 0.6);
-        g.strokePoints(
-          pts.map((q) => new Phaser.Math.Vector2(q.x - thick * 0.25, q.y)),
-          false,
-        );
-        g.lineStyle(2, 0xe03c31, 0.6);
-        g.strokePoints(
-          pts.map((q) => new Phaser.Math.Vector2(q.x + thick * 0.25, q.y)),
-          false,
-        );
-      } else {
-        g.lineStyle(3, 0xffffff, 0.25);
-        g.strokePoints(
-          pts.map((q) => new Phaser.Math.Vector2(q.x - thick * 0.25, q.y)),
-          false,
-        );
-      }
-      // Plug head / hose clamp.
-      const w = d.w * STAGE;
-      const hh = d.h * STAGE;
-      g.fillStyle(0x15121b, 1);
-      g.fillRoundedRect(p.x - w / 2 - 3, p.y - hh / 2 - 3, w + 6, hh + 6, 5);
-      g.fillStyle(hose ? 0xb9bfc9 : 0xe9e5da, 1);
-      g.fillRoundedRect(p.x - w / 2, p.y - hh / 2, w, hh, 4);
+      drawCableBody(g, look, pts, cableThickness(look, w));
+      drawPlug(g, look, p.x, p.y, w, hh);
       if (this.done[i]) {
-        g.lineStyle(3, 0x4cc65a, 1);
-        g.strokeRoundedRect(p.x - w / 2 - 5, p.y - hh / 2 - 5, w + 10, hh + 10, 6);
+        g.lineStyle(3, 0x4cc65a, 0.9);
+        g.strokeRoundedRect(p.x - w / 2 - 7, p.y - hh / 2 - 7, w + 14, hh + 14, 6);
       }
-      this.labels[i]?.setPosition(p.x, p.y).setVisible(!this.done[i]);
+      this.labels[i]?.setPosition(p.x, p.y - hh / 2 - 16).setVisible(!this.done[i]);
     });
   }
 }

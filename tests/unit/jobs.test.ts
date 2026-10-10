@@ -101,7 +101,7 @@ describe('contracts', () => {
     expect(des).toHaveLength(1);
     expect(businessOffers(g, 'phone').some((o) => o.k === 'design')).toBe(false);
     const inst = acceptJob(g, des[0].id)!;
-    expect(recipeFor(inst).map((s) => s.k)).toEqual(['design', 'fix', 'polish']);
+    expect(recipeFor(inst).map((s) => s.k)).toEqual(['design', 'build', 'polish']);
     const normal = businessOffers(g, 'computer').filter((o) => o.k !== 'design');
     expect(des[0].fee).toBeGreaterThan(Math.max(...normal.map((o) => o.fee)));
   });

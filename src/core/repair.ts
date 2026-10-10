@@ -38,6 +38,8 @@ export type PartKind =
   | 'ram'
   | 'drive'
   | 'cell'
+  /** A phone's flat lithium pouch battery. */
+  | 'pouch'
   | 'plug'
   | 'cooler'
   | 'gpu'
@@ -58,9 +60,10 @@ export type TaskSpec =
   | { k: 'wires' }
   /**
    * Pull the broken part out to the bin, then put the new one in its slot. With `paste`, thermal
-   * paste goes on the CPU in between (CPU coolers).
+   * paste goes on the CPU in between (CPU coolers). With `fit` (building something new) the slot is
+   * empty: just fit the new part.
    */
-  | { k: 'swap'; part: PartKind; zone?: Zone; paste?: boolean }
+  | { k: 'swap'; part: PartKind; zone?: Zone; paste?: boolean; fit?: boolean }
   /** Hold on the filler cap and stop with the level in the green band. */
   | { k: 'pour'; fluid: Fluid }
   /** Hold on the drain plug until the old fluid has run out. */
@@ -90,6 +93,8 @@ export interface Rig {
   aspect: number;
   /** What to do once the cover is off, in order. */
   tasks: TaskSpec[];
+  /** Building something new: it starts open and empty, and the cover goes on at the end. */
+  build?: boolean;
 }
 
 const rig = (r: Partial<Rig> & Pick<Rig, 'view' | 'panel' | 'inside' | 'glow'>): Rig => ({
@@ -288,7 +293,7 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'phone',
     glow: 'screen',
     aspect: 0.9,
-    tasks: [{ k: 'swap', part: 'cell' }, { k: 'cables', set: 'phone' }, { k: 'wires' }],
+    tasks: [{ k: 'swap', part: 'pouch' }, { k: 'cables', set: 'phone' }, { k: 'wires' }],
   }),
   'phones:1': rig({
     view: 'back',
@@ -299,7 +304,7 @@ const FIX_RIGS: Record<string, Rig> = {
     aspect: 0.9,
     tasks: [
       { k: 'swap', part: 'screen', zone: 'c' },
-      { k: 'swap', part: 'cell' },
+      { k: 'swap', part: 'pouch' },
       { k: 'cables', set: 'phone' },
     ],
   }),
@@ -312,7 +317,7 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'screen',
     aspect: 0.9,
     tasks: [
-      { k: 'swap', part: 'cell' },
+      { k: 'swap', part: 'pouch' },
       { k: 'swap', part: 'camera', zone: 'tl' },
       { k: 'cables', set: 'phone' },
     ],
@@ -327,7 +332,7 @@ const FIX_RIGS: Record<string, Rig> = {
     aspect: 1.2,
     tasks: [
       { k: 'dust', n: 3 },
-      { k: 'swap', part: 'cell' },
+      { k: 'swap', part: 'pouch' },
       { k: 'cables', set: 'phone' },
     ],
   }),
@@ -340,7 +345,7 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'screen',
     tasks: [
       { k: 'dust', n: 2 },
-      { k: 'swap', part: 'cell' },
+      { k: 'swap', part: 'pouch' },
     ],
   }),
   // Robots: motors (servos), controller chips, batteries and the wiring harness.
@@ -546,8 +551,93 @@ export function engineSwapRig(): Rig {
   });
 }
 
-/** The rig for a repair step: the wire step, the item's own Repair step, or a big job. */
-export function repairRig(step: 'wire' | 'fix', cat: CategoryId, shape: number, job?: JobKind): Rig {
+/**
+ * Building a custom design from scratch (after the blueprint is approved): the frame is open and
+ * empty, every part is fitted, bolted and plugged in, fluids go in, then the cover goes on.
+ */
+const BUILD_RIGS: Partial<Record<CategoryId, Rig>> = {
+  tech: rig({
+    view: 'back',
+    panel: 'rect',
+    inside: 'pc',
+    glow: 'screen',
+    mains: true,
+    aspect: 1.05,
+    build: true,
+    tasks: [
+      { k: 'swap', part: 'cooler', zone: 'tl', paste: true, fit: true },
+      { k: 'swap', part: 'ram', fit: true },
+      { k: 'swap', part: 'gpu', zone: 'c', fit: true },
+      { k: 'bolts', n: 2, dir: 'in', at: 'card' },
+      { k: 'swap', part: 'drive', zone: 'bl', fit: true },
+      { k: 'cables', set: 'pc' },
+    ],
+  }),
+  vehicles: rig({
+    view: 'hood',
+    panel: 'rect',
+    lid: 'hood',
+    screws: 0,
+    inside: 'bay',
+    glow: 'engine',
+    aspect: 1.05,
+    build: true,
+    tasks: [
+      { k: 'hoist', dir: 'in' },
+      { k: 'bolts', n: 4, dir: 'in', at: 'engine' },
+      { k: 'cables', set: 'hoses' },
+      { k: 'pour', fluid: 'oil' },
+      { k: 'pour', fluid: 'coolant' },
+      { k: 'swap', part: 'battery', fit: true },
+      { k: 'wires' },
+    ],
+  }),
+  robots: rig({
+    view: 'back',
+    panel: 'rect',
+    inside: 'robot',
+    glow: 'led',
+    aspect: 1.2,
+    build: true,
+    tasks: [
+      { k: 'swap', part: 'servo', zone: 'tl', fit: true },
+      { k: 'swap', part: 'battery', fit: true },
+      { k: 'swap', part: 'chip', zone: 'c', fit: true },
+      { k: 'swap', part: 'camera', zone: 'bl', fit: true },
+      { k: 'cables', set: 'harness' },
+    ],
+  }),
+  rockets: rig({
+    view: 'back',
+    panel: 'rect',
+    screws: 6,
+    inside: 'rocket',
+    glow: 'engine',
+    aspect: 1.05,
+    build: true,
+    tasks: [
+      { k: 'swap', part: 'pump', zone: 'c', fit: true },
+      { k: 'bolts', n: 4, dir: 'in', at: 'engine' },
+      { k: 'swap', part: 'chip', zone: 'tl', fit: true },
+      { k: 'cables', set: 'fuel' },
+      { k: 'pour', fluid: 'fuel' },
+      { k: 'wires' },
+    ],
+  }),
+};
+
+export function buildRigFor(cat: CategoryId, shape: number): Rig {
+  return BUILD_RIGS[cat] ?? { ...fixRigFor(cat, shape), build: true };
+}
+
+/** The rig for a repair step: the wire step, the item's own Repair step, a big job or a build. */
+export function repairRig(
+  step: 'wire' | 'fix' | 'build',
+  cat: CategoryId,
+  shape: number,
+  job?: JobKind,
+): Rig {
+  if (step === 'build') return buildRigFor(cat, shape);
   if (step === 'fix' && job === 'pc') return pcRebuildRig();
   if (step === 'fix' && job === 'engine') return engineSwapRig();
   return step === 'fix' ? fixRigFor(cat, shape) : rigFor(cat, shape);
@@ -573,6 +663,8 @@ export function partSize(kind: PartKind): { w: number; h: number } {
       return { w: 0.2, h: 0.13 };
     case 'cell':
       return { w: 0.18, h: 0.07 };
+    case 'pouch':
+      return { w: 0.15, h: 0.2 };
     case 'plug':
       return { w: 0.07, h: 0.17 };
     case 'gpu':
