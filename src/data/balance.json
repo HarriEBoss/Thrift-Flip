@@ -870,6 +870,188 @@
           }
         }
       ]
+    },
+    "space": {
+      "tech": [
+        {
+          "id": "rockets",
+          "cost": 300000,
+          "days": 2,
+          "needs": []
+        },
+        {
+          "id": "lifesupport",
+          "cost": 500000,
+          "days": 3,
+          "needs": [
+            "rockets"
+          ]
+        },
+        {
+          "id": "habitats",
+          "cost": 800000,
+          "days": 3,
+          "needs": [
+            "lifesupport"
+          ]
+        },
+        {
+          "id": "mining",
+          "cost": 1200000,
+          "days": 4,
+          "needs": [
+            "rockets"
+          ]
+        },
+        {
+          "id": "iondrive",
+          "cost": 2000000,
+          "days": 4,
+          "needs": [
+            "mining"
+          ]
+        },
+        {
+          "id": "coldtech",
+          "cost": 3000000,
+          "days": 5,
+          "needs": [
+            "iondrive",
+            "habitats"
+          ]
+        },
+        {
+          "id": "heatshield",
+          "cost": 4000000,
+          "days": 5,
+          "needs": [
+            "iondrive"
+          ]
+        },
+        {
+          "id": "dyson",
+          "cost": 8000000,
+          "days": 7,
+          "needs": [
+            "heatshield",
+            "mining"
+          ]
+        }
+      ],
+      "bodies": [
+        {
+          "id": "moon",
+          "cost": 1000000,
+          "techs": [
+            "rockets",
+            "lifesupport"
+          ],
+          "material": "helium3",
+          "rate": 4,
+          "income": 20000,
+          "orbit": 0.18,
+          "optional": true,
+          "client": "Moon Base Alpha"
+        },
+        {
+          "id": "mars",
+          "cost": 2500000,
+          "techs": [
+            "lifesupport",
+            "habitats"
+          ],
+          "material": "regolith",
+          "rate": 5,
+          "income": 40000,
+          "orbit": 0.42,
+          "client": "Mars Colony"
+        },
+        {
+          "id": "asteroids",
+          "cost": 5000000,
+          "techs": [
+            "mining",
+            "iondrive"
+          ],
+          "body": "mars",
+          "material": "nickeliron",
+          "rate": 5,
+          "income": 70000,
+          "orbit": 0.55,
+          "client": "Belt Mining Station"
+        },
+        {
+          "id": "europa",
+          "cost": 8000000,
+          "techs": [
+            "coldtech"
+          ],
+          "body": "asteroids",
+          "material": "ice",
+          "rate": 4,
+          "income": 100000,
+          "orbit": 0.7,
+          "client": "Europa Ice Lab"
+        },
+        {
+          "id": "titan",
+          "cost": 12000000,
+          "techs": [
+            "coldtech"
+          ],
+          "body": "europa",
+          "material": "methane",
+          "rate": 4,
+          "income": 140000,
+          "orbit": 0.85,
+          "client": "Titan Outpost"
+        },
+        {
+          "id": "mercury",
+          "cost": 16000000,
+          "techs": [
+            "heatshield"
+          ],
+          "body": "asteroids",
+          "material": "silicon",
+          "rate": 4,
+          "income": 180000,
+          "orbit": 0.28,
+          "client": "Mercury Sun Station"
+        }
+      ],
+      "contract": {
+        "pay": [
+          0.6,
+          5000
+        ],
+        "reward": 2,
+        "cats": [
+          "rockets",
+          "robots"
+        ],
+        "shapes": {
+          "rockets": [
+            2,
+            4
+          ],
+          "robots": [
+            3
+          ]
+        }
+      },
+      "dyson": {
+        "stages": 10,
+        "coins": 2000000,
+        "materials": {
+          "regolith": 10,
+          "nickeliron": 15,
+          "ice": 8,
+          "methane": 8,
+          "silicon": 15
+        },
+        "energy": 100000
+      }
     }
   }
 }

@@ -307,12 +307,26 @@ Next: Phase 3, the playable core loop in Phaser.
 - Save v7. Tests: gating, offices and flagship contracts, conquering (and not on a missed target),
   region bonuses, regional markets, migration; e2e: open North America, deliver the flagship, conquer.
 
+## Business empire, phase 5: space and the Dyson project ✅
+- **Space program** (after conquering every Earth region): research space technology on Earth (each
+  takes a few days), found colonies on the Moon (optional), Mars, the asteroid belt, Europa, Titan and
+  Mercury. Each colony harvests its own material and earns coins every day, and sends rover and lander
+  repair contracts to Rocket Repair that ship extra material home.
+- **The Dyson project:** ten stages built from the colonies' materials; each one harvests 10% more of
+  the Sun and sells energy every day. Finishing it means the whole Sun powers your company: the end of
+  the race (prestige comes next).
+- **Pacing:** all space numbers are in one place (`balance.json` → `empire.space`). The balance bot's
+  long run reaches the whole Sun at about 110 hours of play (target 50–150 h); see `docs/BALANCE.md`.
+- Big numbers are shown short in the HUD and space screens (23.5M). Save v8. Tests: research gating and
+  timing, colony requirements, harvest and income, colony contracts, Dyson stages, migration; e2e:
+  research, found Mars, harvest, build a Dyson stage.
+
 ## Definition of done: status
 | Item | Status |
 |---|---|
 | `npm run check` (lint, typecheck, unit + coverage, YouTube build + bundle checks, e2e) | ✅ passes in this container (see the final run log in the commit message / PR) |
 | `thrift-flip-youtube.zip` meets every automatable MUST in §7 | ✅ automated; manual items listed in SUBMISSION_YOUTUBE.md |
 | iOS project builds in Xcode | ⏳ **human step**: no Xcode on Linux. `build:ios` + `cap sync` pass; IAP and ads are absent from the YouTube bundle (checked) |
-| Old-save migration tests | ✅ (v1–v7 fixtures; every migration tested) |
+| Old-save migration tests | ✅ (v1–v8 fixtures; every migration tested) |
 | Docs complete | ✅ ARCHITECTURE, BALANCE, PROGRESS, HUMAN_TODO, SUBMISSION_IOS, SUBMISSION_YOUTUBE, PRIVACY_POLICY, STORE_LISTING |
 | HUMAN_TODO lists every required human step | ✅ |

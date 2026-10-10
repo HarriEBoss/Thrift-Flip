@@ -7,6 +7,7 @@ import { session } from '../session';
 import { xpToNext } from '../../core/progression';
 import { t } from '../../i18n';
 import type { RewardId } from '../../platform/Platform';
+import { compact } from '../ui/format';
 
 /**
  * Base for the in-day scenes: top HUD (coins, day, level/XP, reputation), home button and juice
@@ -37,7 +38,7 @@ export abstract class GameScene extends BaseScene {
     const coinIcon = this.add.graphics();
     iconCoin(coinIcon, 44);
     coinIcon.setPosition(-0, 0);
-    this.coinText = this.txt(0, 0, String(s.coins), FS.h3, C.ink, { align: 'left' });
+    this.coinText = this.txt(0, 0, compact(s.coins), FS.h3, C.ink, { align: 'left' });
     const heart = this.add.graphics();
     iconHeart(heart, 38);
     this.repText = this.txt(0, 0, String(s.rep), FS.body, C.ink, { align: 'left' });
@@ -103,7 +104,7 @@ export abstract class GameScene extends BaseScene {
     if (this.coinTween) this.coinTween.stop();
     const from = this.shownCoins;
     if (from === target) {
-      this.coinText.setText(String(target));
+      this.coinText.setText(compact(target));
       return;
     }
     const obj = { v: from };
@@ -114,11 +115,11 @@ export abstract class GameScene extends BaseScene {
       ease: 'Cubic.out',
       onUpdate: () => {
         this.shownCoins = Math.round(obj.v);
-        this.coinText.setText(String(this.shownCoins));
+        this.coinText.setText(compact(this.shownCoins));
       },
       onComplete: () => {
         this.shownCoins = target;
-        this.coinText.setText(String(target));
+        this.coinText.setText(compact(target));
       },
     });
     this.tweens.add({ targets: this.coinText, scale: 1.25, duration: 120, yoyo: true });

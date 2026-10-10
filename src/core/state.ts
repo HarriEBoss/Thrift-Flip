@@ -36,7 +36,22 @@ export interface ItemInstance {
     c?: string;
     /** Region whose flagship contract this is (finishing it conquers the region). */
     r?: string;
+    /** Colony whose repair contract this is (finishing it ships extra material). */
+    sp?: string;
   };
+}
+
+export interface SpaceState {
+  /** Technologies researched. */
+  techs: string[];
+  /** Research in progress and days left. */
+  research: { id: string; left: number } | null;
+  /** Colonies founded (body ids). */
+  colonies: string[];
+  /** Materials in stock. */
+  mat: Record<string, number>;
+  /** Dyson stages built. */
+  dyson: number;
 }
 
 export interface CustomerRequest {
@@ -162,6 +177,8 @@ export interface GameState {
   branches: Record<string, number>;
   /** Regions: 1 = office open (flagship contract on offer), 2 = conquered. */
   regions: Record<string, number>;
+  /** Space program. */
+  space: SpaceState;
   /** One char per item: '0' unseen, '1' found, '2' perfectly restored. */
   catalog: string;
   requests: CustomerRequest[];
@@ -258,6 +275,7 @@ export function newGame(seed: number): GameState {
     managers: {},
     branches: {},
     regions: {},
+    space: { techs: [], research: null, colonies: [], mat: {}, dyson: 0 },
     catalog: '0'.repeat(ITEMS.length),
     requests: [],
     stats: {

@@ -221,6 +221,22 @@ describe('migrations', () => {
     expect(v7.inv.some((i) => i.job?.r === 'asia')).toBe(true);
   });
 
+  it('v7 -> v8: an empty space program; v8 keeps research, colonies and materials', () => {
+    const v7 = JSON.parse(readFileSync(new URL('v7-midgame.json', FIXTURES), 'utf8'));
+    expect(migrate(v7)).toMatchObject({ sp: [[], 0, [], {}, 0] });
+    expect(deserialize(JSON.stringify(v7)).space).toEqual({
+      techs: [],
+      research: null,
+      colonies: [],
+      mat: {},
+      dyson: 0,
+    });
+    const v8 = deserialize(readFileSync(new URL('v8-midgame.json', FIXTURES), 'utf8'));
+    expect(v8.space.research).toEqual({ id: 'mining', left: 3 });
+    expect(v8.space.colonies).toEqual(['moon', 'mars']);
+    expect(v8.space.mat).toEqual({ helium3: 8, regolith: 15 });
+  });
+
   it('migrate is a no-op at the current version and validates chain', () => {
     const obj = { v: CURRENT_VERSION, a: 1 };
     expect(migrate(obj)).toBe(obj);

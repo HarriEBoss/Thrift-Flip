@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { setupPage, waitForScene } from './helpers';
-import { closeModals, playWorkshop, press, tap, tf, where } from './play';
+import { closeModals, playSummary, playWorkshop, press, tap, tf, where } from './play';
 
 type Smoke = { name: string; steps: string[]; q: number; value: number; sold: number; inv: number };
 
@@ -355,4 +355,77 @@ test('world expansion: open an office in North America, deliver the flagship con
   await playWorkshop(page, 'mouse');
   await waitForScene(page, 'Summary');
   expect(await regions()).toEqual({ namerica: 2 });
+});
+
+test('space: research rockets, found a colony on Mars, harvest, and build a Dyson stage', async ({
+  page,
+}) => {
+  test.setTimeout(240_000);
+  await page.setViewportSize({ width: 405, height: 720 });
+  await setupPage(page);
+  await page.goto('/');
+  await waitForScene(page, 'MainMenu');
+  type Sp = { techs: string[]; colonies: string[]; mat: Record<string, number>; dyson: number };
+  type Tf = {
+    setup(p: object): void;
+    goto(k: string): void;
+    state(): { regions: Record<string, number>; space: Sp };
+  };
+  await page.evaluate(() => {
+    const tf = (window as unknown as { __tf: Tf }).__tf;
+    tf.setup({
+      tutorialDone: true,
+      tier: 4,
+      coins: 500_000_000,
+      day: 150,
+      phase: 'market',
+      named: true,
+      businesses: ['phone', 'computer', 'mechanic', 'robotics', 'rocket'],
+      business: 'rocket',
+    });
+    const st = tf.state();
+    for (const r of ['namerica', 'samerica', 'europe', 'africa', 'asia', 'oceania', 'antarctica'])
+      st.regions[r] = 2;
+    tf.goto('Market');
+  });
+  await waitForScene(page, 'Market');
+  const space = () => tf(page, (t) => (t.state() as unknown as { space: Sp }).space);
+  const endDay = async () => {
+    await press(page, 'mouse', 'go');
+    await waitForScene(page, 'Summary');
+    await playSummary(page, 'mouse');
+    await waitForScene(page, 'Market');
+  };
+  await press(page, 'mouse', 'upgrades');
+  await press(page, 'mouse', 'hub_space');
+  await press(page, 'mouse', 'space_research');
+  await press(page, 'mouse', 'tech_rockets');
+  await closeModals(page, 'mouse');
+  await endDay();
+  await endDay();
+  expect((await space()).techs).toEqual(['rockets']);
+  // Skip ahead in the tree, then found the Mars colony.
+  await page.evaluate(() => {
+    (window as unknown as { __tf: Tf }).__tf.state().space.techs.push('lifesupport', 'habitats');
+  });
+  await press(page, 'mouse', 'upgrades');
+  await press(page, 'mouse', 'hub_space');
+  await press(page, 'mouse', 'space_colonies');
+  await press(page, 'mouse', 'colony_mars');
+  await closeModals(page, 'mouse');
+  expect((await space()).colonies).toEqual(['mars']);
+  await endDay();
+  expect((await space()).mat.regolith).toBeGreaterThan(0);
+  // With the Dyson swarm tech and enough materials, build the first stage.
+  await page.evaluate(() => {
+    const sp = (window as unknown as { __tf: Tf }).__tf.state().space;
+    sp.techs.push('dyson');
+    Object.assign(sp.mat, { regolith: 99, nickeliron: 99, ice: 99, methane: 99, silicon: 99 });
+  });
+  await press(page, 'mouse', 'upgrades');
+  await press(page, 'mouse', 'hub_space');
+  await press(page, 'mouse', 'space_dyson');
+  await press(page, 'mouse', 'dyson_build');
+  await page.waitForTimeout(300);
+  expect((await space()).dyson).toBe(1);
 });

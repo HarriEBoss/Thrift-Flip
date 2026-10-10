@@ -33,6 +33,8 @@ export const MIGRATIONS: Migration[] = [
   (old) => ({ ...old, v: 6, mg: {}, bn: {} }),
   // v6 -> v7: global expansion (`rg`: region -> 1 office open, 2 conquered), none yet.
   (old) => ({ ...old, v: 7, rg: {} }),
+  // v7 -> v8: the space program (`sp`: techs, research, colonies, materials, Dyson stages), empty.
+  (old) => ({ ...old, v: 8, sp: [[], 0, [], {}, 0] }),
 ];
 
 export const CURRENT_VERSION = MIGRATIONS.length + 1;

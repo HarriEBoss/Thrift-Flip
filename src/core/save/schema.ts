@@ -1,4 +1,4 @@
-import { ITEMS } from '../data';
+import { BALANCE, ITEMS } from '../data';
 import {
   defaultSettings,
   emptyDayStats,
@@ -13,6 +13,7 @@ import { RESELLING, business } from '../empire';
 import { cleanName } from '../names';
 import { maxManagerLevel } from '../managers';
 import { WON, region } from '../regions';
+import { body as spaceBody, tech } from '../space';
 import { CURRENT_VERSION, migrate } from './migrations';
 
 /**
@@ -21,7 +22,8 @@ import { CURRENT_VERSION, migrate } from './migrations';
  *
  * Shape (see tests/fixtures/saves for real examples; v2 added `dc`, v3 added dy[15] and the optional
  * job tuple [fee, persona, kind] at the end of an item, v4 added `cn` and `bz` and dropped `ws`, v5 added `br`, dy[16] and the job tuple's target and
- * client), v6 added `mg` (managers), `bn` (branches) and today's manager takings in dy[10][12], v7 added `rg` (regions) and the job tuple's region):
+ * client), v6 added `mg` (managers), `bn` (branches) and today's manager takings in dy[10][12], v7 added `rg` (regions) and the job tuple's region, v8 added `sp` (space: techs, research, colonies,
+ * materials, Dyson stages) and the job tuple's colony):
  * { v, sd, c, x, l, rp, t, nu, dy:[...], iv:[[...]], sk, up, pk, ow, ct, rq:[[t,p,day]], st:{...}, bs, se:{...}, dl:[...], fl:{...} }
  */
 export type SaveObject = Record<string, unknown> & { v: number };
@@ -29,7 +31,7 @@ export type SaveObject = Record<string, unknown> & { v: number };
 const PHASES: DayPhase[] = ['market', 'workshop', 'shop', 'summary'];
 
 /** [fee, persona, kind, target stars (0 = none), client company ('' = the persona)] (v5 adds the last two). */
-type JobTuple = [number, string, string, number?, string?, string?];
+type JobTuple = [number, string, string, number?, string?, string?, string?];
 type ItemTuple = [
   number,
   number,
@@ -60,7 +62,8 @@ function encodeItem(i: ItemInstance): ItemTuple {
     i.col,
     i.day,
   ];
-  if (i.job) t.push([i.job.fee, i.job.p, i.job.k, i.job.t ?? 0, i.job.c ?? '', i.job.r ?? '']);
+  if (i.job)
+    t.push([i.job.fee, i.job.p, i.job.k, i.job.t ?? 0, i.job.c ?? '', i.job.r ?? '', i.job.sp ?? '']);
   return t;
 }
 
@@ -77,6 +80,7 @@ function decodeItem(t: unknown): ItemInstance | null {
           ...(num(jb[3], 0) > 0 ? { t: Math.min(3, num(jb[3], 0)) } : {}),
           ...(str(jb[4], '') ? { c: cleanName(str(jb[4], '')).slice(0, 30) } : {}),
           ...(region(str(jb[5], '')) ? { r: str(jb[5], '') } : {}),
+          ...(spaceBody(str(jb[6], '')) ? { sp: str(jb[6], '') } : {}),
         }
       : undefined;
   return {
@@ -181,6 +185,13 @@ export function serialize(state: GameState): string {
     mg: { ...state.managers },
     bn: { ...state.branches },
     rg: { ...state.regions },
+    sp: [
+      state.space.techs,
+      state.space.research ? [state.space.research.id, state.space.research.left] : 0,
+      state.space.colonies,
+      { ...state.space.mat },
+      state.space.dyson,
+    ],
     ct: state.catalog,
     rq: state.requests.map((r) => [r.t, r.p, r.day]),
     st: { ...state.stats },
@@ -289,6 +300,22 @@ function fromObject(o: SaveObject): GameState {
   g.managers = levels(o.mg, maxManagerLevel());
   g.branches = levels(o.bn, 999);
   g.regions = levels(o.rg, WON, (k) => !!region(k));
+  const sp = Array.isArray(o.sp) ? (o.sp as unknown[]) : [];
+  const res = Array.isArray(sp[1]) ? (sp[1] as unknown[]) : null;
+  g.space = {
+    techs: strArr(sp[0]).filter((x) => !!tech(x)),
+    research:
+      res && tech(str(res[0], ''))
+        ? { id: str(res[0], ''), left: Math.max(1, Math.floor(num(res[1], 1))) }
+        : null,
+    colonies: strArr(sp[2]).filter((x) => !!spaceBody(x)),
+    mat: Object.fromEntries(
+      Object.entries(sp[3] && typeof sp[3] === 'object' ? (sp[3] as Record<string, unknown>) : {})
+        .filter(([, v]) => typeof v === 'number' && isFinite(v) && v > 0)
+        .map(([k, v]) => [k, Math.floor(v as number)]),
+    ),
+    dyson: Math.max(0, Math.min(BALANCE.empire.space.dyson.stages, Math.floor(num(sp[4], 0)))),
+  };
   const ct = str(o.ct, '');
   g.catalog = /^[012]*$/.test(ct)
     ? ct.padEnd(ITEMS.length, '0').slice(0, ITEMS.length)

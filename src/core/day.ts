@@ -8,6 +8,7 @@ import { addXp } from './progression';
 import { decorFx } from './decor';
 import { fadeBrand } from './marketing';
 import { payManagers } from './managers';
+import { spaceDay } from './space';
 import { matchesRequest, requestTemplate, type SaleResult } from './customers';
 import { newDay, type DayPhase, type GameState, type ItemInstance } from './state';
 import type { CategoryId } from './types';
@@ -33,6 +34,8 @@ export function advancePhase(state: GameState, to: DayPhase): void {
   if (to === 'summary') {
     // Managers bring in the day's takings from the businesses they run.
     payManagers(state);
+    // Research moves on, colonies harvest and pay, the Dyson project sells energy.
+    spaceDay(state);
     // Decorations like plants and the fountain make the shop more popular every day.
     const rep = decorFx(state).repPerDay;
     if (rep > 0) {

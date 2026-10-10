@@ -35,6 +35,18 @@ import { DECOR, buyDecor } from '../src/core/decor';
 import { acceptJob, businessOffers, completeJob } from '../src/core/jobs';
 import { CAMPAIGNS, campaignStatus, runCampaign } from '../src/core/marketing';
 import {
+  BODIES,
+  TECHS,
+  buildDysonStage,
+  colonyStatus,
+  dysonDone,
+  dysonStatus,
+  foundColony,
+  spaceUnlocked,
+  startResearch,
+  techStatus,
+} from '../src/core/space';
+import {
   REGIONS,
   allRegionsWon,
   expansionUnlocked,
@@ -90,6 +102,9 @@ interface BotResult {
   bizDay: number[];
   /** Day all Earth regions were conquered (-1 = never). */
   worldDay: number;
+  /** Day each colony was founded (-1 = never), and the Dyson project finished. */
+  colonyDay: number[];
+  dysonDay: number;
 }
 
 /** Restores everything in the queue; finished customer jobs are paid. */
@@ -166,6 +181,14 @@ function playDay(g: GameState, rng: Rng, skill: number): number {
       .reverse()
       .find((x) => campaignStatus(g, x) === 'available' && g.coins > x.cost * 4);
     if (c) runCampaign(g, c.id);
+  }
+  // Space: research in tree order, found colonies, build Dyson stages, keeping a third in hand.
+  if (spaceUnlocked(g)) {
+    const t = TECHS.find((x) => techStatus(g, x) === 'available' && x.cost <= g.coins * 0.7);
+    if (t) startResearch(g, t.id);
+    for (const b of BODIES)
+      if (colonyStatus(g, b) === 'available' && b.cost <= g.coins * 0.7) foundColony(g, b.id);
+    while (dysonStatus(g) === 'available') buildDysonStage(g);
   }
   // Global expansion: open the next region's office when it is comfortably affordable.
   if (expansionUnlocked(g)) {
@@ -252,7 +275,7 @@ function playDay(g: GameState, rng: Rng, skill: number): number {
   return sec;
 }
 
-function runBot(seed: number): BotResult {
+function runBot(seed: number, days = DAYS): BotResult {
   const g = newGame(seed);
   const rng = new Rng(seed ^ 0x9e3779b9);
   const skill = rng.range(0.78, 0.92);
@@ -264,9 +287,11 @@ function runBot(seed: number): BotResult {
     playSec: [],
     bizDay: BUSINESSES.map((b, i) => (i === 0 ? 1 : -1)),
     worldDay: -1,
+    colonyDay: BODIES.map(() => -1),
+    dysonDay: -1,
   };
   let total = 0;
-  for (let d = 1; d <= DAYS; d++) {
+  for (let d = 1; d <= days; d++) {
     total += playDay(g, rng, skill);
     for (let t = 1; t <= g.tier; t++) if (res.tierDay[t] < 0) res.tierDay[t] = d;
     res.coins.push(g.coins);
@@ -276,7 +301,14 @@ function runBot(seed: number): BotResult {
       if (res.bizDay[i] < 0 && g.biz.own.includes(b.id)) res.bizDay[i] = d;
     });
     if (res.worldDay < 0 && allRegionsWon(g)) res.worldDay = d;
-    if (process.env.REGIONS && d === DAYS) console.error(`regions ${regionsWon(g)} coins ${g.coins}`);
+    BODIES.forEach((b, i) => {
+      if (res.colonyDay[i] < 0 && g.space.colonies.includes(b.id)) res.colonyDay[i] = d;
+    });
+    if (res.dysonDay < 0 && dysonDone(g)) {
+      res.dysonDay = d;
+      if (days > DAYS) break;
+    }
+    if (process.env.REGIONS && d === days) console.error(`regions ${regionsWon(g)} coins ${g.coins}`);
     if (process.env.TRACE && d % 5 === 0)
       console.error(`d${d} t${g.tier} c${g.coins} rep${g.rep} lvl${g.level} inv${g.inv.length}`);
     if (res.completeDay < 0 && isContentComplete(g)) res.completeDay = d;
@@ -291,6 +323,10 @@ function median(xs: number[]): number {
 }
 
 const results = Array.from({ length: BOTS }, (_, i) => runBot(1000 + i * 7919));
+// The long game (empire, world, space, Dyson): fewer bots, many more days.
+const LONG_DAYS = Number(process.env.LONG_DAYS ?? 1500);
+const LONG_BOTS = Number(process.env.LONG_BOTS ?? 6);
+const longRuns = Array.from({ length: LONG_BOTS }, (_, i) => runBot(5000 + i * 104729, LONG_DAYS));
 const lines: string[] = [];
 const out = (s = '') => lines.push(s);
 out('# Balance simulation');
@@ -368,6 +404,27 @@ const minsPerDay = median(results.map((r) => r.playSec[DAYS - 1] / DAYS)) / 60;
 out(`- Average real minutes per in-game day: ${minsPerDay.toFixed(1)} (target 3–6)`);
 out();
 out('Purchases are not needed: these bots never buy anything or watch ads.');
+out();
+out('## The long game (empire, world, space)');
+out();
+out(
+  `${LONG_BOTS} bots play up to ${LONG_DAYS} days with the same strategy plus: open every business, hire managers and open branches, run campaigns, conquer regions, research, found colonies and build the Dyson project. Target: 50–150 hours to harvest the whole Sun.`,
+);
+out();
+out('| Milestone | Median day | Median play time (h) | Bots reaching |');
+out('|---|---|---|---|');
+const milestone = (label: string, day: (r: BotResult) => number) => {
+  const days = longRuns.map(day);
+  const md = median(days);
+  const hours = median(longRuns.map((r) => (day(r) > 0 ? r.playSec[day(r) - 1] : -1))) / 3600;
+  out(
+    `| ${label} | ${md > 0 ? md : '-'} | ${md > 0 ? hours.toFixed(1) : '-'} | ${days.filter((d) => d > 0).length}/${LONG_BOTS} |`,
+  );
+};
+BUSINESSES.forEach((b, i) => milestone(`Business: ${b.id}`, (r) => r.bizDay[i]));
+milestone('All Earth regions', (r) => r.worldDay);
+BODIES.forEach((b, i) => milestone(`Colony: ${b.id}`, (r) => r.colonyDay[i]));
+milestone('Dyson project done (whole Sun)', (r) => r.dysonDay);
 const report = lines.join('\n') + '\n';
 console.log(report);
 if (process.argv.includes('--write')) writeFileSync('docs/BALANCE.md', report);

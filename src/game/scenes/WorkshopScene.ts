@@ -722,9 +722,11 @@ export class WorkshopScene extends GameScene {
     if (job)
       extra = job.missed
         ? t('jobs.missed', { stars: '★'.repeat(inst.job?.t ?? 1) })
-        : job.tip > 0
-          ? t('jobs.tip', { n: job.tip })
-          : '';
+        : job.material
+          ? t('jobs.colonyMat', { n: job.material.n, mat: t(`mat.${job.material.id}`) })
+          : job.tip > 0
+            ? t('jobs.tip', { n: job.tip })
+            : '';
     else if (res.gemRevealed) extra = t('reveal.gem');
     else if (res.newPerfect) extra = t('reveal.perfect');
     else if (inst.r > 0) extra = `${'★'.repeat(inst.r)} ${rarityLabel(inst.r)}`;

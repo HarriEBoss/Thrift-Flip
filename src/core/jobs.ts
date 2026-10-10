@@ -15,6 +15,7 @@ import { brandFlow } from './marketing';
 import { designFor } from './design';
 import { starsFor } from './economy';
 import { conquerRegion, flagshipsAt, regionFx } from './regions';
+import { BODIES, body, colonyReward } from './space';
 import namesJson from '../data/names.json';
 import type { JobKind } from './repair';
 import type { GameState, ItemInstance } from './state';
@@ -44,6 +45,8 @@ export interface JobOffer {
   target: number;
   /** A region's flagship contract (delivering it conquers the region). */
   region?: string;
+  /** A colony's repair contract (delivering it ships extra material home). */
+  colony?: string;
 }
 
 const round5 = (v: number) => Math.round(v / 5) * 5;
@@ -178,6 +181,37 @@ export function businessOffers(state: GameState, id: string): JobOffer[] {
     const last = out[out.length - 1];
     last.s = last.items[0].s;
   });
+  // Colonies send their repair contracts (rovers, landers, drones) to the top business (ids 100+).
+  if (bi === BUSINESSES.length - 1) {
+    const sc = BALANCE.empire.space.contract;
+    const pool = ITEMS.map((it, a) => ({ it, a })).filter(
+      (x) => sc.cats.includes(x.it.cat) && (sc.shapes[x.it.cat] ?? [x.it.shape]).includes(x.it.shape),
+    );
+    BODIES.forEach((body, k) => {
+      if (!state.space.colonies.includes(body.id) || !pool.length) return;
+      if (state.inv.some((i) => i.job?.sp === body.id)) return;
+      const cr = new Rng(hashSeed(state.seed, 'colony', state.day.n, body.id));
+      const { it, a } = cr.pick(pool);
+      const d = cr.int(1, 2);
+      out.push({
+        id: 100 + k,
+        b: id,
+        items: [{ a, s: cr.int(1000, 2 ** 30), d }],
+        a,
+        s: 0,
+        d,
+        k: 'service',
+        fee: round5(contractFee(round5(it.base * sc.pay[0] + sc.pay[1]), 5, 1) * boost),
+        p: contact(it.cat),
+        client: body.client,
+        stars: 5,
+        target: 2,
+        colony: body.id,
+      });
+      const last = out[out.length - 1];
+      last.s = last.items[0].s;
+    });
+  }
   return out;
 }
 
@@ -205,6 +239,7 @@ export function signContract(state: GameState, id: number): ItemInstance[] {
       t: o.target,
       ...(o.client ? { c: o.client } : {}),
       ...(o.region ? { r: o.region } : {}),
+      ...(o.colony ? { sp: o.colony } : {}),
     };
     inst.sc = recipeFor(inst).map(() => null);
     state.inv.push(inst);
@@ -230,6 +265,8 @@ export interface JobResult {
   missed: boolean;
   /** Region conquered by this delivery. */
   region: string | null;
+  /** Material shipped home by a colony contract. */
+  material: { id: string; n: number } | null;
   fee: number;
   tip: number;
   xp: number;
@@ -261,7 +298,15 @@ export function completeJob(state: GameState, inst: ItemInstance): JobResult {
   const levelUps = addXp(state, xp);
   // A flagship contract delivered to the client's wishes conquers its region.
   const region = inst.job.r && !missed && conquerRegion(state, inst.job.r) ? inst.job.r : null;
-  return { fee, tip, xp: Math.round(xp), rep, levelUps, missed, region };
+  // A colony's repair contract ships extra material home.
+  let material: { id: string; n: number } | null = null;
+  const colony = inst.job.sp ? body(inst.job.sp) : undefined;
+  if (colony && !missed) {
+    const n = colonyReward(colony);
+    state.space.mat[colony.material] = (state.space.mat[colony.material] ?? 0) + n;
+    material = { id: colony.material, n };
+  }
+  return { fee, tip, xp: Math.round(xp), rep, levelUps, missed, region, material };
 }
 
 export { business };

@@ -372,6 +372,66 @@ function v_iconWorkshop(g: Pen, id: string, s: number): void {
     g.fillPoints([V(-4 * k, 15 * k), V(4 * k, 15 * k), V(0, 21 * k)], true);
     return;
   }
+  if (id === 'space') {
+    // A ringed planet.
+    g.fillStyle(C.purple, 1);
+    g.fillCircle(0, 0, 11 * k);
+    g.strokeCircle(0, 0, 11 * k);
+    g.lineStyle(3 * k, C.mustard, 1);
+    g.strokeEllipse(0, 0, 40 * k, 12 * k);
+    g.lineStyle(2.5 * k, C.ink, 1);
+    g.fillStyle(C.white, 1);
+    g.fillCircle(14 * k, -13 * k, 2.5 * k);
+    g.fillCircle(-15 * k, 12 * k, 1.8 * k);
+    return;
+  }
+  if (id === 'sun') {
+    g.fillStyle(C.gold, 1);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      g.fillTriangle(
+        Math.cos(a - 0.2) * 11 * k,
+        Math.sin(a - 0.2) * 11 * k,
+        Math.cos(a + 0.2) * 11 * k,
+        Math.sin(a + 0.2) * 11 * k,
+        Math.cos(a) * 19 * k,
+        Math.sin(a) * 19 * k,
+      );
+    }
+    g.fillStyle(C.mustard, 1);
+    g.fillCircle(0, 0, 12 * k);
+    g.strokeCircle(0, 0, 12 * k);
+    return;
+  }
+  if (id === 'research') {
+    // A flask.
+    g.fillStyle(C.tealLight, 1);
+    g.fillPoints(
+      [
+        V(-4 * k, -16 * k),
+        V(4 * k, -16 * k),
+        V(4 * k, -4 * k),
+        V(14 * k, 14 * k),
+        V(-14 * k, 14 * k),
+        V(-4 * k, -4 * k),
+      ],
+      true,
+    );
+    g.strokePoints(
+      [
+        V(-4 * k, -16 * k),
+        V(4 * k, -16 * k),
+        V(4 * k, -4 * k),
+        V(14 * k, 14 * k),
+        V(-14 * k, 14 * k),
+        V(-4 * k, -4 * k),
+      ],
+      true,
+    );
+    g.fillStyle(C.leaf, 1);
+    g.fillPoints([V(-9 * k, 5 * k), V(9 * k, 5 * k), V(13 * k, 13 * k), V(-13 * k, 13 * k)], true);
+    return;
+  }
   if (id === 'manager') {
     // A manager with a clipboard.
     g.fillStyle(0xf1c7a3, 1);

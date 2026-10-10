@@ -21,6 +21,8 @@ import {
   regionsWon,
 } from '../../core/regions';
 import { MARKETS } from '../../core/data';
+import { spaceActions, spaceUnlocked, sunHarvested } from '../../core/space';
+import { openSpace } from './spaceMenus';
 import {
   branchCost,
   branchStatus,
@@ -131,6 +133,16 @@ export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
       open: () => openWorld(scene, after),
     },
     {
+      id: 'hub_space',
+      label: t('hub.space'),
+      sub: spaceUnlocked(s)
+        ? t('hub.spaceSub', { n: s.space.colonies.length, pct: Math.round(sunHarvested(s) * 100) })
+        : t('hub.spaceLocked'),
+      color: C.inkSoft,
+      badge: spaceActions(s) ? '!' : null,
+      open: () => openSpace(scene, after),
+    },
+    {
       id: 'hub_tools',
       label: t('hub.tools'),
       sub: t('hub.toolsSub'),
@@ -147,14 +159,19 @@ export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
       open: () => openSkills(scene, after),
     },
   ];
+  // The late-game rows (managers, world, space) appear once you own the top business.
+  const late = ['hub_managers', 'hub_world', 'hub_space'];
+  const shown = rows.filter((r) => !late.includes(r.id) || delegationUnlocked(s));
+  const step = shown.length > 6 ? 82 : 104;
+  const bh = shown.length > 6 ? 74 : 92;
   function after(): void {
     refresh(scene);
     onChange?.();
   }
-  rows.forEach((r, i) => {
-    const b = new Button(scene, 0, -444 + i * 88, {
+  shown.forEach((r, i) => {
+    const b = new Button(scene, 0, -440 + bh / 2 - 40 + i * step, {
       w: 520,
-      h: 80,
+      h: bh,
       label: r.label,
       sub: r.sub,
       color: r.color,

@@ -275,6 +275,44 @@ export interface ContractDef {
   design: boolean;
 }
 
+export interface TechDef {
+  id: string;
+  cost: number;
+  /** In-game days of research. */
+  days: number;
+  needs: string[];
+}
+
+/** A solar system body: found a colony there to harvest its material. */
+export interface BodyDef {
+  id: string;
+  /** Coins to found the colony. */
+  cost: number;
+  techs: string[];
+  /** Colony that must be founded first. */
+  body?: string;
+  material: string;
+  /** Material harvested per day. */
+  rate: number;
+  /** Coins the colony makes per day. */
+  income: number;
+  /** Distance from the Sun on the map (0..1). */
+  orbit: number;
+  /** Not needed to go further (the Moon). */
+  optional?: boolean;
+  /** The colony's name as a client of its repair contracts. */
+  client: string;
+}
+
+export interface SpaceBalance {
+  tech: TechDef[];
+  bodies: BodyDef[];
+  /** Colony repair contracts at Rocket Repair: pay = base x pay[0] + pay[1]; reward = rate x reward. */
+  contract: { pay: [number, number]; reward: number; cats: CategoryId[]; shapes: Record<string, number[]> };
+  /** Dyson stage n needs coins x n and materials[m] x n; each built stage sells energy every day. */
+  dyson: { stages: number; coins: number; materials: Record<string, number>; energy: number };
+}
+
 /** An Earth region: open an office, then win its flagship contract to conquer it. */
 export interface RegionDef {
   id: string;
@@ -302,6 +340,8 @@ export interface CampaignDef {
 
 export interface EmpireBalance {
   businesses: BusinessDef[];
+  /** Space: Earth research, colonies on other bodies, and the Dyson project. */
+  space: SpaceBalance;
   /** Global expansion: conquer every region before space. */
   regions: {
     /** Business that must be owned first. */

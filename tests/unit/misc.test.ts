@@ -128,3 +128,15 @@ describe('trends', () => {
     for (let i = 0; i < 80; i++) trendsFor(i, 1, 2);
   });
 });
+
+describe('compact numbers', () => {
+  it('keeps small amounts and shortens big ones', async () => {
+    const { compact } = await import('../../src/game/ui/format');
+    expect(compact(98765)).toBe('98765');
+    expect(compact(123456)).toBe('123K');
+    expect(compact(1234567)).toBe('1.23M');
+    expect(compact(45_600_000)).toBe('45.6M');
+    expect(compact(2_500_000_000)).toBe('2.5B');
+    expect(compact(-1_500_000)).toBe('-1.5M');
+  });
+});

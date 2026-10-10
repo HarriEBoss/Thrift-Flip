@@ -215,6 +215,26 @@ prices in `instanceValue`, contract pay in `businessOffers`, manager income in `
 the region's own market: a `markets.json` entry with `region` and `cats` (it only offers those
 categories). `allRegionsWon` gates space (Phase 5).
 
+### Space and the Dyson project (`core/space.ts`, `empire.space`, `ui/spaceMenus.ts`)
+
+Once every Earth region is conquered (`spaceUnlocked`), Upgrades → Space program opens three screens:
+
+- **Research** (`empire.space.tech`): a tech tree (reusable rockets → life support → habitats; space
+  mining → ion drive → deep-cold tech / heat shields → Dyson swarm). One at a time; it costs coins and
+  takes `days` in-game days (`startResearch`, ticked by `spaceDay` at the end of each day).
+- **Colonies** (`empire.space.bodies`): the Moon (optional), Mars, the asteroid belt, Europa, Titan and
+  Mercury, each needing technologies and the colony before it. A colony harvests its material
+  (`rate` a day: helium-3, Mars dust, nickel-iron, ice, methane, solar silicon) and pays `income` a day.
+  Each colony also sends a daily repair contract (rovers, landers, drones; ids 100+) to the top
+  business's board; delivering it ships `rate × contract.reward` extra material home.
+- **Dyson project** (`empire.space.dyson`): stage n needs `coins × n` and `materials[m] × n`; each built
+  stage sells `energy` coins a day. Ten stages harvest the whole Sun (`dysonDone`), the end of the race
+  and the trigger for prestige (phase 6).
+
+All space numbers live in `balance.json` → `empire.space`, the one place to tune the long game.
+`scripts/simulate.ts` plays a long run (`LONG_DAYS`, `LONG_BOTS`) and reports the median day and play
+time of every milestone in `docs/BALANCE.md`. Big numbers are shown short (`ui/format.ts`: 23.5M).
+
 ## Asset pipeline
 
 **Art style.** Objects (items, the workshop, thumbnails) are drawn smooth and lit: soft light from the
@@ -261,9 +281,10 @@ bright palette in `theme.ts` and the Nunito font.
   forces a write on day end, purchases and pause. It checks UTF-16 well-formedness and the 3 MiB / 500 KiB limits.
   A corrupt save is kept in memory and writing is blocked until the player sees a friendly message.
 
-Current version: **v7** (v5 added `br`, the brand, `dy[16]`, today's campaigns, and the job tuple's
+Current version: **v8** (v5 added `br`, the brand, `dy[16]`, today's campaigns, and the job tuple's
 quality target and client company; v6 added `mg` managers, `bn` branches and today's manager takings;
-v7 adds `rg` regions and the job tuple's region). v2 added `dc` (owned decorations); v3 added `ws` (owned workshops), `dy[15]`
+v7 added `rg` regions and the job tuple's region; v8 adds `sp`, the space program, and the job
+tuple's colony). v2 added `dc` (owned decorations); v3 added `ws` (owned workshops), `dy[15]`
 (today's taken jobs) and an optional job tuple `[fee, persona, kind]` at the end of an item; v4 adds `cn`
 (company name), `bz` (`[owned businesses, today's business]`) and `fl.nm` (named), and drops `ws`: the
 Repair Shop becomes Phone Repair, the Computer Workshop Computer Repair and the Car Garage Mechanic.
