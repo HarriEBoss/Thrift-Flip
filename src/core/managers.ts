@@ -1,13 +1,15 @@
 /**
  * Delegation: once you own the top of the ladder (Rocket Repair), hire managers to run your other
  * businesses and open more branches of any business. Every day you are not working at a managed
- * business, it pays income x branches x manager efficiency x brand flow, minus the manager's wage.
+ * business, it pays income x branches x manager efficiency x brand flow x region bonus, minus the
+ * manager's wage.
  * Managers train up through efficiency levels; each extra branch costs more than the last, so the
  * loop keeps scaling. Numbers in balance.json -> empire.managers. Pure.
  */
 import { BALANCE } from './data';
 import { BUSINESSES, business, ownsBusiness } from './empire';
 import { brandFlow } from './marketing';
+import { regionFx } from './regions';
 import { hashSeed } from './prng';
 import namesJson from '../data/names.json';
 import type { GameState } from './state';
@@ -97,7 +99,8 @@ export function openBranch(state: GameState, id: string): boolean {
 export function dailyIncome(state: GameState, b: BusinessDef): { gross: number; wage: number; net: number } {
   const lvl = managerLevel(state, b.id);
   if (lvl <= 0 || !ownsBusiness(state, b.id)) return { gross: 0, wage: 0, net: 0 };
-  const gross = Math.round(b.income * shops(state, b.id) * efficiency(lvl) * brandFlow(state.brand));
+  const region = 1 + regionFx(state).income;
+  const gross = Math.round(b.income * shops(state, b.id) * efficiency(lvl) * brandFlow(state.brand) * region);
   const wage = Math.round(gross * M().wagePct);
   return { gross, wage, net: gross - wage };
 }

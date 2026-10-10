@@ -515,11 +515,13 @@ export async function openStore(scene: BaseScene, onChange?: () => void): Promis
 export function openMarketSwitch(scene: BaseScene): void {
   const s = session.state;
   const ms = availableMarkets(s);
-  const m = scene.openModal({ title: t('market.switchTitle'), w: 600, h: 260 + ms.length * 110 });
+  // Regional markets make the list long: rows get a little tighter.
+  const step = ms.length > 7 ? 92 : 110;
+  const m = scene.openModal({ title: t('market.switchTitle'), w: 600, h: 240 + ms.length * step });
   ms.forEach((md, i) => {
-    const b = new Button(scene, 0, -m.ph / 2 + 110 + i * 110, {
-      w: 500,
-      h: 90,
+    const b = new Button(scene, 0, -m.ph / 2 + 104 + i * step, {
+      w: 520,
+      h: step - 18,
       label: t(`market.${md.id}`),
       sub: t(`market.${md.id}.desc`),
       color: parseInt(md.color.slice(1), 16),

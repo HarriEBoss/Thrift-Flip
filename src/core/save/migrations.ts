@@ -31,6 +31,8 @@ export const MIGRATIONS: Migration[] = [
   (old) => ({ ...old, v: 5, br: typeof old.br === 'number' ? old.br : 0 }),
   // v5 -> v6: managers (`mg`) and branches (`bn`), none yet.
   (old) => ({ ...old, v: 6, mg: {}, bn: {} }),
+  // v6 -> v7: global expansion (`rg`: region -> 1 office open, 2 conquered), none yet.
+  (old) => ({ ...old, v: 7, rg: {} }),
 ];
 
 export const CURRENT_VERSION = MIGRATIONS.length + 1;

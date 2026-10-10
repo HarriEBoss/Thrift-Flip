@@ -296,12 +296,23 @@ Next: Phase 3, the playable core loop in Phaser.
 - Save v6. Tests: unlock gating, hire/train costs and efficiency, branch cost growth and income, daily
   payout (not at the business you work at), migration; e2e: hire, train, open a branch, earn.
 
+## Business empire, phase 4: global expansion ✅
+- **World expansion** (from Rocket Repair on): a world map with seven regions. Open an office in a region,
+  then deliver its flagship contract (a big custom design job for a famous client, such as the Tokyo
+  Robot Expo) to conquer it. A flag goes up on the map.
+- **Each region gives a permanent bonus** (shop prices, contract pay or manager income) and **opens its
+  own market**: Route 66 Swap Meet, Rio Street Fair, Paris Brocante, Marrakech Souk, Tokyo Night
+  Market, Sydney Surplus Yard and Polar Station Swap, each specialising in a few categories.
+- Conquering all seven regions is what unlocks space (phase 5).
+- Save v7. Tests: gating, offices and flagship contracts, conquering (and not on a missed target),
+  region bonuses, regional markets, migration; e2e: open North America, deliver the flagship, conquer.
+
 ## Definition of done: status
 | Item | Status |
 |---|---|
 | `npm run check` (lint, typecheck, unit + coverage, YouTube build + bundle checks, e2e) | ✅ passes in this container (see the final run log in the commit message / PR) |
 | `thrift-flip-youtube.zip` meets every automatable MUST in §7 | ✅ automated; manual items listed in SUBMISSION_YOUTUBE.md |
 | iOS project builds in Xcode | ⏳ **human step**: no Xcode on Linux. `build:ios` + `cap sync` pass; IAP and ads are absent from the YouTube bundle (checked) |
-| Old-save migration tests | ✅ (v1–v6 fixtures; every migration tested) |
+| Old-save migration tests | ✅ (v1–v7 fixtures; every migration tested) |
 | Docs complete | ✅ ARCHITECTURE, BALANCE, PROGRESS, HUMAN_TODO, SUBMISSION_IOS, SUBMISSION_YOUTUBE, PRIVACY_POLICY, STORE_LISTING |
 | HUMAN_TODO lists every required human step | ✅ |

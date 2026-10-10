@@ -784,6 +784,92 @@
       "wagePct": 0.1,
       "branchCost": 1.5,
       "branchGrowth": 1.6
+    },
+    "regions": {
+      "unlock": "rocket",
+      "flagshipPay": 3,
+      "list": [
+        {
+          "id": "namerica",
+          "cost": 80000,
+          "biz": "mechanic",
+          "client": "Route 66 Racing Club",
+          "u": 0.2,
+          "v": 0.33,
+          "fx": {
+            "price": 0.05
+          }
+        },
+        {
+          "id": "samerica",
+          "cost": 100000,
+          "biz": "robotics",
+          "client": "Amazon Rainforest Rangers",
+          "u": 0.3,
+          "v": 0.66,
+          "fx": {
+            "income": 0.1
+          }
+        },
+        {
+          "id": "europe",
+          "cost": 120000,
+          "biz": "computer",
+          "client": "Euro Science Museum",
+          "u": 0.5,
+          "v": 0.27,
+          "fx": {
+            "contracts": 0.08
+          }
+        },
+        {
+          "id": "africa",
+          "cost": 150000,
+          "biz": "mechanic",
+          "client": "Sahara Safari Tours",
+          "u": 0.53,
+          "v": 0.56,
+          "fx": {
+            "income": 0.12
+          }
+        },
+        {
+          "id": "asia",
+          "cost": 200000,
+          "biz": "robotics",
+          "client": "Tokyo Robot Expo",
+          "u": 0.72,
+          "v": 0.33,
+          "fx": {
+            "contracts": 0.1,
+            "price": 0.03
+          }
+        },
+        {
+          "id": "oceania",
+          "cost": 250000,
+          "biz": "rocket",
+          "client": "Outback Launch Site",
+          "u": 0.84,
+          "v": 0.7,
+          "fx": {
+            "price": 0.06,
+            "income": 0.05
+          }
+        },
+        {
+          "id": "antarctica",
+          "cost": 400000,
+          "biz": "rocket",
+          "client": "Polar Research Station",
+          "u": 0.5,
+          "v": 0.92,
+          "fx": {
+            "contracts": 0.12,
+            "income": 0.08
+          }
+        }
+      ]
     }
   }
 }

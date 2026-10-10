@@ -301,3 +301,58 @@ test('managers and branches: hire a manager, open a branch, and they earn while 
   await waitForScene(page, 'Summary');
   expect((await st()).day.stats.passive).toBeGreaterThan(0);
 });
+
+test('world expansion: open an office in North America, deliver the flagship contract, conquer it', async ({
+  page,
+}) => {
+  test.setTimeout(300_000);
+  await page.setViewportSize({ width: 405, height: 720 });
+  await setupPage(page);
+  await page.goto('/');
+  await waitForScene(page, 'MainMenu');
+  type Tf = { setup(p: object): void; goto(k: string): void };
+  await page.evaluate(() => {
+    const tf = (window as unknown as { __tf: Tf }).__tf;
+    tf.setup({
+      tutorialDone: true,
+      tier: 4,
+      coins: 200_000,
+      day: 40,
+      phase: 'market',
+      named: true,
+      businesses: ['phone', 'computer', 'mechanic', 'robotics', 'rocket'],
+      business: 'mechanic',
+    });
+    tf.goto('Market');
+  });
+  await waitForScene(page, 'Market');
+  await press(page, 'mouse', 'upgrades');
+  await press(page, 'mouse', 'hub_world');
+  await press(page, 'mouse', 'region_namerica');
+  await page.waitForTimeout(300);
+  const regions = () =>
+    tf(page, (t) => (t.state() as unknown as { regions: Record<string, number> }).regions);
+  expect(await regions()).toEqual({ namerica: 1 });
+  await closeModals(page, 'mouse');
+  // The flagship contract is the last card on Mechanic's board.
+  await page.evaluate(() => (window as unknown as { __tf: Tf }).__tf.goto('Market'));
+  await waitForScene(page, 'Market');
+  await page.waitForTimeout(500);
+  let last = 0;
+  for (let i = 0; i < 10; i++)
+    if (
+      await page.evaluate(
+        (k) => !!(window as unknown as { __tf: { where(id: string): unknown } }).__tf.where(k),
+        `job${i}`,
+      )
+    )
+      last = i;
+  await press(page, 'mouse', `job${last}`);
+  await press(page, 'mouse', 'take');
+  await page.waitForTimeout(1000);
+  await press(page, 'mouse', 'go');
+  await waitForScene(page, 'Workshop');
+  await playWorkshop(page, 'mouse');
+  await waitForScene(page, 'Summary');
+  expect(await regions()).toEqual({ namerica: 2 });
+});

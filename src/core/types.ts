@@ -115,6 +115,10 @@ export interface MarketDef {
   floor: [number, number];
   auction?: boolean;
   color: string;
+  /** A region's own market: open once that region is conquered. */
+  region?: string;
+  /** Only these categories (that the shop size allows) are found here. */
+  cats?: CategoryId[];
 }
 
 export interface TierDef {
@@ -271,6 +275,22 @@ export interface ContractDef {
   design: boolean;
 }
 
+/** An Earth region: open an office, then win its flagship contract to conquer it. */
+export interface RegionDef {
+  id: string;
+  /** Coins to open the regional office. */
+  cost: number;
+  /** Business whose job board gets the flagship contract. */
+  biz: string;
+  /** Who the flagship contract is for. */
+  client: string;
+  /** Position on the world map (0..1). */
+  u: number;
+  v: number;
+  /** Permanent bonuses once conquered: shop prices, contract pay, manager income (fractions). */
+  fx: { price?: number; contracts?: number; income?: number };
+}
+
 export interface CampaignDef {
   id: string;
   cost: number;
@@ -282,6 +302,14 @@ export interface CampaignDef {
 
 export interface EmpireBalance {
   businesses: BusinessDef[];
+  /** Global expansion: conquer every region before space. */
+  regions: {
+    /** Business that must be owned first. */
+    unlock: string;
+    /** Flagship contract pay: a design contract's pay x this. */
+    flagshipPay: number;
+    list: RegionDef[];
+  };
   /** Delegation: managers run businesses for you; branches multiply a business. */
   managers: {
     /** Business that must be owned before managers and branches are available. */

@@ -34,6 +34,8 @@ export interface ItemInstance {
     t?: number;
     /** Client company name for contracts (else the customer persona is the client). */
     c?: string;
+    /** Region whose flagship contract this is (finishing it conquers the region). */
+    r?: string;
   };
 }
 
@@ -158,6 +160,8 @@ export interface GameState {
   managers: Record<string, number>;
   /** Extra branches per business id (missing = just the first shop). */
   branches: Record<string, number>;
+  /** Regions: 1 = office open (flagship contract on offer), 2 = conquered. */
+  regions: Record<string, number>;
   /** One char per item: '0' unseen, '1' found, '2' perfectly restored. */
   catalog: string;
   requests: CustomerRequest[];
@@ -253,6 +257,7 @@ export function newGame(seed: number): GameState {
     brand: 0,
     managers: {},
     branches: {},
+    regions: {},
     catalog: '0'.repeat(ITEMS.length),
     requests: [],
     stats: {

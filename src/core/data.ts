@@ -59,6 +59,7 @@ export function categoriesForTier(tier: number): CategoryId[] {
   return CATEGORIES.filter((c) => c.unlockTier <= tier && !c.business).map((c) => c.id);
 }
 
+/** Markets a shop size opens (regional markets open with their region instead). */
 export function marketsForTier(tier: number): MarketDef[] {
-  return MARKETS.filter((m) => m.unlockTier <= tier);
+  return MARKETS.filter((m) => m.unlockTier <= tier && !m.region);
 }

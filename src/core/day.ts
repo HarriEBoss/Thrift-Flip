@@ -1,4 +1,5 @@
-import { BALANCE, ITEMS, marketsForTier } from './data';
+import { BALANCE, ITEMS } from './data';
+import { availableMarkets } from './market';
 import { hashSeed } from './prng';
 import { starsFor } from './economy';
 import { categoryComplete, markFound, markPerfect } from './catalog';
@@ -183,7 +184,7 @@ export function applyDoubleDay(state: GameState): number {
 
 function startNextDay(state: GameState): void {
   const n = state.day.n + 1;
-  const markets = marketsForTier(state.tier);
+  const markets = availableMarkets(state);
   const prev = markets.find((m) => m.id === state.day.market) ? state.day.market : markets[0].id;
   if (!state.flags.tutorialDone) state.flags.tutorialDone = true;
   state.day = newDay(n, prev, hashSeed(state.seed, 'day', n) >>> 0);

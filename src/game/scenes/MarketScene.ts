@@ -609,8 +609,8 @@ export class MarketScene extends GameScene {
     const special = o.k !== 'service' || o.items.length > 1;
     drawCard(bg, -w / 2, -h / 2, w, h, taken ? 0xe8efe0 : o.k === 'design' ? 0xe3eefc : C.paper, {
       radius: 20,
-      stroke: special ? C.terracotta : C.ink,
-      strokeW: special ? 6 : 4,
+      stroke: o.region ? C.mustardDark : special ? C.terracotta : C.ink,
+      strokeW: o.region ? 8 : special ? 6 : 4,
     });
     const img = this.add.image(0, -h * 0.07, instanceThumb(this, jobInstance(o)));
     img.setDisplaySize(w * 0.7, w * 0.7);
@@ -618,7 +618,11 @@ export class MarketScene extends GameScene {
     const label = o.items.length > 1 ? `${o.items.length} × ${ITEMS[o.a].name}` : ITEMS[o.a].name;
     const name = makeText(this, 0, h * 0.3, label, Math.max(16, Math.round(w * 0.1)), C.ink);
     if (name.width > w - 14) name.setScale((w - 14) / name.width);
-    const kindKey = o.items.length > 1 ? 'jobs.kindShort.fleet' : `jobs.kindShort.${o.k}`;
+    const kindKey = o.region
+      ? 'jobs.kindShort.flagship'
+      : o.items.length > 1
+        ? 'jobs.kindShort.fleet'
+        : `jobs.kindShort.${o.k}`;
     const kind = makeText(this, 0, -h / 2 + 18, t(kindKey), FS.tiny, C.inkSoft, { bold: false });
     if (kind.width > w - 10) kind.setScale((w - 10) / kind.width);
     const stars = makeText(this, 0, -h / 2 + 44, '★'.repeat(o.stars), FS.tiny, C.mustardDark);

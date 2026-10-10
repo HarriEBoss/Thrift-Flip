@@ -14,6 +14,7 @@ import { BUSINESSES, business, ownsBusiness } from './empire';
 import { brandFlow } from './marketing';
 import { designFor } from './design';
 import { starsFor } from './economy';
+import { conquerRegion, flagshipsAt, regionFx } from './regions';
 import namesJson from '../data/names.json';
 import type { JobKind } from './repair';
 import type { GameState, ItemInstance } from './state';
@@ -41,6 +42,8 @@ export interface JobOffer {
   stars: number;
   /** Reveal stars the client asks for (1-3). */
   target: number;
+  /** A region's flagship contract (delivering it conquers the region). */
+  region?: string;
 }
 
 const round5 = (v: number) => Math.round(v / 5) * 5;
@@ -79,6 +82,7 @@ export function businessOffers(state: GameState, id: string): JobOffer[] {
   const top = topIndex(state);
   const bonus = top > bi ? 1 : 0;
   const flow = brandFlow(state.brand);
+  const boost = 1 + regionFx(state).contracts;
   const rng = new Rng(hashSeed(state.seed, 'jobs', state.day.n, id));
   const out: JobOffer[] = [];
   let slot = 0;
@@ -113,7 +117,7 @@ export function businessOffers(state: GameState, id: string): JobOffer[] {
         items,
         ...first,
         k: def.k,
-        fee: contractFee(jobFee(it.base, def, first.d), stars, count),
+        fee: Math.round((contractFee(jobFee(it.base, def, first.d), stars, count) * boost) / 5) * 5,
         p,
         client,
         stars,
@@ -137,7 +141,7 @@ export function businessOffers(state: GameState, id: string): JobOffer[] {
         s: 0,
         d: 0,
         k: 'design',
-        fee: contractFee(round5(it.base * dp[0] + dp[1]), stars, 1),
+        fee: round5(contractFee(round5(it.base * dp[0] + dp[1]), stars, 1) * boost),
         p: contact(it.cat),
         client: rng.pick(CLIENTS[id] ?? ['']),
         stars,
@@ -147,6 +151,33 @@ export function businessOffers(state: GameState, id: string): JobOffer[] {
       last.s = last.items[0].s;
     }
   }
+  // Flagship contracts of regions whose office is open (slots 9, 8, 7).
+  flagshipsAt(state, id).forEach((r, k) => {
+    const def = b.jobs.find((j) => j.k !== 'service') ?? b.jobs[0];
+    const pool = poolFor(def);
+    if (!pool.length || k > 2) return;
+    const fr = new Rng(hashSeed(state.seed, 'flagship', r.id));
+    const { it, a } = fr.pick(pool);
+    const dp = BALANCE.empire.contracts.designPay;
+    const base = contractFee(round5(it.base * dp[0] + dp[1]), 5, 1);
+    out.push({
+      id: bi * 10 + 9 - k,
+      b: id,
+      items: [{ a, s: fr.int(1000, 2 ** 30), d: 0 }],
+      a,
+      s: 0,
+      d: 0,
+      k: 'design',
+      fee: round5(base * BALANCE.empire.regions.flagshipPay * boost),
+      p: contact(it.cat),
+      client: r.client,
+      stars: 5,
+      target: 1,
+      region: r.id,
+    });
+    const last = out[out.length - 1];
+    last.s = last.items[0].s;
+  });
   return out;
 }
 
@@ -167,7 +198,14 @@ export function signContract(state: GameState, id: number): ItemInstance[] {
   if (!o) return [];
   const out = o.items.map((x) => {
     const inst = makeInstance(state, x.a, 0, x.s, x.d, 0, true);
-    inst.job = { fee: o.fee, p: o.p, k: o.k, t: o.target, ...(o.client ? { c: o.client } : {}) };
+    inst.job = {
+      fee: o.fee,
+      p: o.p,
+      k: o.k,
+      t: o.target,
+      ...(o.client ? { c: o.client } : {}),
+      ...(o.region ? { r: o.region } : {}),
+    };
     inst.sc = recipeFor(inst).map(() => null);
     state.inv.push(inst);
     return inst;
@@ -190,6 +228,8 @@ export function jobPay(fee: number, quality: number): { fee: number; tip: number
 export interface JobResult {
   /** The client's quality target was missed (lower pay). */
   missed: boolean;
+  /** Region conquered by this delivery. */
+  region: string | null;
   fee: number;
   tip: number;
   xp: number;
@@ -219,7 +259,9 @@ export function completeJob(state: GameState, inst: ItemInstance): JobResult {
   state.day.stats.rep += rep;
   const xp = 10 + pay / 20;
   const levelUps = addXp(state, xp);
-  return { fee, tip, xp: Math.round(xp), rep, levelUps, missed };
+  // A flagship contract delivered to the client's wishes conquers its region.
+  const region = inst.job.r && !missed && conquerRegion(state, inst.job.r) ? inst.job.r : null;
+  return { fee, tip, xp: Math.round(xp), rep, levelUps, missed, region };
 }
 
 export { business };

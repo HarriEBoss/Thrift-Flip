@@ -35,6 +35,14 @@ import { DECOR, buyDecor } from '../src/core/decor';
 import { acceptJob, businessOffers, completeJob } from '../src/core/jobs';
 import { CAMPAIGNS, campaignStatus, runCampaign } from '../src/core/marketing';
 import {
+  REGIONS,
+  allRegionsWon,
+  expansionUnlocked,
+  flagshipsAt,
+  openRegion,
+  regionStatus,
+} from '../src/core/regions';
+import {
   branchCost,
   branchCount,
   branchStatus,
@@ -79,6 +87,8 @@ interface BotResult {
   playSec: number[];
   /** Day each business on the ladder was opened (-1 = never). */
   bizDay: number[];
+  /** Day all Earth regions were conquered (-1 = never). */
+  worldDay: number;
 }
 
 /** Restores everything in the queue; finished customer jobs are paid. */
@@ -156,9 +166,16 @@ function playDay(g: GameState, rng: Rng, skill: number): number {
       .find((x) => campaignStatus(g, x) === 'available' && g.coins > x.cost * 4);
     if (c) runCampaign(g, c.id);
   }
-  // Work at the biggest business two days out of three, the Reselling Shop on the third.
+  // Global expansion: open the next region's office when it is comfortably affordable.
+  if (expansionUnlocked(g)) {
+    const next = REGIONS.find((r) => regionStatus(g, r) === 'available' && r.cost <= g.coins * 0.5);
+    if (next && !REGIONS.some((r) => regionStatus(g, r) === 'open')) openRegion(g, next.id);
+  }
+  // Work where a flagship contract waits; else at the biggest business two days out of three, the
+  // Reselling Shop on the third.
   const top = BUSINESSES.filter((b) => g.biz.own.includes(b.id)).pop()!;
-  setCurrentBusiness(g, g.biz.own.length > 1 && g.day.n % 3 !== 0 ? top.id : 'reselling');
+  const flag = REGIONS.find((r) => regionStatus(g, r) === 'open' && flagshipsAt(g, r.biz).length);
+  setCurrentBusiness(g, flag ? flag.biz : g.biz.own.length > 1 && g.day.n % 3 !== 0 ? top.id : 'reselling');
   if (g.biz.cur !== 'reselling') {
     sec += T.marketBase;
     for (const o of businessOffers(g, g.biz.cur)) if (acceptJob(g, o.id)) sec += T.perBuy;
@@ -245,6 +262,7 @@ function runBot(seed: number): BotResult {
     completeDay: -1,
     playSec: [],
     bizDay: BUSINESSES.map((b, i) => (i === 0 ? 1 : -1)),
+    worldDay: -1,
   };
   let total = 0;
   for (let d = 1; d <= DAYS; d++) {
@@ -256,6 +274,7 @@ function runBot(seed: number): BotResult {
     BUSINESSES.forEach((b, i) => {
       if (res.bizDay[i] < 0 && g.biz.own.includes(b.id)) res.bizDay[i] = d;
     });
+    if (res.worldDay < 0 && allRegionsWon(g)) res.worldDay = d;
     if (process.env.TRACE && d % 5 === 0)
       console.error(`d${d} t${g.tier} c${g.coins} rep${g.rep} lvl${g.level} inv${g.inv.length}`);
     if (res.completeDay < 0 && isContentComplete(g)) res.completeDay = d;
@@ -309,6 +328,16 @@ BUSINESSES.forEach((b, i) => {
   );
 });
 out();
+{
+  const days = results.map((r) => r.worldDay);
+  const md = median(days);
+  const hours =
+    md > 0 ? median(results.map((r) => (r.worldDay > 0 ? r.playSec[r.worldDay - 1] : -1))) / 3600 : -1;
+  out(
+    `All ${REGIONS.length} Earth regions conquered: median day ${md > 0 ? md : '-'} (${hours >= 0 ? hours.toFixed(1) : '-'} h), ${days.filter((d) => d > 0).length}/${BOTS} bots.`,
+  );
+  out();
+}
 out('## Coin curve and catalog (median)');
 out();
 out('| Day | Coins | Catalog found | Play time (min) |');

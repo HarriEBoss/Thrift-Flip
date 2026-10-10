@@ -203,6 +203,18 @@ in `advancePhase(…, 'summary')`); the summary shows "Managers earned". Hiring 
 of the capital. Income grows linearly with branches while their cost grows exponentially: a repeatable
 loop that keeps scaling without ever running out.
 
+### Global expansion (`core/regions.ts`, `empire.regions`, regional markets in `markets.json`)
+
+From the top of the ladder (`regions.unlock`), Upgrades → World expansion shows a world map with seven
+regions (North America, South America, Europe, Africa, Asia, Oceania, Antarctica). Each region: pay
+`cost` to open an office (`openRegion`), which puts a **flagship contract** (a 5-star custom design for
+`client`, pay = design pay × `flagshipPay`) on the job board of business `biz` (slots 9, 8, 7 of that
+board; never offered while one is in the workshop). Delivering it at the quality wanted conquers the
+region (`completeJob` → `conquerRegion`). Conquered regions add permanent bonuses (`regionFx`: shop
+prices in `instanceValue`, contract pay in `businessOffers`, manager income in `dailyIncome`) and open
+the region's own market: a `markets.json` entry with `region` and `cats` (it only offers those
+categories). `allRegionsWon` gates space (Phase 5).
+
 ## Asset pipeline
 
 **Art style.** Objects (items, the workshop, thumbnails) are drawn smooth and lit: soft light from the
@@ -249,8 +261,9 @@ bright palette in `theme.ts` and the Nunito font.
   forces a write on day end, purchases and pause. It checks UTF-16 well-formedness and the 3 MiB / 500 KiB limits.
   A corrupt save is kept in memory and writing is blocked until the player sees a friendly message.
 
-Current version: **v6** (v5 added `br`, the brand, `dy[16]`, today's campaigns, and the job tuple's
-quality target and client company; v6 adds `mg` managers, `bn` branches and today's manager takings). v2 added `dc` (owned decorations); v3 added `ws` (owned workshops), `dy[15]`
+Current version: **v7** (v5 added `br`, the brand, `dy[16]`, today's campaigns, and the job tuple's
+quality target and client company; v6 added `mg` managers, `bn` branches and today's manager takings;
+v7 adds `rg` regions and the job tuple's region). v2 added `dc` (owned decorations); v3 added `ws` (owned workshops), `dy[15]`
 (today's taken jobs) and an optional job tuple `[fee, persona, kind]` at the end of an item; v4 adds `cn`
 (company name), `bz` (`[owned businesses, today's business]`) and `fl.nm` (named), and drops `ws`: the
 Repair Shop becomes Phone Repair, the Computer Workshop Computer Repair and the Car Garage Mechanic.

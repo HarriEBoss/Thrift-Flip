@@ -12,6 +12,7 @@ import type { JobKind } from '../repair';
 import { RESELLING, business } from '../empire';
 import { cleanName } from '../names';
 import { maxManagerLevel } from '../managers';
+import { WON, region } from '../regions';
 import { CURRENT_VERSION, migrate } from './migrations';
 
 /**
@@ -20,7 +21,7 @@ import { CURRENT_VERSION, migrate } from './migrations';
  *
  * Shape (see tests/fixtures/saves for real examples; v2 added `dc`, v3 added dy[15] and the optional
  * job tuple [fee, persona, kind] at the end of an item, v4 added `cn` and `bz` and dropped `ws`, v5 added `br`, dy[16] and the job tuple's target and
- * client), v6 added `mg` (managers), `bn` (branches) and today's manager takings in dy[10][12]):
+ * client), v6 added `mg` (managers), `bn` (branches) and today's manager takings in dy[10][12], v7 added `rg` (regions) and the job tuple's region):
  * { v, sd, c, x, l, rp, t, nu, dy:[...], iv:[[...]], sk, up, pk, ow, ct, rq:[[t,p,day]], st:{...}, bs, se:{...}, dl:[...], fl:{...} }
  */
 export type SaveObject = Record<string, unknown> & { v: number };
@@ -28,7 +29,7 @@ export type SaveObject = Record<string, unknown> & { v: number };
 const PHASES: DayPhase[] = ['market', 'workshop', 'shop', 'summary'];
 
 /** [fee, persona, kind, target stars (0 = none), client company ('' = the persona)] (v5 adds the last two). */
-type JobTuple = [number, string, string, number?, string?];
+type JobTuple = [number, string, string, number?, string?, string?];
 type ItemTuple = [
   number,
   number,
@@ -59,7 +60,7 @@ function encodeItem(i: ItemInstance): ItemTuple {
     i.col,
     i.day,
   ];
-  if (i.job) t.push([i.job.fee, i.job.p, i.job.k, i.job.t ?? 0, i.job.c ?? '']);
+  if (i.job) t.push([i.job.fee, i.job.p, i.job.k, i.job.t ?? 0, i.job.c ?? '', i.job.r ?? '']);
   return t;
 }
 
@@ -75,6 +76,7 @@ function decodeItem(t: unknown): ItemInstance | null {
           k: jb[2] as JobKind,
           ...(num(jb[3], 0) > 0 ? { t: Math.min(3, num(jb[3], 0)) } : {}),
           ...(str(jb[4], '') ? { c: cleanName(str(jb[4], '')).slice(0, 30) } : {}),
+          ...(region(str(jb[5], '')) ? { r: str(jb[5], '') } : {}),
         }
       : undefined;
   return {
@@ -93,12 +95,16 @@ function decodeItem(t: unknown): ItemInstance | null {
   };
 }
 
-/** { businessId: level } with known businesses and whole numbers in 1..max only. */
-function levels(v: unknown, max: number): Record<string, number> {
+/** { id: level } with known ids (businesses by default) and whole numbers in 1..max only. */
+function levels(
+  v: unknown,
+  max: number,
+  valid: (k: string) => boolean = (k) => !!business(k),
+): Record<string, number> {
   const out: Record<string, number> = {};
   if (!v || typeof v !== 'object' || Array.isArray(v)) return out;
   for (const [k, x] of Object.entries(v as Record<string, unknown>))
-    if (business(k) && typeof x === 'number' && x >= 1) out[k] = Math.min(max, Math.floor(x));
+    if (valid(k) && typeof x === 'number' && x >= 1) out[k] = Math.min(max, Math.floor(x));
   return out;
 }
 
@@ -174,6 +180,7 @@ export function serialize(state: GameState): string {
     br: Math.round(state.brand * 10) / 10,
     mg: { ...state.managers },
     bn: { ...state.branches },
+    rg: { ...state.regions },
     ct: state.catalog,
     rq: state.requests.map((r) => [r.t, r.p, r.day]),
     st: { ...state.stats },
@@ -281,6 +288,7 @@ function fromObject(o: SaveObject): GameState {
   g.brand = Math.max(0, num(o.br, 0));
   g.managers = levels(o.mg, maxManagerLevel());
   g.branches = levels(o.bn, 999);
+  g.regions = levels(o.rg, WON, (k) => !!region(k));
   const ct = str(o.ct, '');
   g.catalog = /^[012]*$/.test(ct)
     ? ct.padEnd(ITEMS.length, '0').slice(0, ITEMS.length)

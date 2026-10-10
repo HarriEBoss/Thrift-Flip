@@ -789,6 +789,14 @@ export class WorkshopScene extends GameScene {
         this.toast(t('catalog.setDone', { cat: t(`cat.${res.setCompleted}`) }), C.purple),
       );
     if (res.levelUps > 0) this.time.delayedCall(2600, () => this.celebrateLevel(res.levelUps));
+    if (job?.region) {
+      const region = t(`region.${job.region}`);
+      this.time.delayedCall(2000, () => {
+        session.audio.play('levelup');
+        this.toast(t('world.conquered', { company: session.state.company, region }), C.leafDark);
+        this.sparkle(this.frame.w / 2, this.frame.h * 0.3, 60, C.gold);
+      });
+    }
     this.refreshHud();
   }
 

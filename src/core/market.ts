@@ -6,6 +6,7 @@ import { TUTORIAL_SEED, makeInstance } from './items';
 import { appraisalLevel, marketSlots, revealsGems, shelfCapacity, skillRank } from './perks';
 import { trendFor } from './trends';
 import { decorFx } from './decor';
+import { regionMarkets } from './regions';
 import type { GameState, ItemInstance } from './state';
 import type { MarketDef, Rarity } from './types';
 
@@ -54,7 +55,10 @@ function pickArchetype(state: GameState, rng: Rng, cats: string[]): number {
 export function generateOffers(state: GameState, mdef: MarketDef = marketDef(state.day.market)): Offer[] {
   if (!state.flags.tutorialDone && state.day.n === 1) return [tutorialOffer()];
   const rng = new Rng(hashSeed(state.seed, 'market', state.day.mseed, mdef.id));
-  const cats = categoriesForTier(state.tier);
+  // Regional markets specialise in a few categories (of those the shop size allows).
+  const all = categoriesForTier(state.tier);
+  const focus = mdef.cats ? all.filter((c) => mdef.cats!.includes(c)) : [];
+  const cats = focus.length ? focus : all;
   const count = rng.int(mdef.count[0], mdef.count[1]);
   const offers: Offer[] = [];
   for (let i = 0; i < count; i++) {
@@ -191,7 +195,7 @@ export function rerollMarket(state: GameState): void {
 }
 
 export function availableMarkets(state: GameState): MarketDef[] {
-  return marketsForTier(state.tier);
+  return [...marketsForTier(state.tier), ...regionMarkets(state)];
 }
 
 export function setMarket(state: GameState, id: string): boolean {

@@ -12,6 +12,16 @@ import { openSkills, openTierUpgrade, openUpgrades } from './menus';
 import type { DecorFx } from '../../core/types';
 import { CAMPAIGNS, brandFlow, campaignStatus, runCampaign } from '../../core/marketing';
 import {
+  REGIONS,
+  allRegionsWon,
+  expansionUnlocked,
+  openRegion,
+  openableRegions,
+  regionStatus,
+  regionsWon,
+} from '../../core/regions';
+import { MARKETS } from '../../core/data';
+import {
   branchCost,
   branchStatus,
   dailyIncome,
@@ -111,6 +121,16 @@ export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
       open: () => openManagers(scene, after),
     },
     {
+      id: 'hub_world',
+      label: t('hub.world'),
+      sub: expansionUnlocked(s)
+        ? t('hub.worldSub', { n: regionsWon(s), total: REGIONS.length })
+        : t('hub.managersLocked', { biz: t(`biz.${BALANCE.empire.regions.unlock}`) }),
+      color: C.sky,
+      badge: openableRegions(s) ? String(openableRegions(s)) : null,
+      open: () => openWorld(scene, after),
+    },
+    {
       id: 'hub_tools',
       label: t('hub.tools'),
       sub: t('hub.toolsSub'),
@@ -132,9 +152,9 @@ export function openUpgradesHub(scene: BaseScene, onChange?: () => void): void {
     onChange?.();
   }
   rows.forEach((r, i) => {
-    const b = new Button(scene, 0, -422 + i * 96, {
+    const b = new Button(scene, 0, -444 + i * 88, {
       w: 520,
-      h: 84,
+      h: 80,
       label: r.label,
       sub: r.sub,
       color: r.color,
@@ -543,6 +563,148 @@ export function openManagers(scene: BaseScene, onChange?: () => void): void {
     scene.mark(`hire_${b.id}`, hire);
     scene.mark(`branch_${b.id}`, branch);
     row.add([hire, branch]);
+    m.content.add(row);
+  });
+}
+
+/** A soft continent shape (polygon with gently varying radius). */
+function blob(
+  g: Phaser.GameObjects.Graphics,
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  seed: number,
+): void {
+  const pts: Phaser.Math.Vector2[] = [];
+  for (let i = 0; i < 28; i++) {
+    const a = (i / 28) * Math.PI * 2;
+    const k = 1 + 0.16 * Math.sin(a * 3 + seed) + 0.1 * Math.sin(a * 5 + seed * 2.3);
+    pts.push(new Phaser.Math.Vector2(cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k));
+  }
+  g.fillPoints(pts, true);
+}
+
+/** Continents on the world map: [u, v, radius x, radius y] in map units (0..1). */
+const LANDS: Array<[number, number, number, number]> = [
+  [0.2, 0.3, 0.13, 0.15],
+  [0.3, 0.66, 0.07, 0.15],
+  [0.5, 0.25, 0.06, 0.08],
+  [0.53, 0.57, 0.08, 0.15],
+  [0.72, 0.3, 0.16, 0.14],
+  [0.84, 0.71, 0.07, 0.07],
+  [0.5, 0.95, 0.36, 0.05],
+];
+
+/** The world: open regional offices, win flagship contracts, conquer every region before space. */
+export function openWorld(scene: BaseScene, onChange?: () => void): void {
+  const s = session.state;
+  const rowH = 92;
+  const m = scene.openModal({ title: t('world.title'), w: 680, h: 1200 });
+  const unlocked = expansionUnlocked(s);
+  const top = -m.ph / 2 + 80;
+  // Map.
+  const mw = 600;
+  const mh = 260;
+  const map = scene.add.graphics();
+  drawCard(map, -mw / 2, top, mw, mh, 0x4fb6ff, { radius: 20, stroke: C.ink, strokeW: 4, shadow: 4 });
+  map.fillStyle(0x8fd17a, 1);
+  LANDS.forEach(([u, v, rx, ry], i) => {
+    if (i === LANDS.length - 1) map.fillStyle(0xf4f7fb, 1);
+    blob(map, -mw / 2 + u * mw, top + v * mh, rx * mw, ry * mh, i * 1.7);
+  });
+  m.content.add(map);
+  REGIONS.forEach((r) => {
+    const st = regionStatus(s, r);
+    const x = -mw / 2 + r.u * mw;
+    const y = top + r.v * mh;
+    const pin = scene.add.graphics();
+    const col = st === 'won' ? C.leaf : st === 'open' ? C.mustard : st === 'locked' ? 0x9a9aa2 : C.white;
+    pin.fillStyle(C.ink, 1);
+    pin.fillCircle(x, y, 17);
+    pin.fillStyle(col, 1);
+    pin.fillCircle(x, y, 13);
+    if (st === 'won') {
+      // A little flag: this region is yours.
+      pin.lineStyle(3, C.ink, 1);
+      pin.lineBetween(x, y - 12, x, y - 40);
+      pin.fillStyle(C.terracotta, 1);
+      pin.fillTriangle(x, y - 40, x + 22, y - 33, x, y - 26);
+    }
+    m.content.add(pin);
+  });
+  const status = !unlocked
+    ? t('world.locked', { biz: t(`biz.${BALANCE.empire.regions.unlock}`) })
+    : allRegionsWon(s)
+      ? t('world.allWon', { company: s.company })
+      : t('world.progress', { n: regionsWon(s), total: REGIONS.length });
+  m.content.add(
+    makeText(scene, 0, top + mh + 34, status, FS.tiny, allRegionsWon(s) ? C.leafDark : C.inkSoft, {
+      wrap: 600,
+      bold: false,
+    }),
+  );
+  const listTop = top + mh + 100;
+  REGIONS.forEach((r, i) => {
+    const st = regionStatus(s, r);
+    const row = scene.add.container(0, listTop + i * rowH);
+    const g = scene.add.graphics();
+    drawCard(g, -310, -42, 620, 84, st === 'won' ? 0xdff2d5 : st === 'open' ? 0xfff3c4 : C.white, {
+      radius: 16,
+      stroke: C.ink,
+      strokeW: 3,
+      shadow: 2,
+    });
+    const fx = r.fx;
+    const bonus = [
+      fx.price ? t('world.fx.price', { n: Math.round(fx.price * 100) }) : '',
+      fx.contracts ? t('world.fx.contracts', { n: Math.round(fx.contracts * 100) }) : '',
+      fx.income ? t('world.fx.income', { n: Math.round(fx.income * 100) }) : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
+    const mk = MARKETS.find((x) => x.region === r.id);
+    const sub =
+      st === 'open'
+        ? t('world.flagship', { biz: t(`biz.${r.biz}`), client: r.client })
+        : `${bonus}${mk ? ` · ${t(`market.${mk.id}`)}` : ''}`;
+    // One line each: the sub line shrinks to fit next to the button.
+    const subT = makeText(scene, -290, 18, sub, FS.tiny, C.inkSoft, { align: 'left', bold: false });
+    if (subT.width > 400) subT.setScale(400 / subT.width);
+    row.add([g, makeText(scene, -290, -16, t(`region.${r.id}`), FS.small, C.ink, { align: 'left' }), subT]);
+    const label =
+      st === 'won'
+        ? t('world.won')
+        : st === 'open'
+          ? t('world.open')
+          : st === 'locked'
+            ? t('decor.locked')
+            : String(r.cost);
+    const b = new Button(scene, 220, 0, {
+      w: 150,
+      h: 60,
+      label,
+      color: st === 'available' ? C.leaf : C.inkSoft,
+      fontSize: FS.tiny,
+      icon: st === 'available' || st === 'poor' ? (gr, sz) => iconCoin(gr, sz) : undefined,
+      onClick: () => {
+        if (!openRegion(s, r.id)) return;
+        session.audio.play('levelup');
+        session.haptic('success');
+        void session.save(true);
+        refresh(scene);
+        (scene as unknown as { toast?: (s: string, c?: number) => void }).toast?.(
+          t('world.opened', { region: t(`region.${r.id}`), biz: t(`biz.${r.biz}`) }),
+          C.leafDark,
+        );
+        m.close();
+        onChange?.();
+        openWorld(scene, onChange);
+      },
+    });
+    b.setEnabled(st === 'available');
+    scene.mark(`region_${r.id}`, b);
+    row.add(b);
     m.content.add(row);
   });
 }

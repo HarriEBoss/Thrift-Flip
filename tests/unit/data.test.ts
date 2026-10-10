@@ -39,8 +39,9 @@ describe('content data', () => {
       expect(RECIPES[c].some((s) => s.req)).toBe(true);
     }
   });
-  it('has 5 markets, 5 tiers, 14 personas, ~25 request templates, 12 skills', () => {
-    expect(MARKETS).toHaveLength(5);
+  it('has 5 markets (+7 regional ones), 5 tiers, 14 personas, ~25 request templates, 12 skills', () => {
+    expect(MARKETS.filter((m) => !m.region)).toHaveLength(5);
+    expect(MARKETS.filter((m) => m.region)).toHaveLength(7);
     expect(BALANCE.tiers).toHaveLength(5);
     expect(PERSONAS).toHaveLength(14);
     expect(REQUESTS).toHaveLength(25);

@@ -212,6 +212,15 @@ describe('migrations', () => {
     expect(v6.day.stats.passive).toBe(845);
   });
 
+  it('v6 -> v7: no regions yet; v7 keeps regions and the flagship contract item', () => {
+    const v6 = JSON.parse(readFileSync(new URL('v6-midgame.json', FIXTURES), 'utf8'));
+    expect(migrate(v6)).toMatchObject({ rg: {} });
+    expect(deserialize(JSON.stringify(v6)).regions).toEqual({});
+    const v7 = deserialize(readFileSync(new URL('v7-midgame.json', FIXTURES), 'utf8'));
+    expect(v7.regions).toEqual({ namerica: 2, asia: 1 });
+    expect(v7.inv.some((i) => i.job?.r === 'asia')).toBe(true);
+  });
+
   it('migrate is a no-op at the current version and validates chain', () => {
     const obj = { v: CURRENT_VERSION, a: 1 };
     expect(migrate(obj)).toBe(obj);
