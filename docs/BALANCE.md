@@ -25,6 +25,8 @@ Targets from the brief: tier 2 around day 3, tier 5 around days 35–45, and abo
 | robotics | 20000 | 12000 | 50 | 5.0 | 20/20 |
 | rocket | 60000 | 36000 | 56 | 5.6 | 20/20 |
 
+All 7 Earth regions conquered: median day - (- h), 0/20 bots.
+
 ## Coin curve and catalog (median)
 
 | Day | Coins | Catalog found | Play time (min) |
@@ -44,16 +46,16 @@ Targets from the brief: tier 2 around day 3, tier 5 around days 35–45, and abo
 | 45 | 6076 | 117/195 (60%) | 246 |
 | 50 | 27177 | 130/195 (67%) | 293 |
 | 60 | 78888 | 159/195 (82%) | 371 |
-| 70 | 210925 | 170/195 (87%) | 454 |
-| 80 | 317348 | 178/195 (91%) | 544 |
-| 90 | 379305 | 185/195 (95%) | 628 |
-| 100 | 517242 | 189/195 (97%) | 711 |
+| 70 | 210925 | 170/195 (87%) | 455 |
+| 80 | 273969 | 178/195 (91%) | 544 |
+| 90 | 354141 | 184/195 (94%) | 635 |
+| 100 | 551057 | 188/195 (96%) | 719 |
 
 ## Content completion (top tier + full catalog)
 
-- Bots completing within 100 days: 6/20
+- Bots completing within 100 days: 3/20
 - Median completion day: 99
-- Median play time to completion: 11.6 h
-- Average real minutes per in-game day: 7.1 (target 3–6)
+- Median play time to completion: 11.3 h
+- Average real minutes per in-game day: 7.2 (target 3–6)
 
 Purchases are not needed: these bots never buy anything or watch ads.
