@@ -59,3 +59,24 @@ All 7 Earth regions conquered: median day - (- h), 0/20 bots.
 - Average real minutes per in-game day: 7.2 (target 3–6)
 
 Purchases are not needed: these bots never buy anything or watch ads.
+
+## The long game (empire, world, space)
+
+6 bots play up to 1500 days with the same strategy plus: open every business, hire managers and open branches, run campaigns, conquer regions, research, found colonies and build the Dyson project. Target: 50–150 hours to harvest the whole Sun.
+
+| Milestone | Median day | Median play time (h) | Bots reaching |
+|---|---|---|---|
+| Business: reselling | 1 | 0.0 | 6/6 |
+| Business: phone | 24 | 1.7 | 6/6 |
+| Business: computer | 46 | 4.1 | 6/6 |
+| Business: mechanic | 49 | 4.7 | 6/6 |
+| Business: robotics | 53 | 5.1 | 6/6 |
+| Business: rocket | 57 | 5.7 | 6/6 |
+| All Earth regions | 123 | 15.4 | 6/6 |
+| Colony: moon | 151 | 19.4 | 6/6 |
+| Colony: mars | 212 | 28.9 | 6/6 |
+| Colony: asteroids | 303 | 44.0 | 6/6 |
+| Colony: europa | 389 | 59.8 | 6/6 |
+| Colony: titan | 465 | 74.6 | 6/6 |
+| Colony: mercury | 522 | 87.1 | 6/6 |
+| Dyson project done (whole Sun) | 651 | 117.4 | 6/6 |
