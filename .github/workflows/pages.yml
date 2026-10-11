@@ -1,0 +1,46 @@
+# Publishes the playable web build of the game to GitHub Pages:
+#   https://harrieboss.github.io/Thrift-Flip/
+# One-time setup: Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+name: Deploy game to GitHub Pages
+
+on:
+  push:
+    branches: [claude/tender-bohr-be8uzm, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+      # The playtest build: the web game with a mock store and no ads.
+      - run: npx vite build --mode playtest
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist-playtest
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
