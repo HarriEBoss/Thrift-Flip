@@ -8,6 +8,7 @@ import { xpToNext } from '../../core/progression';
 import { t } from '../../i18n';
 import type { RewardId } from '../../platform/Platform';
 import { compact } from '../ui/format';
+import { openTablet } from './TabletScene';
 
 /**
  * Base for the in-day scenes: top HUD (coins, day, level/XP, reputation), home button and juice
@@ -22,6 +23,8 @@ export abstract class GameScene extends BaseScene {
   private xpBar!: ProgressBar;
   private hudBg!: Phaser.GameObjects.Graphics;
   protected homeBtn!: Button;
+  protected tabletBtn!: Button;
+  private dayMax = 0;
   private shownCoins = 0;
   private coinTween: Phaser.Tweens.Tween | null = null;
   protected coinAnchor = { x: 0, y: 0 };
@@ -59,13 +62,46 @@ export abstract class GameScene extends BaseScene {
       onClick: () => this.goHome(),
     });
     this.root.add(this.homeBtn);
+    this.tabletBtn = new Button(this, 0, 0, {
+      w: 80,
+      h: 78,
+      label: '',
+      color: 0x2a2833,
+      icon: (g) => {
+        // A little tablet with two app tiles.
+        g.fillStyle(0x15141a, 1);
+        g.fillRoundedRect(-17, -22, 34, 44, 6);
+        g.fillStyle(0x1aa89c, 1);
+        g.fillRoundedRect(-13, -18, 26, 36, 3);
+        g.fillStyle(0xffd34d, 1);
+        g.fillRect(-9, -12, 8, 8);
+        g.fillStyle(0xd0542f, 1);
+        g.fillRect(2, -12, 8, 8);
+      },
+      onClick: () => {
+        if (!this.hasModal()) openTablet(this);
+      },
+    });
+    this.mark('tablet', this.tabletBtn);
+    this.root.add(this.tabletBtn);
     this.refreshHud();
+  }
+
+  /** The tablet can be opened from any game screen once the first day is done. */
+  protected tabletShown(): boolean {
+    return session.state.flags.tutorialDone;
   }
 
   protected layoutHud(): void {
     const f = this.frame;
-    const w = f.w - 24;
+    const tab = this.tabletShown();
+    const w = f.w - 24 - (tab ? 92 : 0);
     const h = 78;
+    this.tabletBtn.setVisible(tab).setPosition(f.w - 12 - 40, 10 + h / 2);
+    // The day and screen name fit between the coins and the reputation.
+    this.dayMax = Math.min(f.w * 0.42, w - 420);
+    this.dayText.setScale(1);
+    if (this.dayText.width > this.dayMax) this.dayText.setScale(this.dayMax / this.dayText.width);
     this.hud.setPosition(12, 10);
     this.hudBg.clear();
     drawCard(this.hudBg, 0, 0, w, h, C.paper, { radius: 26, stroke: C.ink, strokeW: 4, shadow: 5 });
@@ -91,8 +127,8 @@ export abstract class GameScene extends BaseScene {
   refreshHud(): void {
     const s = session.state;
     this.dayText.setText(`${t('common.day', { n: s.day.n })} · ${this.hudTitle()}`);
-    if (this.dayText.width > this.frame.w * 0.42)
-      this.dayText.setScale((this.frame.w * 0.42) / this.dayText.width);
+    const max = this.dayMax || this.frame.w * 0.42;
+    if (this.dayText.width > max) this.dayText.setScale(max / this.dayText.width);
     else this.dayText.setScale(1);
     this.lvlText.setText(t('common.level', { n: s.level }));
     this.repText.setText(String(s.rep));

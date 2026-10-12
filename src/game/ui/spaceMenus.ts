@@ -36,7 +36,7 @@ function toast(scene: BaseScene, text: string, color: number = C.leafDark): void
   (scene as unknown as { toast?: (s: string, c?: number) => void }).toast?.(text, color);
 }
 
-const MAT_COL: Record<string, number> = {
+export const MAT_COL: Record<string, number> = {
   helium3: 0x9fd8ff,
   regolith: 0xd9561a,
   nickeliron: 0x8d939d,

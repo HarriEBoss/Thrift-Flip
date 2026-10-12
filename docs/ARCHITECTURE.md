@@ -264,6 +264,26 @@ colonies; capped by `maxDiscount`), `marketing` and `loyal` (brand gain and fade
 `startBiz`, applied by `applyHeadStart`). `pos` places a node on the tree map (the tablet, phase 7).
 The balance bot plays prestige runs too and reports them in `docs/BALANCE.md`.
 
+### The tablet (`scenes/TabletScene.ts`, `core/tablet.ts`)
+
+A tablet button at the right end of the HUD (every game screen, once the first day is done) launches
+`TabletScene` over the current scene, which is paused until the tablet is put away (✕, Esc, or Esc
+twice from an app). It is a generic dark device (rounded bezel, camera dot, status bar with the day,
+company name and a battery): no real brand, logo or icons. The home screen has two apps:
+
+- **Legacy tree**: the skill tree as a map. `treeLayout` places nodes from their `pos` (turned so
+  branches run down a tall screen), with gold links between owned skills. Tap a node to see its effect,
+  needs and cost in the info panel and buy it; prestige from here when the run is finished.
+- **Solar system**: the Sun with its Dyson swarm ring (built stages lit), Earth with the Moon, and
+  every colony body on its orbit (`orbitRadius` spreads the orbits out; `orbitAngle` gives each a
+  fixed start per save and a slow drift, stopped with Reduced Motion). Founded colonies have a flag,
+  bodies ready to colonise a pulsing gold ring, locked ones a padlock. Tap a body for its material,
+  harvest and income, needs or cost, and found the colony; tap the Sun to open the Dyson project.
+
+Both maps pan (drag) and zoom (+/− buttons, mouse wheel). Phaser 4 has no simple clip mask, so the
+maps clip their own drawing to the map area (`clipSegment`, nodes and bodies hidden outside it). On
+wide screens the info panel sits beside the map, on tall ones under it.
+
 ## Asset pipeline
 
 **Art style.** Objects (items, the workshop, thumbnails) are drawn smooth and lit: soft light from the

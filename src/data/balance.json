@@ -951,7 +951,8 @@
           "income": 20000,
           "orbit": 0.18,
           "optional": true,
-          "client": "Moon Base Alpha"
+          "client": "Moon Base Alpha",
+          "around": "earth"
         },
         {
           "id": "mars",
@@ -1051,7 +1052,8 @@
           "silicon": 15
         },
         "energy": 100000
-      }
+      },
+      "earthOrbit": 0.35
     },
     "prestige": {
       "maxDiscount": 0.6,
@@ -1299,7 +1301,7 @@
           "cost": 4,
           "req": [
             "boss2",
-            "cash2"
+            "wages"
           ],
           "fx": {
             "managers": 0.25

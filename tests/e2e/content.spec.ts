@@ -505,3 +505,71 @@ test('prestige: harvest the whole Sun, prestige for a token, spend it, and the n
   const again = await page2.evaluate(() => (window as unknown as { __tf: Tf }).__tf.state().prestige);
   expect(again).toEqual({ n: 1, tokens: 0, nodes: ['cash1'], best: 600 });
 });
+
+test('tablet: open it over the market, buy a legacy skill on the tree map, found a colony on the solar system map', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  await page.setViewportSize({ width: 405, height: 720 });
+  await setupPage(page);
+  await page.goto('/');
+  await waitForScene(page, 'MainMenu');
+  type St = {
+    coins: number;
+    regions: Record<string, number>;
+    space: { techs: string[]; colonies: string[] };
+    prestige: { n: number; tokens: number; nodes: string[]; best: number };
+  };
+  type Tf = { setup(p: object): void; goto(k: string): void; state(): St; scene(): string };
+  await page.evaluate(() => {
+    const tf = (window as unknown as { __tf: Tf }).__tf;
+    tf.setup({
+      tutorialDone: true,
+      tier: 4,
+      coins: 50_000_000,
+      day: 300,
+      phase: 'market',
+      named: true,
+      businesses: ['phone', 'computer', 'mechanic', 'robotics', 'rocket'],
+      business: 'rocket',
+    });
+    const st = tf.state();
+    for (const r of ['namerica', 'samerica', 'europe', 'africa', 'asia', 'oceania', 'antarctica'])
+      st.regions[r] = 2;
+    st.space.techs.push('rockets', 'lifesupport', 'habitats');
+    st.prestige = { n: 1, tokens: 1, nodes: [], best: 600 };
+    tf.goto('Market');
+  });
+  await waitForScene(page, 'Market');
+  const state = () => tf(page, (t) => t.state() as unknown as St);
+  await press(page, 'mouse', 'tablet');
+  await waitForScene(page, 'Tablet');
+  // Legacy tree: tap a skill on the map, then buy it.
+  await press(page, 'mouse', 'app_tree');
+  await press(page, 'mouse', 'tnode_cash1');
+  await press(page, 'mouse', 'tbuy');
+  await page.waitForTimeout(300);
+  expect((await state()).prestige).toMatchObject({ tokens: 0, nodes: ['cash1'] });
+  // Zoomed in, the map still works.
+  await press(page, 'mouse', 'tzoom_in');
+  await press(page, 'mouse', 'tab_back');
+  // Solar system: Mars is ready for a colony.
+  await press(page, 'mouse', 'app_space');
+  await press(page, 'mouse', 'tbody_mars');
+  const before = (await state()).coins;
+  await press(page, 'mouse', 'tfound');
+  await page.waitForTimeout(300);
+  const after = await state();
+  expect(after.space.colonies).toContain('mars');
+  expect(after.coins).toBeLessThan(before);
+  // Esc goes back to the home screen, then puts the tablet away; the market carries on.
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('Escape');
+  await waitForScene(page, 'Market');
+  await page.waitForTimeout(300);
+  expect(await tf(page, (t) => (t as unknown as Tf).scene())).toBe('Market');
+  await press(page, 'mouse', 'upgrades');
+  expect(
+    await page.evaluate(() => (window as unknown as { __tf: { hasModal(): boolean } }).__tf.hasModal()),
+  ).toBe(true);
+});

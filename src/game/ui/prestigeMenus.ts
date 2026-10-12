@@ -73,6 +73,10 @@ export function openPrestige(scene: BaseScene): void {
       void session.save(true);
       session.openTreeNext = true;
       m.close();
+      // A fresh run starts at the market: put away the tablet or anything else still open.
+      for (const sc of scene.game.scene.getScenes(false))
+        if (sc !== scene && sc.scene.key !== 'Market' && (sc.sys.isActive() || sc.sys.isPaused()))
+          sc.scene.stop();
       scene.scene.start('Market');
     },
   });

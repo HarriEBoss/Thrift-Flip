@@ -11,6 +11,7 @@ import { DailyScene } from './DailyScene';
 import { CompleteScene } from './CompleteScene';
 import { PromoScene } from './PromoScene';
 import { NameScene } from './NameScene';
+import { TabletScene } from './TabletScene';
 
 export const SCENES: Array<typeof Phaser.Scene> = [
   BootScene,
@@ -24,6 +25,7 @@ export const SCENES: Array<typeof Phaser.Scene> = [
   DailyScene,
   CompleteScene,
   NameScene,
+  TabletScene,
   // Store key art: only in E2E/dev builds.
   ...(__E2E__ ? [PromoScene] : []),
 ];

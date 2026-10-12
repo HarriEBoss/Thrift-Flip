@@ -299,6 +299,8 @@ export interface BodyDef {
   income: number;
   /** Distance from the Sun on the map (0..1). */
   orbit: number;
+  /** Shown circling this planet on the map instead of the Sun ('earth' for the Moon). */
+  around?: string;
   /** Not needed to go further (the Moon). */
   optional?: boolean;
   /** The colony's name as a client of its repair contracts. */
@@ -306,6 +308,8 @@ export interface BodyDef {
 }
 
 export interface SpaceBalance {
+  /** Earth's distance from the Sun on the solar system map (0..1). */
+  earthOrbit: number;
   tech: TechDef[];
   bodies: BodyDef[];
   /** Colony repair contracts at Rocket Repair: pay = base x pay[0] + pay[1]; reward = rate x reward. */

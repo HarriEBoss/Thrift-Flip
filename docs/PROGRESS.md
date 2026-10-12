@@ -365,6 +365,23 @@ Next: Phase 3, the playable core loop in Phaser.
   kept, node prerequisites and costs, every bonus reaching the game, save round trip and v8 → v9; e2e:
   prestige from the Dyson screen, spend the token, the tree survives a reload.
 
+## Business empire, phase 7: the tablet ✅
+
+- A **tablet** button at the right of the HUD opens an in-game tablet over any game screen (the game
+  behind pauses). A plain dark device: no real brand or logos. Home screen with the day, company name
+  and two apps; ✕ or Esc puts it away.
+- **Legacy tree app:** the whole prestige tree as a map: skills as round nodes by branch colour, gold
+  links between the ones you own, a gold ring on the ones you can buy now. Tap a skill to see what it
+  does and buy it. Prestige from here when the Sun is harvested.
+- **Solar system app:** the Sun with its Dyson ring, Earth and the Moon, Mercury, Mars, the asteroid
+  belt, Europa and Titan slowly going round. Flags on your colonies, a gold ring where you can found one
+  now, padlocks on the rest. Tap a body for its material, harvest, income and what it still needs, and
+  found the colony; tap the Sun for the Dyson project.
+- Drag to look around and zoom with + / − or the mouse wheel. Works at 9:16, 16:9 and 1:1 (on wide
+  screens the info panel sits beside the map).
+- Tests: tree and orbit layout (fits, no overlaps, orbits in order, the Moon circles Earth, line
+  clipping); e2e: open the tablet over the market, buy a skill on the map, found Mars, put it away.
+
 ## Definition of done: status
 
 | Item                                                                                   | Status                                                                                                                        |
