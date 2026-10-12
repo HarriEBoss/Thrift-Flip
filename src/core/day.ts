@@ -31,19 +31,24 @@ export function advancePhase(state: GameState, to: DayPhase): void {
     startNextDay(state);
     return;
   }
-  if (to === 'summary') {
-    // Managers bring in the day's takings from the businesses they run.
-    payManagers(state);
-    // Research moves on, colonies harvest and pay, the Dyson project sells energy.
-    spaceDay(state);
-    // Decorations like plants and the fountain make the shop more popular every day.
-    const rep = decorFx(state).repPerDay;
-    if (rep > 0) {
-      state.rep += rep;
-      state.day.stats.rep += rep;
-    }
-  }
+  if (to === 'summary') endOfDay(state);
   state.day.ph = to;
+}
+
+/**
+ * What happens at the end of every day without you: managers bring in the takings, research moves
+ * on, colonies harvest and pay, the Dyson project sells energy, decorations add reputation. `away`
+ * (a time skip): you were not working anywhere, so every managed business pays.
+ */
+export function endOfDay(state: GameState, away = false): { researched: string | null } {
+  payManagers(state, away);
+  const sp = spaceDay(state);
+  const rep = decorFx(state).repPerDay;
+  if (rep > 0) {
+    state.rep += rep;
+    state.day.stats.rep += rep;
+  }
+  return { researched: sp.researched };
 }
 
 /** Items still waiting in the workshop. */

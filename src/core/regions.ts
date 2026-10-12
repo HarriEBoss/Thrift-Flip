@@ -10,6 +10,7 @@ import { ownsBusiness } from './empire';
 import type { GameState } from './state';
 import type { MarketDef, RegionDef } from './types';
 import { discounted } from './skilltree';
+import { earnGold } from './gold';
 
 const R = () => BALANCE.empire.regions;
 export const REGIONS: RegionDef[] = BALANCE.empire.regions.list;
@@ -53,6 +54,7 @@ export function openRegion(state: GameState, id: string): boolean {
 export function conquerRegion(state: GameState, id: string): boolean {
   if (!region(id) || state.regions[id] === WON) return false;
   state.regions[id] = WON;
+  earnGold(state, 'region');
   return true;
 }
 

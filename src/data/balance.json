@@ -360,6 +360,26 @@
       "kind": "consumable",
       "price": "\u20ac9.99",
       "coins": 8000
+    },
+    {
+      "id": "gold_small",
+      "kind": "consumable",
+      "price": "\u20ac0.99",
+      "gold": 20
+    },
+    {
+      "id": "gold_medium",
+      "kind": "consumable",
+      "price": "\u20ac4.99",
+      "gold": 120,
+      "badge": "popular"
+    },
+    {
+      "id": "gold_large",
+      "kind": "consumable",
+      "price": "\u20ac9.99",
+      "gold": 280,
+      "badge": "value"
     }
   ],
   "xp": {
@@ -1386,6 +1406,38 @@
           ]
         }
       ]
+    },
+    "gold": {
+      "skips": [
+        {
+          "id": "skip1",
+          "days": 1,
+          "cost": 4
+        },
+        {
+          "id": "skip3",
+          "days": 3,
+          "cost": 10
+        },
+        {
+          "id": "skip7",
+          "days": 7,
+          "cost": 20
+        }
+      ],
+      "early": {
+        "base": 6,
+        "perTier": 6
+      },
+      "earn": {
+        "business": 3,
+        "region": 5,
+        "colony": 5,
+        "dyson": 3,
+        "prestige": 10,
+        "daily": 1,
+        "perfectJob": 1
+      }
     }
   }
 }

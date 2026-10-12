@@ -573,3 +573,49 @@ test('tablet: open it over the market, buy a legacy skill on the tree map, found
     await page.evaluate(() => (window as unknown as { __tf: { hasModal(): boolean } }).__tf.hasModal()),
   ).toBe(true);
 });
+
+test('Gold Bars on YouTube: no store, unlock a tool early and skip days with bars earned in play', async ({
+  page,
+}) => {
+  test.setTimeout(180_000);
+  await page.setViewportSize({ width: 405, height: 720 });
+  await setupPage(page);
+  await page.goto('/');
+  await waitForScene(page, 'MainMenu');
+  type St = {
+    coins: number;
+    day: { n: number };
+    upgrades: string[];
+    gold: { bars: number; earned: number };
+  };
+  type Tf = { setup(p: object): void; goto(k: string): void; state(): St; where(id: string): unknown };
+  await page.evaluate(() => {
+    const tf = (window as unknown as { __tf: Tf }).__tf;
+    tf.setup({ tutorialDone: true, tier: 1, coins: 2000, day: 30, phase: 'market', named: true });
+    tf.state().gold = { bars: 30, earned: 30 };
+    tf.goto('Market');
+  });
+  await waitForScene(page, 'Market');
+  const state = () => tf(page, (t) => t.state() as unknown as St);
+  await press(page, 'mouse', 'tablet');
+  await press(page, 'mouse', 'app_gold');
+  await page.waitForTimeout(300);
+  // YouTube forbids purchases: no packs to buy, only bars earned by playing.
+  expect(await page.evaluate(() => !!(window as unknown as { __tf: Tf }).__tf.where('pack_gold_small'))).toBe(
+    false,
+  );
+  // A tier-2 tool before the shop is big enough.
+  await press(page, 'mouse', 'early_wire_tester');
+  await page.waitForTimeout(300);
+  let s = await state();
+  expect(s.upgrades).toContain('wire_tester');
+  expect(s.coins).toBe(2000);
+  expect(s.gold.bars).toBe(30 - 12);
+  // Skip three days: the new day opens at the market.
+  await press(page, 'mouse', 'skip_skip3');
+  await waitForScene(page, 'Market');
+  await page.waitForTimeout(400);
+  s = await state();
+  expect(s.day.n).toBe(33);
+  expect(s.gold.bars).toBe(30 - 12 - 10);
+});

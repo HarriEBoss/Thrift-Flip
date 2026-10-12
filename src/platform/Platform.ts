@@ -24,6 +24,11 @@ export interface PlatformCapabilities {
   externalLinks: boolean;
   /** Whether an ad-consent / privacy options form exists (iOS UMP). */
   privacyOptions: boolean;
+  /**
+   * Playtests without a real store: Gold Bar packs can be "bought" for pretend (no money moves).
+   * Never on YouTube (no purchases of any kind) or iOS (real StoreKit).
+   */
+  mockPurchases: boolean;
 }
 
 export interface Platform {

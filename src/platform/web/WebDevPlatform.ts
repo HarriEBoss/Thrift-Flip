@@ -17,6 +17,7 @@ export class WebDevPlatform implements Platform {
     masterMute: true,
     externalLinks: false,
     privacyOptions: false,
+    mockPurchases: false,
   };
   private owned = new Set<string>();
   private pauseCbs: Array<() => void> = [];

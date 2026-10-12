@@ -25,5 +25,8 @@ export const IOS_CONFIG = {
     'coins_small',
     'coins_medium',
     'coins_large',
+    'gold_small',
+    'gold_medium',
+    'gold_large',
   ],
 } as const;

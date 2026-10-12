@@ -118,14 +118,17 @@ export function dailyIncome(state: GameState, b: BusinessDef): { gross: number; 
   return { gross, wage, net: gross - wage };
 }
 
-/** Today's income from every managed business you are not working at yourself. */
-export function passiveIncome(state: GameState): number {
-  return BUSINESSES.filter((b) => b.id !== state.biz.cur).reduce((n, b) => n + dailyIncome(state, b).net, 0);
+/** Today's income from every managed business you are not working at yourself (all when away). */
+export function passiveIncome(state: GameState, away = false): number {
+  return BUSINESSES.filter((b) => away || b.id !== state.biz.cur).reduce(
+    (n, b) => n + dailyIncome(state, b).net,
+    0,
+  );
 }
 
 /** Pays the managers' takings at the end of the day (once). */
-export function payManagers(state: GameState): number {
-  const pay = passiveIncome(state);
+export function payManagers(state: GameState, away = false): number {
+  const pay = passiveIncome(state, away);
   if (pay <= 0) return 0;
   state.coins += pay;
   state.day.stats.passive += pay;

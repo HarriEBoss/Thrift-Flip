@@ -17,7 +17,7 @@ Everything that code cannot do. Items are grouped by platform and listed roughly
 - [ ] **Signing:** team, distribution certificate, App Store provisioning profile (or automatic signing).
 - [ ] Set the bundle id in `capacitor.config.ts` (`appId`) and in Xcode.
 - [ ] **App Store Connect app record** (SUBMISSION_IOS.md §3).
-- [ ] **Create the 9 IAP products** in App Store Connect (SUBMISSION_IOS.md §4), each with a review screenshot.
+- [ ] **Create the 12 IAP products** in App Store Connect (SUBMISSION_IOS.md §4), each with a review screenshot.
 - [ ] **RevenueCat:** create the project, connect App Store Connect (In-App Purchase key), import the products, and put the
       public iOS SDK key in `src/platform/ios/config.ts`.
 - [ ] **AdMob:** create the account and iOS app, plus one rewarded and one interstitial ad unit. Put the ids in

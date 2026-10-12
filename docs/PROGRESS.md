@@ -382,6 +382,22 @@ Next: Phase 3, the playable core loop in Phaser.
 - Tests: tree and orbit layout (fits, no overlaps, orbits in order, the Moon circles Earth, line
   clipping); e2e: open the tablet over the market, buy a skill on the map, found Mars, put it away.
 
+## Business empire, phase 8: Gold Bars, time skips and the store ✅
+
+- **Gold Bars**, a premium currency, earned by playing: a new business (3), a conquered region (5), a new
+  colony (5), a Dyson stage (3), a perfect contract (1), a 3-star daily challenge (1) and every prestige
+  (10). A toast says when you earn some. They are kept through prestiges.
+- The tablet's new **Gold Bars** app:
+  - **Skip ahead** 1, 3 or 7 days (4, 10 or 20 bars) at the start of a day: managers, research,
+    colonies and the Dyson project work through the skipped days exactly as on a real day.
+  - **Tools early**: a tool before your shop is big enough, for Gold Bars instead of coins.
+  - **Get Gold Bars**: packs of 20, 120 and 280. Mock store only, behind a `PaymentProvider`
+    interface: pretend purchases in the playtest (it says no money is paid and asks first), the
+    platform store where one exists, and hidden on YouTube (no purchases there; bars come from play).
+- Save v10. Tests: wallet, milestones, skips (only at the start of a day, real end-of-day effects),
+  early tools, the store service with mock and failing providers, migration; e2e on the YouTube build:
+  no store, unlock a tool early, skip three days.
+
 ## Definition of done: status
 
 | Item                                                                                   | Status                                                                                                                        |
@@ -389,6 +405,6 @@ Next: Phase 3, the playable core loop in Phaser.
 | `npm run check` (lint, typecheck, unit + coverage, YouTube build + bundle checks, e2e) | ✅ passes in this container (see the final run log in the commit message / PR)                                                |
 | `thrift-flip-youtube.zip` meets every automatable MUST in §7                           | ✅ automated; manual items listed in SUBMISSION_YOUTUBE.md                                                                    |
 | iOS project builds in Xcode                                                            | ⏳ **human step**: no Xcode on Linux. `build:ios` + `cap sync` pass; IAP and ads are absent from the YouTube bundle (checked) |
-| Old-save migration tests                                                               | ✅ (v1–v9 fixtures; every migration tested)                                                                                   |
+| Old-save migration tests                                                               | ✅ (v1–v10 fixtures; every migration tested)                                                                                  |
 | Docs complete                                                                          | ✅ ARCHITECTURE, BALANCE, PROGRESS, HUMAN_TODO, SUBMISSION_IOS, SUBMISSION_YOUTUBE, PRIVACY_POLICY, STORE_LISTING             |
 | HUMAN_TODO lists every required human step                                             | ✅                                                                                                                            |

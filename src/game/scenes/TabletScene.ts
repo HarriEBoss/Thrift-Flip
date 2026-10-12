@@ -33,8 +33,20 @@ import {
 import { nodeEffect, openPrestige } from '../ui/prestigeMenus';
 import { MAT_COL, openDyson } from '../ui/spaceMenus';
 import { t } from '../../i18n';
+import { drawGoldBar } from '../ui/goldIcon';
+import { goldStore } from '../store';
+import { GOLD } from '../../core/gold';
+import {
+  awayIncome,
+  canSkip,
+  earlyCost,
+  earlyTools,
+  skipDays,
+  skipStatus,
+  unlockEarly,
+} from '../../core/timeskip';
 
-type App = 'home' | 'tree' | 'space';
+type App = 'home' | 'tree' | 'space' | 'gold';
 interface Rect {
   x: number;
   y: number;
@@ -106,6 +118,9 @@ export class TabletScene extends BaseScene {
   >();
   private bodyObjs = new Map<string, { label: Phaser.GameObjects.Text; hit: Phaser.GameObjects.Zone }>();
   private time0 = 0;
+  private note = '';
+  private prices: Record<string, string> = {};
+  private pricesLoaded = false;
   private tick = 0;
 
   constructor() {
@@ -121,6 +136,8 @@ export class TabletScene extends BaseScene {
     this.sel = null;
     this.drag = null;
     this.time0 = 0;
+    this.note = '';
+    this.pricesLoaded = false;
     this.device = this.add.graphics();
     this.layer = this.add.container(0, 0);
     this.top = this.add.container(0, 0);
@@ -229,8 +246,12 @@ export class TabletScene extends BaseScene {
       makeText(this, s.x + 34, y, t('common.day', { n: st.day.n }), FS.tiny, light, { align: 'left' }),
     );
     const name = makeText(this, s.x + s.w / 2, y, st.company, FS.tiny, light);
-    if (name.width > s.w * 0.4) name.setScale((s.w * 0.4) / name.width);
+    if (name.width > s.w * 0.3) name.setScale((s.w * 0.3) / name.width);
     this.top.add(name);
+    // Gold Bars.
+    const gb = this.add.graphics();
+    drawGoldBar(gb, s.x + 150, y, 26);
+    this.top.add([gb, makeText(this, s.x + 170, y, String(st.gold.bars), FS.tiny, light, { align: 'left' })]);
     // Battery (always full: it is a game).
     const b = this.add.graphics();
     const bx = s.x + s.w - 150;
@@ -319,10 +340,20 @@ export class TabletScene extends BaseScene {
           g.fillCircle(-40, 4, 7);
         },
       },
+      {
+        id: 'gold',
+        label: t('tablet.appGold'),
+        color: 0x8a5a10,
+        badge: st.gold.bars > 0 ? String(st.gold.bars) : null,
+        draw: (g) => {
+          drawGoldBar(g, -8, 14, 62);
+          drawGoldBar(g, 12, -14, 62);
+        },
+      },
     ];
-    const size = Math.min(170, (s.w - 120) / 2);
+    const size = Math.min(160, (s.w - 140) / apps.length);
     apps.forEach((a, i) => {
-      const x = cx + (i - 0.5) * (size + 60);
+      const x = cx + (i - (apps.length - 1) / 2) * (size + 40);
       const y = s.y + s.h * 0.55;
       const btn = new Button(this, x, y, {
         w: size,
@@ -377,7 +408,12 @@ export class TabletScene extends BaseScene {
       onClick: () => this.openApp('home'),
     });
     this.mark('tab_back', backBtn);
-    const title = this.app === 'tree' ? t('tablet.appTree') : t('tablet.appSpace');
+    const title =
+      this.app === 'tree'
+        ? t('tablet.appTree')
+        : this.app === 'gold'
+          ? t('tablet.appGold')
+          : t('tablet.appSpace');
     this.top.add([backBtn, makeText(this, s.x + s.w / 2, hy, title, FS.h3, C.white)]);
     if (this.app === 'tree') {
       const icon = this.add.graphics();
@@ -387,6 +423,15 @@ export class TabletScene extends BaseScene {
         icon,
         makeText(this, s.x + s.w - 98, hy, String(st.prestige.tokens), FS.h3, C.white, { align: 'left' }),
       ]);
+    } else if (this.app === 'gold') {
+      const icon = this.add.graphics();
+      drawGoldBar(icon, s.x + s.w - 128, hy, 38);
+      this.top.add([
+        icon,
+        makeText(this, s.x + s.w - 100, hy, String(st.gold.bars), FS.h3, C.white, { align: 'left' }),
+      ]);
+      this.renderGold(s.y + STATUS_H + HEADER_H + 10);
+      return;
     } else {
       this.top.add(
         makeText(this, s.x + s.w - 30, hy, `☀ ${Math.round(sunHarvested(st) * 100)}%`, FS.small, C.mustard, {
@@ -953,6 +998,225 @@ export class TabletScene extends BaseScene {
     this.top.add(panel);
   }
 
+  // ---------------------------------------------------------------- Gold Bars app
+
+  /** Skip days, get tools early, and (where there is a store) buy Gold Bar packs. */
+  private renderGold(y0: number): void {
+    const s = this.screenR;
+    const st = session.state;
+    const store = goldStore();
+    const wide = s.w > s.h;
+    const bottom = s.y + s.h - 14;
+    const pad = 12;
+    const cards: Rect[] = [];
+    if (wide) {
+      const cw = (s.w - pad * 4) / 3;
+      for (let i = 0; i < 3; i++) cards.push({ x: s.x + pad + i * (cw + pad), y: y0, w: cw, h: bottom - y0 });
+    } else {
+      const hs = [0.3, 0.37, 0.33];
+      let y = y0;
+      const total = bottom - y0 - pad * 2;
+      for (const k of hs) {
+        cards.push({ x: s.x + pad, y, w: s.w - pad * 2, h: total * k });
+        y += total * k + pad;
+      }
+    }
+    const card = (r: Rect, title: string) => {
+      const g = this.add.graphics();
+      drawCard(g, r.x, r.y, r.w, r.h, C.paper, { radius: 20, stroke: C.ink, strokeW: 3, shadow: 0 });
+      this.top.add([g, makeText(this, r.x + 22, r.y + 32, title, FS.h3, C.ink, { align: 'left' })]);
+    };
+    const para = (r: Rect, y: number, str: string, color: number = C.inkSoft) => {
+      const tx = makeText(this, r.x + 22, y, str, FS.tiny, color, {
+        align: 'left',
+        wrap: r.w - 44,
+        bold: false,
+      });
+      tx.setOrigin(0, 0);
+      this.top.add(tx);
+      return y + tx.height + 8;
+    };
+    /** Buttons in a row when the card is wide enough, else one under the other. */
+    const buttons = (
+      r: Rect,
+      y: number,
+      list: Array<{ id: string; label: string; sub: string; ok: boolean; color: number; on: () => void }>,
+      column = false,
+    ) => {
+      const row = !column && (r.w >= 520 || wide === false);
+      const n = list.length;
+      const bw = row ? (r.w - 44 - (n - 1) * 12) / n : r.w - 44;
+      const bh = row ? 92 : 70;
+      list.forEach((it, i) => {
+        const b = new Button(
+          this,
+          row ? r.x + 22 + bw / 2 + i * (bw + 12) : r.x + r.w / 2,
+          row ? y + bh / 2 : y + bh / 2 + i * (bh + 10),
+          {
+            w: bw,
+            h: bh,
+            label: it.label,
+            sub: it.sub,
+            color: it.ok ? it.color : C.inkSoft,
+            fontSize: FS.small,
+            onClick: it.on,
+          },
+        );
+        b.setEnabled(it.ok);
+        this.mark(it.id, b);
+        this.top.add(b);
+      });
+    };
+    // 1. Skip ahead.
+    const r0 = cards[0];
+    card(r0, t('gold.skipTitle'));
+    let y = para(
+      r0,
+      r0.y + 60,
+      !canSkip(st)
+        ? t('gold.skipBusy')
+        : awayIncome(st) > 0
+          ? t('gold.skipText', { n: compact(awayIncome(st)) })
+          : t('gold.skipNothing'),
+      canSkip(st) ? C.inkSoft : C.terracottaDark,
+    );
+    buttons(
+      r0,
+      y,
+      GOLD.skips.map((k) => ({
+        id: `skip_${k.id}`,
+        label: k.days === 1 ? t('gold.day1') : t('gold.days', { n: k.days }),
+        sub: t('gold.bars', { n: k.cost }),
+        ok: skipStatus(st, k.id) === 'available',
+        color: C.teal,
+        on: () => this.doSkip(k.id),
+      })),
+    );
+    // 2. Tools early.
+    const r1 = cards[1];
+    card(r1, t('gold.earlyTitle'));
+    const tools = earlyTools(st)
+      .sort((a, b) => earlyCost(st, a) - earlyCost(st, b))
+      .slice(0, 3);
+    y = para(r1, r1.y + 60, tools.length ? t('gold.earlyText') : t('gold.earlyNone'));
+    buttons(
+      r1,
+      y,
+      tools.map((u) => ({
+        id: `early_${u.id}`,
+        label: t(`up.${u.id}`),
+        sub: t('gold.earlySub', { n: earlyCost(st, u), tier: t(`tier.${BALANCE.tiers[u.tier].id}`) }),
+        ok: st.gold.bars >= earlyCost(st, u),
+        color: C.purple,
+        on: () => {
+          if (!unlockEarly(st, u.id)) return;
+          session.audio.play('levelup');
+          session.haptic('success');
+          void session.save(true);
+          this.note = t('gold.gotTool', { tool: t(`up.${u.id}`) });
+          this.render();
+        },
+      })),
+      true,
+    );
+    // 3. Gold Bars: packs where there is a store, else how to earn them.
+    const r2 = cards[2];
+    card(r2, t('gold.getTitle'));
+    if (!store.available) {
+      para(r2, r2.y + 60, t('gold.earn'));
+    } else {
+      y = para(r2, r2.y + 60, store.pretend ? t('gold.pretend') : t('gold.buyText'));
+      buttons(
+        r2,
+        y,
+        store.goldPacks().map((p) => ({
+          id: `pack_${p.id}`,
+          label: `+${p.gold}`,
+          sub: this.prices[p.id] ?? p.price,
+          ok: true,
+          color: C.mustardDark,
+          on: () => void this.buyPack(p.id),
+        })),
+      );
+      if (!this.pricesLoaded) {
+        this.pricesLoaded = true;
+        void store.prices().then((pr) => {
+          this.prices = pr;
+          if (this.app === 'gold' && this.sys.isActive()) this.render();
+        });
+      }
+    }
+    if (this.note) {
+      const n = makeText(this, s.x + s.w / 2, y0 - 2, this.note, FS.tiny, C.white, {
+        stroke: 0x1b1530,
+        strokeW: 5,
+      });
+      this.top.add(n);
+      this.note = '';
+    }
+  }
+
+  private async buyPack(id: string): Promise<void> {
+    const store = goldStore();
+    const p = store.goldPacks().find((x) => x.id === id);
+    if (!p) return;
+    if (store.pretend) {
+      // Playtest: say clearly that nothing is paid, and ask first.
+      const m = this.openModal({ title: t('gold.pretendTitle'), w: 600, h: 520 });
+      m.content.add(
+        makeText(this, 0, -60, t('gold.pretendAsk', { n: p.gold ?? 0 }), FS.small, C.ink, { wrap: 520 }),
+      );
+      const ok = new Button(this, 0, 90, {
+        w: 320,
+        h: 80,
+        label: t('gold.pretendOk'),
+        color: C.leaf,
+        fontSize: FS.small,
+        onClick: () => {
+          m.close();
+          void this.finishBuy(id);
+        },
+      });
+      this.mark('pay_ok', ok);
+      m.content.add(ok);
+      return;
+    }
+    await this.finishBuy(id);
+  }
+
+  private async finishBuy(id: string): Promise<void> {
+    const st = session.state;
+    const r = await goldStore().buy(st, id);
+    if (r === 'success') {
+      session.audio.play('register');
+      void session.save(true);
+      this.note = t('gold.got', {
+        n:
+          goldStore()
+            .goldPacks()
+            .find((p) => p.id === id)?.gold ?? 0,
+      });
+    } else if (r === 'failed') this.note = t('store.failed');
+    if (this.sys.isActive()) this.render();
+  }
+
+  /** Lets the days pass, then the new day starts at the market (the screen behind is out of date). */
+  private doSkip(id: string): void {
+    const r = skipDays(session.state, id);
+    if (!r) return;
+    session.audio.play('levelup');
+    session.haptic('success');
+    void session.save(true);
+    const parts = [t('gold.skipped', { n: r.days, coins: compact(r.coins) })];
+    if (r.researched.length)
+      parts.push(t('gold.skipResearch', { list: r.researched.map((x) => t(`tech.${x}`)).join(', ') }));
+    session.skipNote = parts.join(' ');
+    for (const sc of this.game.scene.getScenes(false))
+      if (sc !== this && sc.scene.key !== 'Market' && (sc.sys.isActive() || sc.sys.isPaused()))
+        sc.scene.stop();
+    this.scene.start('Market');
+  }
+
   // ---------------------------------------------------------------- input
 
   private local(p: Phaser.Input.Pointer): XY {
@@ -961,7 +1225,7 @@ export class TabletScene extends BaseScene {
   }
 
   private onDown(p: Phaser.Input.Pointer): void {
-    if (this.app === 'home' || this.hasModal()) return;
+    if (this.app === 'home' || this.app === 'gold' || this.hasModal()) return;
     const q = this.local(p);
     // The zoom buttons sit over the map's top-right corner.
     if (q.x > this.area.x + this.area.w - 76 && q.y < this.area.y + 140) return;
@@ -994,7 +1258,7 @@ export class TabletScene extends BaseScene {
   }
 
   private onWheel(_p: Phaser.Input.Pointer, _o: unknown, _dx: number, dy: number): void {
-    if (this.app === 'home' || this.hasModal()) return;
+    if (this.app === 'home' || this.app === 'gold' || this.hasModal()) return;
     this.zoomBy(dy < 0 ? 1 : -1);
   }
 

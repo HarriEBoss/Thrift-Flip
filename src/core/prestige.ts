@@ -9,6 +9,7 @@ import { hashSeed } from './prng';
 import { prestigeFx, tokensFor } from './skilltree';
 import { dysonDone } from './space';
 import { newGame, type GameState } from './state';
+import { earnGold } from './gold';
 
 export function canPrestige(state: GameState): boolean {
   return dysonDone(state);
@@ -48,6 +49,9 @@ export function prestige(state: GameState): GameState | null {
     nodes: [...state.prestige.nodes],
     best: state.prestige.best > 0 ? Math.min(state.prestige.best, days) : days,
   };
+  // Gold Bars (bought or earned) are never lost; finishing a run earns a few more.
+  g.gold = { ...state.gold };
+  earnGold(g, 'prestige');
   applyHeadStart(g);
   return g;
 }

@@ -10,6 +10,7 @@ import { allRegionsWon } from './regions';
 import type { GameState } from './state';
 import type { BodyDef, TechDef } from './types';
 import { discounted, prestigeFx } from './skilltree';
+import { earnGold } from './gold';
 
 const S = () => BALANCE.empire.space;
 export const TECHS: TechDef[] = BALANCE.empire.space.tech;
@@ -82,6 +83,7 @@ export function foundColony(state: GameState, id: string): boolean {
   if (!b || colonyStatus(state, b) !== 'available') return false;
   state.coins -= colonyCost(state, b);
   state.space.colonies.push(id);
+  earnGold(state, 'colony');
   return true;
 }
 
@@ -152,6 +154,7 @@ export function buildDysonStage(state: GameState): boolean {
   state.coins -= need.coins;
   for (const [m, k] of Object.entries(need.mat)) state.space.mat[m] -= k;
   state.space.dyson += 1;
+  earnGold(state, 'dyson');
   return true;
 }
 

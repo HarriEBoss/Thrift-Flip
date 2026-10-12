@@ -219,6 +219,11 @@ export class MarketScene extends GameScene {
       this.coach = new Coach(this);
       this.tutorialStep = 0;
     }
+    if (session.skipNote) {
+      const note = session.skipNote;
+      session.skipNote = null;
+      this.time.delayedCall(300, () => this.toast(note, C.teal));
+    }
     if (session.openTreeNext) {
       // A new run after a prestige: spend the new tokens first.
       session.openTreeNext = false;

@@ -193,6 +193,8 @@ export interface GameState {
   space: SpaceState;
   /** Prestige count, tokens and the permanent skill tree. */
   prestige: PrestigeState;
+  /** Gold Bars (premium currency) and how many were ever earned by playing. */
+  gold: { bars: number; earned: number };
   /** One char per item: '0' unseen, '1' found, '2' perfectly restored. */
   catalog: string;
   requests: CustomerRequest[];
@@ -291,6 +293,7 @@ export function newGame(seed: number): GameState {
     regions: {},
     space: { techs: [], research: null, colonies: [], mat: {}, dyson: 0 },
     prestige: { n: 0, tokens: 0, nodes: [], best: 0 },
+    gold: { bars: 0, earned: 0 },
     catalog: '0'.repeat(ITEMS.length),
     requests: [],
     stats: {

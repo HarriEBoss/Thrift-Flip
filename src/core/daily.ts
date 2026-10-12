@@ -3,6 +3,7 @@ import { Rng, hashSeed } from './prng';
 import type { GameState, ItemInstance } from './state';
 import { recipeFor } from './items';
 import type { Rarity } from './types';
+import { earnGold } from './gold';
 
 /** Local calendar date key YYYY-MM-DD. */
 export function dateKey(d: Date): string {
@@ -62,6 +63,7 @@ export function recordDaily(state: GameState, key: string, stars: number): Daily
   if (improved) {
     reward = (s - cur.best) * BALANCE.daily.rewardPerStar * (1 + state.tier);
     if (cur.best === 0 && s > 0) cur.streak += 1;
+    if (s === 3) earnGold(state, 'daily');
     cur.best = s;
     state.coins += reward;
     state.stats.profit += reward;

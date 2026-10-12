@@ -33,6 +33,7 @@ export class IOSPlatform implements Platform {
     masterMute: true,
     externalLinks: true,
     privacyOptions: true,
+    mockPurchases: false,
   };
 
   private adsReady: Promise<boolean> | null = null;

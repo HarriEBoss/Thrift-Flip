@@ -1,6 +1,7 @@
 import { BALANCE } from './data';
 import type { GameState } from './state';
 import type { ProductDef } from './types';
+import { addGold } from './gold';
 
 export const PRODUCTS: ProductDef[] = BALANCE.products;
 
@@ -28,6 +29,7 @@ export function grantProduct(state: GameState, id: string): boolean {
     state.owned.push(id);
   }
   if (p.coins) state.coins += p.coins;
+  if (p.gold) addGold(state, p.gold);
   for (const perk of p.perks ?? []) if (!state.perks.includes(perk)) state.perks.push(perk);
   return true;
 }

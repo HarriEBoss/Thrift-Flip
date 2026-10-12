@@ -284,6 +284,27 @@ Both maps pan (drag) and zoom (+/− buttons, mouse wheel). Phaser 4 has no simp
 maps clip their own drawing to the map area (`clipSegment`, nodes and bodies hidden outside it). On
 wide screens the info panel sits beside the map, on tall ones under it.
 
+### Gold Bars, time skips and the store (`core/gold.ts`, `core/timeskip.ts`, `core/store/`, `game/store.ts`)
+
+**Gold Bars** are the premium currency (`state.gold`, all numbers in `balance.json` → `empire.gold`).
+They are earned by playing (`earnGold`: opening a business, conquering a region, founding a colony,
+building a Dyson stage, a perfect contract, a 3-star daily challenge, every prestige) and kept through
+prestiges. The tablet's **Gold Bars** app spends them:
+
+- **Time skips** (`skipDays`): 1, 3 or 7 days pass at the start of a day. Each day runs the same
+  `endOfDay` code as a real one (managers, research, colonies, the Dyson project, decorations) with
+  `away` set, so every managed business pays (you are not working at any), then the next day starts.
+- **Tools early** (`unlockEarly`): a tool before your shop size, for `base + perTier × sizes to go`
+  Gold Bars and no coins.
+
+**The store** is mock-only and isolated behind an interface. `core/store/payments.ts` defines
+`PaymentProvider` (`prices()`, `buy()`); `StoreService` lists the Gold Bar packs and grants them only
+after `buy` returns success. `game/store.ts` picks the provider: the platform's own store where
+`capabilities.iap` (iOS StoreKit via RevenueCat; the web dev build's mock), `MockPaymentProvider`
+where `capabilities.mockPurchases` (the playtest: pretend purchases after a "no money is paid"
+confirmation), and none on YouTube (no purchases of any kind: the packs are not shown and Gold Bars
+only come from playing). Wiring in a real payment provider means implementing `PaymentProvider`.
+
 ## Asset pipeline
 
 **Art style.** Objects (items, the workshop, thumbnails) are drawn smooth and lit: soft light from the
@@ -330,7 +351,7 @@ bright palette in `theme.ts` and the Nunito font.
   forces a write on day end, purchases and pause. It checks UTF-16 well-formedness and the 3 MiB / 500 KiB limits.
   A corrupt save is kept in memory and writing is blocked until the player sees a friendly message.
 
-Current version: **v9** (v9 adds `pr`: `[prestiges, tokens, nodes, best run in days]`; v5 added `br`, the brand, `dy[16]`, today's campaigns, and the job tuple's
+Current version: **v10** (v10 adds `gb`: `[Gold Bars, earned by playing]`; v9 added `pr`: `[prestiges, tokens, nodes, best run in days]`; v5 added `br`, the brand, `dy[16]`, today's campaigns, and the job tuple's
 quality target and client company; v6 added `mg` managers, `bn` branches and today's manager takings;
 v7 added `rg` regions and the job tuple's region; v8 adds `sp`, the space program, and the job
 tuple's colony). v2 added `dc` (owned decorations); v3 added `ws` (owned workshops), `dy[15]`

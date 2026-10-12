@@ -52,6 +52,9 @@ Verify every item against current Apple documentation at submission time; requir
 | `coins_small` | Consumable | €0.99 | 500 coins |
 | `coins_medium` | Consumable | €4.99 | 3,000 coins |
 | `coins_large` | Consumable | €9.99 | 8,000 coins |
+| `gold_small` | Consumable | €0.99 | 20 Gold Bars (time skips, early tools; also earned by playing) |
+| `gold_medium` | Consumable | €4.99 | 120 Gold Bars |
+| `gold_large` | Consumable | €9.99 | 280 Gold Bars |
 
 - [ ] Each product needs a display name, a description and a review screenshot (use the in-game Shop Perks screen).
 - [ ] **No paid randomised rewards** exist (Guideline 3.1.1 loot-box disclosure is therefore not needed).

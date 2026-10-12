@@ -18,6 +18,7 @@ export class YouTubePlatform implements Platform {
     masterMute: false, // YouTube owns the overall mute
     externalLinks: false,
     privacyOptions: false,
+    mockPurchases: false,
   };
 
   private yt: YtGame | null = null;

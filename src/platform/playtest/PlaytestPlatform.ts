@@ -18,6 +18,7 @@ export class PlaytestPlatform implements Platform {
     masterMute: false,
     externalLinks: false,
     privacyOptions: false,
+    mockPurchases: true,
   };
 
   private lastShown = 0;

@@ -20,6 +20,8 @@ export class Session {
   gameReadySent = false;
   /** Just prestiged: show the legacy tree when the new run's first scene opens. */
   openTreeNext = false;
+  /** What a time skip did, shown when the new day opens at the market. */
+  skipNote: string | null = null;
   private pauseListeners: Array<(paused: boolean) => void> = [];
 
   settings(): Settings {

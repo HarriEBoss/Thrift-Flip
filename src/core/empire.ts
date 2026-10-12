@@ -8,6 +8,7 @@ import { BALANCE } from './data';
 import { discounted } from './skilltree';
 import type { GameState } from './state';
 import type { BusinessDef } from './types';
+import { earnGold } from './gold';
 
 export const BUSINESSES: BusinessDef[] = BALANCE.empire.businesses;
 export const RESELLING = 'reselling';
@@ -55,6 +56,7 @@ export function openBusiness(state: GameState, id: string): boolean {
   if (!b || businessStatus(state, b) !== 'available') return false;
   state.coins -= openCost(b, state);
   state.biz.own.push(id);
+  earnGold(state, 'business');
   return true;
 }
 

@@ -21,6 +21,7 @@ import namesJson from '../data/names.json';
 import type { JobKind } from './repair';
 import type { GameState, ItemInstance } from './state';
 import type { JobDef } from './types';
+import { earnGold } from './gold';
 
 /** A contract a customer or client company offers today. */
 export interface JobOffer {
@@ -289,6 +290,7 @@ export function completeJob(state: GameState, inst: ItemInstance): JobResult {
     : jobPay(inst.job.fee, inst.q);
   const pay = fee + tip;
   state.coins += pay;
+  if (!missed && starsFor(inst.q) >= 3) earnGold(state, 'perfectJob');
   state.day.stats.revenue += pay;
   state.stats.revenue += pay;
   state.stats.profit += pay;

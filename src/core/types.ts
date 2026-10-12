@@ -198,6 +198,8 @@ export interface ProductDef {
   kind: 'consumable' | 'non_consumable';
   price: string; // display fallback only; real price comes from the store
   coins?: number;
+  /** Gold Bars (premium currency) the product gives. */
+  gold?: number;
   perks?: string[];
   once?: boolean;
   badge?: string;
@@ -382,8 +384,27 @@ export interface SkillNodeDef {
   pos: [number, number];
 }
 
+/** Gold Bars: premium currency for time skips and early tools, also earned by playing. */
+export interface GoldBalance {
+  skips: Array<{ id: string; days: number; cost: number }>;
+  /** Early tool: base + perTier x (shop sizes still to go). */
+  early: { base: number; perTier: number };
+  /** Gold Bars earned for milestones in play. */
+  earn: {
+    business: number;
+    region: number;
+    colony: number;
+    dyson: number;
+    prestige: number;
+    /** A contract delivered perfectly (three reveal stars). */
+    perfectJob: number;
+    daily: number;
+  };
+}
+
 export interface EmpireBalance {
   businesses: BusinessDef[];
+  gold: GoldBalance;
   /** Prestige: tokens buy permanent skill tree nodes. */
   prestige: { maxDiscount: number; nodes: SkillNodeDef[] };
   /** Space: Earth research, colonies on other bodies, and the Dyson project. */

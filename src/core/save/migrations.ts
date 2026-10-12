@@ -37,6 +37,8 @@ export const MIGRATIONS: Migration[] = [
   (old) => ({ ...old, v: 8, sp: [[], 0, [], {}, 0] }),
   // v8 -> v9: prestige (`pr`: prestiges done, unspent tokens, skill tree nodes, best run in days).
   (old) => ({ ...old, v: 9, pr: [0, 0, [], 0] }),
+  // v9 -> v10: Gold Bars (`gb`: [bars, earned by playing]), none yet.
+  (old) => ({ ...old, v: 10, gb: [0, 0] }),
 ];
 
 export const CURRENT_VERSION = MIGRATIONS.length + 1;

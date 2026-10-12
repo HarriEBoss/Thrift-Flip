@@ -239,13 +239,26 @@ describe('migrations', () => {
 
   it('v8 -> v9: no prestige yet; v9 keeps the prestige count, tokens and skill tree', () => {
     const v8 = JSON.parse(readFileSync(new URL('v8-midgame.json', FIXTURES), 'utf8'));
-    expect(migrate(v8)).toMatchObject({ v: 9, pr: [0, 0, [], 0] });
+    expect(migrate(v8)).toMatchObject({ pr: [0, 0, [], 0] });
     const g8 = deserialize(JSON.stringify(v8));
     expect(g8.prestige).toEqual({ n: 0, tokens: 0, nodes: [], best: 0 });
     expect(g8.space.colonies).toEqual(['moon', 'mars']);
     const v9 = deserialize(readFileSync(new URL('v9-midgame.json', FIXTURES), 'utf8'));
     expect(v9.prestige).toEqual({ n: 2, tokens: 1, nodes: ['cash1', 'deals1'], best: 612 });
     expect(v9.space.colonies).toEqual(['moon', 'mars']);
+  });
+
+  it('v9 -> v10: no Gold Bars yet; v10 keeps them', () => {
+    const v9 = JSON.parse(readFileSync(new URL('v9-midgame.json', FIXTURES), 'utf8'));
+    expect(migrate(v9)).toMatchObject({ gb: [0, 0] });
+    const g9 = deserialize(JSON.stringify(v9));
+    expect(g9.gold).toEqual({ bars: 0, earned: 0 });
+    expect(g9.prestige.nodes).toEqual(['cash1', 'deals1']);
+    const v10 = deserialize(readFileSync(new URL('v10-midgame.json', FIXTURES), 'utf8'));
+    expect(v10.gold).toEqual({ bars: 37, earned: 22 });
+    const raw = JSON.parse(readFileSync(new URL('v10-midgame.json', FIXTURES), 'utf8'));
+    raw.gb = [-4, 'x'];
+    expect(deserialize(JSON.stringify(raw)).gold).toEqual({ bars: 0, earned: 0 });
   });
 
   it('migrate is a no-op at the current version and validates chain', () => {

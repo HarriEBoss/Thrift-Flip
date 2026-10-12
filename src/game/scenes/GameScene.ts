@@ -9,6 +9,7 @@ import { t } from '../../i18n';
 import type { RewardId } from '../../platform/Platform';
 import { compact } from '../ui/format';
 import { openTablet } from './TabletScene';
+import { drainGoldNews } from '../../core/gold';
 
 /**
  * Base for the in-day scenes: top HUD (coins, day, level/XP, reputation), home button and juice
@@ -84,7 +85,20 @@ export abstract class GameScene extends BaseScene {
     });
     this.mark('tablet', this.tabletBtn);
     this.root.add(this.tabletBtn);
+    // "+3 Gold Bars" when a milestone pays out (checked every frame; cheap).
+    this.events.on(Phaser.Scenes.Events.UPDATE, this.showGoldNews, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
+      this.events.off(Phaser.Scenes.Events.UPDATE, this.showGoldNews, this),
+    );
     this.refreshHud();
+  }
+
+  private showGoldNews(): void {
+    const news = drainGoldNews();
+    if (!news.length) return;
+    const n = news.reduce((a, x) => a + x.n, 0);
+    this.toast(t('gold.earned', { n, why: t(`gold.why.${news[news.length - 1].why}`) }), 0x8a5a10);
+    session.audio.play('sparkle');
   }
 
   /** The tablet can be opened from any game screen once the first day is done. */
