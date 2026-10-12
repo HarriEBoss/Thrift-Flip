@@ -37,6 +37,19 @@ import { drawGoldBar } from '../ui/goldIcon';
 import { goldStore } from '../store';
 import { GOLD } from '../../core/gold';
 import {
+  boostBrand,
+  canBoostBrand,
+  canGoldReroll,
+  canGoldenTools,
+  goldReroll,
+  goldenTools,
+  researchRushCost,
+  rushResearch,
+  shipMaterial,
+  shippableMaterials,
+} from '../../core/goldShop';
+import { DECOR, buyDecor, decorStatus } from '../../core/decor';
+import {
   awayIncome,
   canSkip,
   earlyCost,
@@ -47,6 +60,7 @@ import {
 } from '../../core/timeskip';
 
 type App = 'home' | 'tree' | 'space' | 'gold';
+type GoldTab = 'time' | 'boost' | 'space' | 'shop' | 'get';
 interface Rect {
   x: number;
   y: number;
@@ -119,6 +133,7 @@ export class TabletScene extends BaseScene {
   private bodyObjs = new Map<string, { label: Phaser.GameObjects.Text; hit: Phaser.GameObjects.Zone }>();
   private time0 = 0;
   private note = '';
+  private goldTab: GoldTab = 'time';
   private prices: Record<string, string> = {};
   private pricesLoaded = false;
   private tick = 0;
@@ -137,6 +152,7 @@ export class TabletScene extends BaseScene {
     this.drag = null;
     this.time0 = 0;
     this.note = '';
+    this.goldTab = 'time';
     this.pricesLoaded = false;
     this.device = this.add.graphics();
     this.layer = this.add.container(0, 0);
@@ -1000,7 +1016,11 @@ export class TabletScene extends BaseScene {
 
   // ---------------------------------------------------------------- Gold Bars app
 
-  /** Skip days, get tools early, and (where there is a store) buy Gold Bar packs. */
+  /**
+   * Everything Gold Bars buy, in tabs: Time (skips, finish research), Boosts (golden tools, new
+   * stock, brand), Space (cargo runs of colony materials), Shop (tools early, golden decorations)
+   * and Get (packs where there is a store, else how to earn them).
+   */
   private renderGold(y0: number): void {
     const s = this.screenR;
     const st = session.state;
@@ -1008,23 +1028,53 @@ export class TabletScene extends BaseScene {
     const wide = s.w > s.h;
     const bottom = s.y + s.h - 14;
     const pad = 12;
-    const cards: Rect[] = [];
-    if (wide) {
-      const cw = (s.w - pad * 4) / 3;
-      for (let i = 0; i < 3; i++) cards.push({ x: s.x + pad + i * (cw + pad), y: y0, w: cw, h: bottom - y0 });
-    } else {
-      const hs = [0.3, 0.37, 0.33];
-      let y = y0;
-      const total = bottom - y0 - pad * 2;
-      for (const k of hs) {
-        cards.push({ x: s.x + pad, y, w: s.w - pad * 2, h: total * k });
-        y += total * k + pad;
+    // Tabs.
+    const tabs: Array<{ id: GoldTab; label: string }> = [
+      { id: 'time', label: t('gold.tabTime') },
+      { id: 'boost', label: t('gold.tabBoost') },
+      { id: 'space', label: t('gold.tabSpace') },
+      { id: 'shop', label: t('gold.tabShop') },
+      { id: 'get', label: t('gold.tabGet') },
+    ];
+    const tw = (s.w - pad * 2) / tabs.length;
+    tabs.forEach((tb, i) => {
+      const b = new Button(this, s.x + pad + tw / 2 + i * tw, y0 + 30, {
+        w: tw - 8,
+        h: 56,
+        label: tb.label,
+        color: tb.id === this.goldTab ? C.mustardDark : 0x4a4656,
+        fontSize: FS.tiny,
+        onClick: () => {
+          this.goldTab = tb.id;
+          session.audio.play('tick');
+          this.render();
+        },
+      });
+      this.mark(`gtab_${tb.id}`, b);
+      this.top.add(b);
+    });
+    const top = y0 + 70;
+    /** One card filling the area, or two (side by side when wide, stacked when tall). */
+    const areas = (n: 1 | 2, split = 0.5): Rect[] => {
+      if (n === 1) return [{ x: s.x + pad, y: top, w: s.w - pad * 2, h: bottom - top }];
+      if (wide) {
+        const w = (s.w - pad * 3) / 2;
+        return [
+          { x: s.x + pad, y: top, w, h: bottom - top },
+          { x: s.x + pad * 2 + w, y: top, w, h: bottom - top },
+        ];
       }
-    }
+      const h = bottom - top - pad;
+      return [
+        { x: s.x + pad, y: top, w: s.w - pad * 2, h: h * split },
+        { x: s.x + pad, y: top + h * split + pad, w: s.w - pad * 2, h: h * (1 - split) },
+      ];
+    };
     const card = (r: Rect, title: string) => {
       const g = this.add.graphics();
       drawCard(g, r.x, r.y, r.w, r.h, C.paper, { radius: 20, stroke: C.ink, strokeW: 3, shadow: 0 });
       this.top.add([g, makeText(this, r.x + 22, r.y + 32, title, FS.h3, C.ink, { align: 'left' })]);
+      return r.y + 60;
     };
     const para = (r: Rect, y: number, str: string, color: number = C.inkSoft) => {
       const tx = makeText(this, r.x + 22, y, str, FS.tiny, color, {
@@ -1034,126 +1084,238 @@ export class TabletScene extends BaseScene {
       });
       tx.setOrigin(0, 0);
       this.top.add(tx);
-      return y + tx.height + 8;
+      return y + tx.height + 10;
     };
-    /** Buttons in a row when the card is wide enough, else one under the other. */
-    const buttons = (
-      r: Rect,
-      y: number,
-      list: Array<{ id: string; label: string; sub: string; ok: boolean; color: number; on: () => void }>,
-      column = false,
-    ) => {
-      const row = !column && (r.w >= 520 || wide === false);
-      const n = list.length;
-      const bw = row ? (r.w - 44 - (n - 1) * 12) / n : r.w - 44;
-      const bh = row ? 92 : 70;
+    type Item = { id: string; label: string; sub: string; ok: boolean; color: number; on: () => void };
+    /** Buttons in a grid of `cols` columns. */
+    const grid = (r: Rect, y: number, list: Item[], cols: number, bh = 80) => {
+      const bw = (r.w - 44 - (cols - 1) * 12) / cols;
       list.forEach((it, i) => {
-        const b = new Button(
-          this,
-          row ? r.x + 22 + bw / 2 + i * (bw + 12) : r.x + r.w / 2,
-          row ? y + bh / 2 : y + bh / 2 + i * (bh + 10),
-          {
-            w: bw,
-            h: bh,
-            label: it.label,
-            sub: it.sub,
-            color: it.ok ? it.color : C.inkSoft,
-            fontSize: FS.small,
-            onClick: it.on,
-          },
-        );
+        const c = i % cols;
+        const row = Math.floor(i / cols);
+        const b = new Button(this, r.x + 22 + bw / 2 + c * (bw + 12), y + bh / 2 + row * (bh + 10), {
+          w: bw,
+          h: bh,
+          label: it.label,
+          sub: it.sub,
+          color: it.ok ? it.color : C.inkSoft,
+          fontSize: FS.small,
+          onClick: it.on,
+        });
         b.setEnabled(it.ok);
         this.mark(it.id, b);
         this.top.add(b);
       });
     };
-    // 1. Skip ahead.
-    const r0 = cards[0];
-    card(r0, t('gold.skipTitle'));
-    let y = para(
-      r0,
-      r0.y + 60,
-      !canSkip(st)
-        ? t('gold.skipBusy')
-        : awayIncome(st) > 0
-          ? t('gold.skipText', { n: compact(awayIncome(st)) })
-          : t('gold.skipNothing'),
-      canSkip(st) ? C.inkSoft : C.terracottaDark,
-    );
-    buttons(
-      r0,
-      y,
-      GOLD.skips.map((k) => ({
-        id: `skip_${k.id}`,
-        label: k.days === 1 ? t('gold.day1') : t('gold.days', { n: k.days }),
-        sub: t('gold.bars', { n: k.cost }),
-        ok: skipStatus(st, k.id) === 'available',
-        color: C.teal,
-        on: () => this.doSkip(k.id),
-      })),
-    );
-    // 2. Tools early.
-    const r1 = cards[1];
-    card(r1, t('gold.earlyTitle'));
-    const tools = earlyTools(st)
-      .sort((a, b) => earlyCost(st, a) - earlyCost(st, b))
-      .slice(0, 3);
-    y = para(r1, r1.y + 60, tools.length ? t('gold.earlyText') : t('gold.earlyNone'));
-    buttons(
-      r1,
-      y,
-      tools.map((u) => ({
-        id: `early_${u.id}`,
-        label: t(`up.${u.id}`),
-        sub: t('gold.earlySub', { n: earlyCost(st, u), tier: t(`tier.${BALANCE.tiers[u.tier].id}`) }),
-        ok: st.gold.bars >= earlyCost(st, u),
-        color: C.purple,
-        on: () => {
-          if (!unlockEarly(st, u.id)) return;
-          session.audio.play('levelup');
-          session.haptic('success');
-          void session.save(true);
-          this.note = t('gold.gotTool', { tool: t(`up.${u.id}`) });
-          this.render();
-        },
-      })),
-      true,
-    );
-    // 3. Gold Bars: packs where there is a store, else how to earn them.
-    const r2 = cards[2];
-    card(r2, t('gold.getTitle'));
-    if (!store.available) {
-      para(r2, r2.y + 60, t('gold.earn'));
-    } else {
-      y = para(r2, r2.y + 60, store.pretend ? t('gold.pretend') : t('gold.buyText'));
-      buttons(
-        r2,
+    const done = (note: string) => {
+      session.audio.play('levelup');
+      session.haptic('success');
+      void session.save(true);
+      this.note = note;
+      this.render();
+    };
+    const bars = (n: number) => t('gold.bars', { n });
+    if (this.goldTab === 'time') {
+      const [a, b] = areas(2, 0.55);
+      let y = card(a, t('gold.skipTitle'));
+      y = para(
+        a,
         y,
-        store.goldPacks().map((p) => ({
-          id: `pack_${p.id}`,
-          label: `+${p.gold}`,
-          sub: this.prices[p.id] ?? p.price,
-          ok: true,
-          color: C.mustardDark,
-          on: () => void this.buyPack(p.id),
-        })),
+        !canSkip(st)
+          ? t('gold.skipBusy')
+          : awayIncome(st) > 0
+            ? t('gold.skipText', { n: compact(awayIncome(st)) })
+            : t('gold.skipNothing'),
+        canSkip(st) ? C.inkSoft : C.terracottaDark,
       );
-      if (!this.pricesLoaded) {
-        this.pricesLoaded = true;
-        void store.prices().then((pr) => {
-          this.prices = pr;
-          if (this.app === 'gold' && this.sys.isActive()) this.render();
-        });
+      grid(
+        a,
+        y,
+        GOLD.skips.map((k) => ({
+          id: `skip_${k.id}`,
+          label: k.days === 1 ? t('gold.day1') : t('gold.days', { n: k.days }),
+          sub: bars(k.cost),
+          ok: skipStatus(st, k.id) === 'available',
+          color: C.teal,
+          on: () => this.doSkip(k.id),
+        })),
+        wide ? 1 : 3,
+        wide ? 64 : 84,
+      );
+      y = card(b, t('gold.rushTitle'));
+      const r = st.space.research;
+      const cost = researchRushCost(st);
+      y = para(b, y, r ? t('gold.rushText', { tech: t(`tech.${r.id}`), n: r.left }) : t('gold.rushNone'));
+      if (r && cost !== null)
+        grid(
+          b,
+          y,
+          [
+            {
+              id: 'gold_rush',
+              label: t('gold.rushGo'),
+              sub: bars(cost),
+              ok: st.gold.bars >= cost,
+              color: C.teal,
+              on: () => {
+                const id = rushResearch(st);
+                if (id) done(t('space.researched', { tech: t(`tech.${id}`) }));
+              },
+            },
+          ],
+          1,
+        );
+    } else if (this.goldTab === 'boost') {
+      const [a] = areas(1);
+      const y = para(a, card(a, t('gold.boostTitle')), t('gold.boostText'));
+      const S = GOLD.shop;
+      grid(
+        a,
+        y,
+        [
+          {
+            id: 'gold_golden',
+            label: t('gold.golden'),
+            sub: st.day.premiumOnce ? t('gold.goldenOn') : `${t('gold.goldenSub')} · ${bars(S.golden)}`,
+            ok: canGoldenTools(st),
+            color: C.mustardDark,
+            on: () => goldenTools(st) && done(t('mg.goldenOn')),
+          },
+          {
+            id: 'gold_reroll',
+            label: t('gold.reroll'),
+            sub: `${t('gold.rerollSub')} · ${bars(S.reroll)}`,
+            ok: canGoldReroll(st),
+            color: C.teal,
+            on: () => {
+              if (!goldReroll(st)) return;
+              // The market behind shows the old stock: open the day afresh at the market.
+              session.skipNote = t('gold.rerolled');
+              this.restartAtMarket();
+            },
+          },
+          {
+            id: 'gold_brand',
+            label: t('gold.brand', { n: S.brand.n }),
+            sub: `${t('gold.brandSub')} · ${bars(S.brand.cost)}`,
+            ok: canBoostBrand(st),
+            color: C.pink,
+            on: () => boostBrand(st) && done(t('gold.brandDone', { n: S.brand.n })),
+          },
+        ],
+        wide ? 3 : 1,
+        wide ? 110 : 92,
+      );
+    } else if (this.goldTab === 'space') {
+      const [a] = areas(1);
+      const mats = shippableMaterials(st);
+      const S = GOLD.shop.material;
+      const y = para(
+        a,
+        card(a, t('gold.shipTitle')),
+        mats.length ? t('gold.shipText', { n: S.n }) : t('gold.shipNone'),
+      );
+      grid(
+        a,
+        y,
+        mats.map((m) => ({
+          id: `ship_${m}`,
+          label: `+${S.n} ${t(`mat.${m}`)}`,
+          sub: `${t('gold.inStock', { n: st.space.mat[m] ?? 0 })} · ${bars(S.cost)}`,
+          ok: st.gold.bars >= S.cost,
+          color: C.purple,
+          on: () => shipMaterial(st, m) && done(t('gold.shipped', { n: S.n, mat: t(`mat.${m}`) })),
+        })),
+        wide ? 3 : 2,
+        84,
+      );
+    } else if (this.goldTab === 'shop') {
+      const [a, b] = areas(2, 0.58);
+      const tools = earlyTools(st)
+        .sort((x, z) => earlyCost(st, x) - earlyCost(st, z))
+        .slice(0, 3);
+      let y = para(
+        a,
+        card(a, t('gold.earlyTitle')),
+        tools.length ? t('gold.earlyText') : t('gold.earlyNone'),
+      );
+      grid(
+        a,
+        y,
+        tools.map((u) => ({
+          id: `early_${u.id}`,
+          label: t(`up.${u.id}`),
+          sub: t('gold.earlySub', { n: earlyCost(st, u), tier: t(`tier.${BALANCE.tiers[u.tier].id}`) }),
+          ok: st.gold.bars >= earlyCost(st, u),
+          color: C.purple,
+          on: () => unlockEarly(st, u.id) && done(t('gold.gotTool', { tool: t(`up.${u.id}`) })),
+        })),
+        1,
+        wide ? 66 : 70,
+      );
+      y = para(b, card(b, t('gold.decorTitle')), t('gold.decorText'));
+      grid(
+        b,
+        y,
+        DECOR.filter((d) => d.gold).map((d) => {
+          const ds = decorStatus(st, d);
+          return {
+            id: `gdecor_${d.id}`,
+            label: t(`decor.${d.id}`),
+            sub: ds === 'owned' ? t('common.owned') : bars(d.gold ?? 0),
+            ok: ds === 'available',
+            color: C.mustardDark,
+            on: () => buyDecor(st, d.id) && done(t('gold.decorDone', { item: t(`decor.${d.id}`) })),
+          };
+        }),
+        wide ? 1 : 2,
+        wide ? 66 : 80,
+      );
+    } else {
+      const [a] = areas(1);
+      const y = card(a, t('gold.getTitle'));
+      if (!store.available) para(a, y, t('gold.earn'));
+      else {
+        const y2 = para(a, y, store.pretend ? t('gold.pretend') : t('gold.buyText'));
+        grid(
+          a,
+          y2,
+          store.goldPacks().map((p) => ({
+            id: `pack_${p.id}`,
+            label: `+${p.gold}`,
+            sub: this.prices[p.id] ?? p.price,
+            ok: true,
+            color: C.mustardDark,
+            on: () => void this.buyPack(p.id),
+          })),
+          3,
+          96,
+        );
+        if (!this.pricesLoaded) {
+          this.pricesLoaded = true;
+          void store.prices().then((pr) => {
+            this.prices = pr;
+            if (this.app === 'gold' && this.sys.isActive()) this.render();
+          });
+        }
       }
     }
     if (this.note) {
-      const n = makeText(this, s.x + s.w / 2, y0 - 2, this.note, FS.tiny, C.white, {
+      const n = makeText(this, s.x + s.w / 2, top - 6, this.note, FS.tiny, C.white, {
         stroke: 0x1b1530,
         strokeW: 5,
       });
       this.top.add(n);
       this.note = '';
     }
+  }
+
+  /** The screen behind is out of date (days passed, new stock): start the day afresh at the market. */
+  private restartAtMarket(): void {
+    for (const sc of this.game.scene.getScenes(false))
+      if (sc !== this && sc.scene.key !== 'Market' && (sc.sys.isActive() || sc.sys.isPaused()))
+        sc.scene.stop();
+    this.scene.start('Market');
   }
 
   private async buyPack(id: string): Promise<void> {
@@ -1211,10 +1373,7 @@ export class TabletScene extends BaseScene {
     if (r.researched.length)
       parts.push(t('gold.skipResearch', { list: r.researched.map((x) => t(`tech.${x}`)).join(', ') }));
     session.skipNote = parts.join(' ');
-    for (const sc of this.game.scene.getScenes(false))
-      if (sc !== this && sc.scene.key !== 'Market' && (sc.sys.isActive() || sc.sys.isPaused()))
-        sc.scene.stop();
-    this.scene.start('Market');
+    this.restartAtMarket();
   }
 
   // ---------------------------------------------------------------- input

@@ -88,5 +88,5 @@ Each bot that harvested the Sun prestiges and plays again, spending its tokens o
 | Run | Tree nodes | Median days to the whole Sun | Median play time (h) | Bots finishing |
 |---|---|---|---|---|
 | 1 | 0 | 651 | 117.4 | 6/6 |
-| 2 | 1 | 578 | 105.4 | 6/6 |
-| 3 | 3 | 516 | 94.3 | 6/6 |
+| 2 | 1 | 587 | 107.0 | 6/6 |
+| 3 | 3 | 520 | 94.0 | 6/6 |

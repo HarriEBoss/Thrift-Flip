@@ -398,6 +398,20 @@ Next: Phase 3, the playable core loop in Phaser.
   early tools, the store service with mock and failing providers, migration; e2e on the YouTube build:
   no store, unlock a tool early, skip three days.
 
+## Owner feedback: realistic assembly, more to buy with Gold Bars ✅
+
+- **Assembly is now hands-on and realistic**, not just "drag the part in":
+  - PC build: seat the CPU (lever, line up the gold triangle, a wrong drop bends pins), paste and
+    cooler, cooler screws in a cross pattern with a torque gauge, RAM into A2 (latches, notch, click),
+    graphics card, SSD, the power cables and the front-panel pins with LED polarity.
+  - Cars: engine bolts torqued centre-out, the serpentine belt routed from the under-hood diagram and
+    the tensioner, hoses, fluids, battery, wiring. Robots: servo centred at 90°, controller chip
+    seated in its socket. Rockets: nozzle bolts in a star pattern and a fuel line leak test.
+  - The PC rebuild, engine swap, rocket and robot repairs use these steps too.
+- **More to buy with Gold Bars**, in tabs on the tablet: finish research now, cargo runs of colony
+  materials, a brand boost, new market stock, golden tools, and two golden decorations (Founder's
+  Statue, Golden Register).
+
 ## Definition of done: status
 
 | Item                                                                                   | Status                                                                                                                        |

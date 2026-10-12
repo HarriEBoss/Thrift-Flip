@@ -11,8 +11,9 @@ import { deserialize } from '../../src/core/save/schema';
 import { game } from './helpers';
 
 describe('decorations', () => {
-  it('has 10 decorations across all tiers', () => {
-    expect(DECOR).toHaveLength(10);
+  it('has 10 coin decorations across all tiers, plus golden ones for Gold Bars', () => {
+    expect(DECOR.filter((d) => !d.gold)).toHaveLength(10);
+    expect(DECOR.filter((d) => d.gold).length).toBeGreaterThanOrEqual(2);
     for (let t = 0; t <= 4; t++) expect(DECOR.some((d) => d.tier === t)).toBe(true);
   });
   it('locks by tier, needs coins, buys once', () => {

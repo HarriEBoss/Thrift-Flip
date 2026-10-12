@@ -167,3 +167,56 @@ describe('store (mock payments behind an interface)', () => {
     expect(g.gold.bars).toBe(300);
   });
 });
+
+describe('more things Gold Bars buy', () => {
+  it('finish research now: bars per day to go', async () => {
+    const { researchRushCost, rushResearch } = await import('../../src/core/goldShop');
+    const g = ready();
+    expect(researchRushCost(g)).toBeNull();
+    expect(rushResearch(g)).toBeNull();
+    g.space.research = { id: 'rockets', left: 2 };
+    expect(researchRushCost(g)).toBe(2 * GOLD.shop.researchPerDay);
+    expect(rushResearch(g)).toBeNull();
+    addGold(g, 100);
+    expect(rushResearch(g)).toBe('rockets');
+    expect(g.space.techs).toContain('rockets');
+    expect(g.space.research).toBeNull();
+    expect(g.gold.bars).toBe(100 - 2 * GOLD.shop.researchPerDay);
+  });
+
+  it('cargo runs only for founded colonies; boosts and golden tools once a day', async () => {
+    const m = await import('../../src/core/goldShop');
+    const g = ready();
+    addGold(g, 100);
+    expect(m.shipMaterial(g, 'regolith')).toBe(false);
+    g.space.colonies = ['mars'];
+    expect(m.shippableMaterials(g)).toEqual(['regolith']);
+    expect(m.shipMaterial(g, 'regolith')).toBe(true);
+    expect(g.space.mat.regolith).toBe(GOLD.shop.material.n);
+    const brand = g.brand;
+    expect(m.boostBrand(g)).toBe(true);
+    expect(g.brand).toBe(brand + GOLD.shop.brand.n);
+    expect(m.boostBrand(g)).toBe(false);
+    expect(m.goldenTools(g)).toBe(true);
+    expect(g.day.premiumOnce).toBe(true);
+    expect(m.canGoldenTools(g)).toBe(false);
+    const seed = g.day.mseed;
+    expect(m.goldReroll(g)).toBe(true);
+    expect(g.day.mseed).not.toBe(seed);
+    g.day.ph = 'workshop';
+    expect(m.canGoldReroll(g)).toBe(false);
+  });
+
+  it('golden decorations cost Gold Bars, not coins', async () => {
+    const { DECOR, buyDecor, decorStatus } = await import('../../src/core/decor');
+    const g = ready();
+    const d = DECOR.find((x) => x.gold)!;
+    g.coins = 1e6;
+    expect(decorStatus(g, d)).toBe('poor');
+    addGold(g, d.gold!);
+    expect(buyDecor(g, d.id)).toBe(true);
+    expect(g.coins).toBe(1e6);
+    expect(g.gold.bars).toBe(0);
+    expect(decorStatus(g, d)).toBe('owned');
+  });
+});

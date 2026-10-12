@@ -189,6 +189,8 @@ export interface DecorFx {
 export interface DecorDef {
   id: string;
   cost: number;
+  /** Gold-only decorations cost Gold Bars instead of coins. */
+  gold?: number;
   tier: number;
   fx: DecorFx;
 }
@@ -389,6 +391,19 @@ export interface GoldBalance {
   skips: Array<{ id: string; days: number; cost: number }>;
   /** Early tool: base + perTier x (shop sizes still to go). */
   early: { base: number; perTier: number };
+  /** Other things Gold Bars buy (costs in bars). */
+  shop: {
+    /** Finish today's research now: bars per day still to go. */
+    researchPerDay: number;
+    /** A cargo run of a colony's material. */
+    material: { n: number; cost: number };
+    /** A brand boost (once a day). */
+    brand: { n: number; cost: number };
+    /** New market stock. */
+    reroll: number;
+    /** Golden tools for the next item. */
+    golden: number;
+  };
   /** Gold Bars earned for milestones in play. */
   earn: {
     business: number;

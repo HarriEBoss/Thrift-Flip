@@ -492,6 +492,24 @@
         "repPerDay": 2,
         "price": 0.05
       }
+    },
+    {
+      "id": "gold_statue",
+      "cost": 0,
+      "gold": 25,
+      "tier": 0,
+      "fx": {
+        "repPerDay": 2
+      }
+    },
+    {
+      "id": "gold_register",
+      "cost": 0,
+      "gold": 40,
+      "tier": 0,
+      "fx": {
+        "price": 0.04
+      }
     }
   ],
   "empire": {
@@ -1437,6 +1455,19 @@
         "prestige": 10,
         "daily": 1,
         "perfectJob": 1
+      },
+      "shop": {
+        "researchPerDay": 3,
+        "material": {
+          "n": 10,
+          "cost": 6
+        },
+        "brand": {
+          "n": 15,
+          "cost": 3
+        },
+        "reroll": 1,
+        "golden": 2
       }
     }
   }

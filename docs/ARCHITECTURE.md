@@ -127,6 +127,15 @@ two long rigs: a **PC rebuild** (dust, cooler + paste, memory, graphics card, ca
 cables) and an **engine swap** (drain, 4 bolts out, hoist out, hoist in, 4 bolts in, 4 hoses, oil, coolant,
 battery, ignition wiring). All layouts are pure and unit-tested; the score is the product of the task scores.
 
+**Detailed assembly** (`core/assembly.ts` layouts and rules, `repair/assembly.ts` tasks): a chip
+`socket` (open the lever, turn the chip to its corner mark, drop it in, lock), `torque` sequences
+with stamped numbers (cross for a cooler, centre-out for an engine, star for a nozzle; snug in order,
+then torque each to the green on the gauge, past it strips the bolt), `ram` (latches, notch, slot
+A2, press until it clicks), the front-panel `header` (switch and LED plugs, LED polarity), the
+serpentine `belt` (route it from the under-hood diagram, then the tensioner), `servo` centring and
+the fuel line `leak` test (pressurise, find the bubbling fitting, tighten). Magnified panels fade
+away when their job is done.
+
 A custom design contract is **built**, not repaired: its recipe is Design → **Build** → Polish, and the
 Build step uses a build rig (`buildRigFor`, `rig.build`). The frame starts open and empty (no screws to
 undo), every `swap` is a `fit` (an empty mount, just put the new part in), then bolts, cables and fluids,
@@ -296,6 +305,10 @@ prestiges. The tablet's **Gold Bars** app spends them:
   `away` set, so every managed business pays (you are not working at any), then the next day starts.
 - **Tools early** (`unlockEarly`): a tool before your shop size, for `base + perTier × sizes to go`
   Gold Bars and no coins.
+- **More** (`core/goldShop.ts`, `empire.gold.shop`): finish the research in progress now (bars per day
+  to go), cargo runs of a founded colony's material, a brand boost (once a day), new market stock,
+  golden tools for the next item, and golden decorations (`gold` price in `balance.json` → `decor`).
+  The app shows them in tabs: Time, Boosts, Space, Shop and Get.
 
 **The store** is mock-only and isolated behind an interface. `core/store/payments.ts` defines
 `PaymentProvider` (`prices()`, `buy()`); `StoreService` lists the Gold Bar packs and grants them only

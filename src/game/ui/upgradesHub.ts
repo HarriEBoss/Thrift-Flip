@@ -24,6 +24,7 @@ import {
 import { MARKETS } from '../../core/data';
 import { spaceActions, spaceUnlocked, sunHarvested } from '../../core/space';
 import { openSpace } from './spaceMenus';
+import { drawGoldBar } from './goldIcon';
 import { openSkillTree } from './prestigeMenus';
 import { canPrestige, nextPrestigeTokens } from '../../core/prestige';
 import { buyableNodes } from '../../core/skilltree';
@@ -302,7 +303,8 @@ function fxText(fx: DecorFx): string {
 /** The decoration shop: things you can see in your shop, each with a small bonus. */
 export function openDecor(scene: BaseScene, onChange?: () => void): void {
   const s = session.state;
-  const rowH = 98;
+  // Twelve decorations (two golden ones): the rows get a little tighter.
+  const rowH = DECOR.length > 10 ? 86 : 98;
   const m = scene.openModal({
     title: t('decor.title'),
     w: 660,
@@ -314,12 +316,20 @@ export function openDecor(scene: BaseScene, onChange?: () => void): void {
     const st = decorStatus(s, d);
     const row = scene.add.container(0, y);
     const g = scene.add.graphics();
-    drawCard(g, -300, -42, 600, 84, st === 'owned' ? 0xdff2d5 : C.white, {
-      radius: 18,
-      stroke: C.ink,
-      strokeW: 3,
-      shadow: 3,
-    });
+    drawCard(
+      g,
+      -300,
+      -(rowH - 14) / 2,
+      600,
+      rowH - 14,
+      st === 'owned' ? 0xdff2d5 : d.gold ? 0xfff3c4 : C.white,
+      {
+        radius: 18,
+        stroke: C.ink,
+        strokeW: 3,
+        shadow: 3,
+      },
+    );
     const art = scene.add.graphics();
     drawDecor(art, d.id, 62);
     art.setPosition(-255, -2);
@@ -332,14 +342,18 @@ export function openDecor(scene: BaseScene, onChange?: () => void): void {
       wrap: 300,
     });
     row.add([g, art, name, desc]);
-    const label = st === 'owned' ? t('common.owned') : st === 'locked' ? t('decor.locked') : String(d.cost);
+    const label =
+      st === 'owned' ? t('common.owned') : st === 'locked' ? t('decor.locked') : String(d.gold ?? d.cost);
     const b = new Button(scene, 205, 0, {
       w: 160,
       h: 64,
       label,
-      color: st === 'available' ? C.leaf : C.inkSoft,
+      color: st === 'available' ? (d.gold ? C.mustardDark : C.leaf) : C.inkSoft,
       fontSize: FS.small,
-      icon: st === 'available' || st === 'poor' ? (gr, sz) => iconCoin(gr, sz) : undefined,
+      icon:
+        st === 'available' || st === 'poor'
+          ? (gr, sz) => (d.gold ? drawGoldBar(gr, 0, 0, sz * 0.9) : iconCoin(gr, sz))
+          : undefined,
       onClick: () => {
         if (buyDecor(s, d.id)) {
           session.audio.play('register');

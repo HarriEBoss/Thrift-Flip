@@ -604,18 +604,25 @@ test('Gold Bars on YouTube: no store, unlock a tool early and skip days with bar
   expect(await page.evaluate(() => !!(window as unknown as { __tf: Tf }).__tf.where('pack_gold_small'))).toBe(
     false,
   );
-  // A tier-2 tool before the shop is big enough.
+  // A tier-2 tool before the shop is big enough (Shop tab).
+  await press(page, 'mouse', 'gtab_shop');
   await press(page, 'mouse', 'early_wire_tester');
   await page.waitForTimeout(300);
   let s = await state();
   expect(s.upgrades).toContain('wire_tester');
   expect(s.coins).toBe(2000);
   expect(s.gold.bars).toBe(30 - 12);
+  // Golden tools for the next item (Boosts tab).
+  await press(page, 'mouse', 'gtab_boost');
+  await press(page, 'mouse', 'gold_golden');
+  await page.waitForTimeout(300);
+  expect((await state()).gold.bars).toBe(30 - 12 - 2);
   // Skip three days: the new day opens at the market.
+  await press(page, 'mouse', 'gtab_time');
   await press(page, 'mouse', 'skip_skip3');
   await waitForScene(page, 'Market');
   await page.waitForTimeout(400);
   s = await state();
   expect(s.day.n).toBe(33);
-  expect(s.gold.bars).toBe(30 - 12 - 10);
+  expect(s.gold.bars).toBe(30 - 12 - 2 - 10);
 });

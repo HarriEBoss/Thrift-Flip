@@ -10,14 +10,16 @@ export type DecorStatus = 'owned' | 'available' | 'poor' | 'locked';
 export function decorStatus(state: GameState, d: DecorDef): DecorStatus {
   if (state.decor.includes(d.id)) return 'owned';
   if (state.tier < d.tier) return 'locked';
-  if (state.coins < d.cost) return 'poor';
+  if (d.gold ? state.gold.bars < d.gold : state.coins < d.cost) return 'poor';
   return 'available';
 }
 
+/** Buys a decoration with coins, or with Gold Bars for the golden ones. */
 export function buyDecor(state: GameState, id: string): boolean {
   const d = DECOR.find((x) => x.id === id);
   if (!d || decorStatus(state, d) !== 'available') return false;
-  state.coins -= d.cost;
+  if (d.gold) state.gold.bars -= d.gold;
+  else state.coins -= d.cost;
   state.decor.push(id);
   return true;
 }

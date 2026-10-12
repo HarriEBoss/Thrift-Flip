@@ -169,7 +169,16 @@ describe('big repairs (computers, cars, workshop jobs)', () => {
     expect(fixRigFor('phones', 2).lid).toBe('glued');
     expect(screwLayout(fixRigFor('phones', 2))).toEqual([]);
     const r = fixRigFor('rockets', 0);
-    expect(r.tasks.map((t) => t.k)).toEqual(['drain', 'bolts', 'swap', 'bolts', 'cables', 'leak', 'pour', 'wires']);
+    expect(r.tasks.map((t) => t.k)).toEqual([
+      'drain',
+      'bolts',
+      'swap',
+      'bolts',
+      'cables',
+      'leak',
+      'pour',
+      'wires',
+    ]);
     expect(r.tasks.some((t) => t.k === 'pour' && t.fluid === 'fuel')).toBe(true);
   });
 

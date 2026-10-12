@@ -169,5 +169,44 @@ export function drawDecor(g: G, id: string, s: number): void {
       g.fillStyle(C.sky, 1);
       g.fillEllipse(0, 32 * k, 70 * k, 12 * k);
       break;
+    case 'gold_statue': {
+      // A golden statue of the shop's founder on a marble plinth.
+      g.fillStyle(0xe8e4dc, 1);
+      g.fillRect(-26 * k, 22 * k, 52 * k, 28 * k);
+      g.strokeRect(-26 * k, 22 * k, 52 * k, 28 * k);
+      g.fillStyle(C.gold, 1);
+      g.fillCircle(0, -34 * k, 12 * k);
+      g.strokeCircle(0, -34 * k, 12 * k);
+      g.fillPoints([V(-16 * k, -20 * k), V(16 * k, -20 * k), V(12 * k, 22 * k), V(-12 * k, 22 * k)], true);
+      g.strokePoints([V(-16 * k, -20 * k), V(16 * k, -20 * k), V(12 * k, 22 * k), V(-12 * k, 22 * k)], true);
+      // One arm raised, holding a coin.
+      g.lineStyle(7 * k, C.gold, 1);
+      g.lineBetween(14 * k, -14 * k, 28 * k, -40 * k);
+      g.lineStyle(4 * k, ink, 1);
+      g.fillStyle(0xfff1b8, 1);
+      g.fillCircle(30 * k, -46 * k, 8 * k);
+      g.strokeCircle(30 * k, -46 * k, 8 * k);
+      g.fillStyle(0xffffff, 0.6);
+      g.fillRect(-8 * k, -14 * k, 4 * k, 30 * k);
+      break;
+    }
+    case 'gold_register': {
+      // A shiny golden cash register.
+      g.fillStyle(C.gold, 1);
+      g.fillPoints([V(-38 * k, 0), V(38 * k, 0), V(42 * k, 48 * k), V(-42 * k, 48 * k)], true);
+      g.strokePoints([V(-38 * k, 0), V(38 * k, 0), V(42 * k, 48 * k), V(-42 * k, 48 * k)], true);
+      g.fillRect(-26 * k, -34 * k, 52 * k, 34 * k);
+      g.strokeRect(-26 * k, -34 * k, 52 * k, 34 * k);
+      g.fillStyle(0x2a2833, 1);
+      g.fillRect(-18 * k, -28 * k, 36 * k, 14 * k);
+      g.fillStyle(0x7dff8a, 1);
+      g.fillRect(-14 * k, -25 * k, 18 * k, 8 * k);
+      g.fillStyle(0xfff1b8, 1);
+      for (let r = 0; r < 2; r++)
+        for (let c = 0; c < 4; c++) g.fillCircle((-24 + c * 16) * k, (14 + r * 14) * k, 4.5 * k);
+      g.fillStyle(0xffffff, 0.5);
+      g.fillRect(-34 * k, 4 * k, 6 * k, 38 * k);
+      break;
+    }
   }
 }
