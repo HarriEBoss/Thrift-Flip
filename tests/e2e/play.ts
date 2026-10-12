@@ -27,7 +27,7 @@ export type BotAction =
   | { a: 'wait' }
   | { a: 'tap'; p: U }
   | { a: 'hold'; p: U }
-  | { a: 'holdLevel'; p: U; until: number }
+  | { a: 'holdLevel'; p: U; until: number; below?: boolean }
   | { a: 'drag'; from: U; to: U }
   | { a: 'circle'; c: U; r: number };
 
@@ -226,7 +226,9 @@ export async function solveStep(page: Page, mode: Mode): Promise<void> {
       } else if (act.a === 'holdLevel') {
         await holdUntil(page, mode, unit(now, act.p.u, act.p.v), async () => {
           const i = await ws(page);
-          return (i?.repair?.level ?? 1) >= act.until || (await changed());
+          const lv = i?.repair?.level;
+          if (lv === undefined || lv === null) return true;
+          return (act.below ? lv <= act.until : lv >= act.until) || (await changed());
         });
         await page.waitForTimeout(400);
       } else if (act.a === 'tap') {

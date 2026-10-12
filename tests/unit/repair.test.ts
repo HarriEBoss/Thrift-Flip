@@ -103,7 +103,7 @@ describe('big repairs (computers, cars, workshop jobs)', () => {
 
   it('workshop jobs: a full PC rebuild and an engine swap with lots to do', () => {
     const pc = repairRig('fix', 'tech', 0, 'pc');
-    expect(pc.tasks.map((t) => t.k)).toEqual(['dust', 'swap', 'swap', 'swap', 'bolts', 'cables']);
+    expect(pc.tasks.map((t) => t.k)).toEqual(['dust', 'swap', 'torque', 'swap', 'swap', 'bolts', 'cables']);
     expect(pc.tasks.some((t) => t.k === 'swap' && t.paste)).toBe(true);
     const eng = repairRig('fix', 'vehicles', 0, 'engine');
     expect(eng.inside).toBe('bay');
@@ -169,7 +169,7 @@ describe('big repairs (computers, cars, workshop jobs)', () => {
     expect(fixRigFor('phones', 2).lid).toBe('glued');
     expect(screwLayout(fixRigFor('phones', 2))).toEqual([]);
     const r = fixRigFor('rockets', 0);
-    expect(r.tasks.map((t) => t.k)).toEqual(['drain', 'bolts', 'swap', 'bolts', 'cables', 'pour', 'wires']);
+    expect(r.tasks.map((t) => t.k)).toEqual(['drain', 'bolts', 'swap', 'bolts', 'cables', 'leak', 'pour', 'wires']);
     expect(r.tasks.some((t) => t.k === 'pour' && t.fluid === 'fuel')).toBe(true);
   });
 

@@ -27,13 +27,13 @@ export interface TaskHost {
 
 /**
  * What the e2e bot should do next, in stage unit coords. `hold` holds until the action changes,
- * `holdLevel` until the level reaches `until`.
+ * `holdLevel` until the level reaches `until` (or, with `below`, drops to it).
  */
 export type BotAction =
   | { a: 'wait' }
   | { a: 'tap'; p: Pt }
   | { a: 'hold'; p: Pt }
-  | { a: 'holdLevel'; p: Pt; until: number }
+  | { a: 'holdLevel'; p: Pt; until: number; below?: boolean }
   | { a: 'drag'; from: Pt; to: Pt }
   | { a: 'circle'; c: Pt; r: number };
 
@@ -91,6 +91,17 @@ export abstract class RepairTask {
     if (this.finished) return;
     this.finished = true;
     this.onDone();
+  }
+
+  /** Fades out (and removes) pieces that only mattered during this job: a magnified panel, a gauge. */
+  protected fadeOut(objs: Phaser.GameObjects.GameObject[] = this.objs): void {
+    for (const o of objs)
+      this.tw({
+        targets: o,
+        alpha: 0,
+        duration: this.ms(260),
+        onComplete: () => o.destroy(),
+      });
   }
 
   protected tw(cfg: Phaser.Types.Tweens.TweenBuilderConfig): Phaser.Tweens.Tween {

@@ -77,7 +77,29 @@ export type TaskSpec =
   /** Blow the dust bunnies away with the air can. */
   | { k: 'dust'; n: number }
   /** Squeeze thermal paste onto the CPU: a pea-sized dot, not too much. */
-  | { k: 'paste' };
+  | { k: 'paste' }
+  /**
+   * Seat a chip in its socket: open the lever, turn the chip so its corner mark lines up with the
+   * socket's (a wrong drop bends the pins), drop it in and close the lever.
+   */
+  | { k: 'socket'; chip: 'cpu' | 'mcu' }
+  /**
+   * Tighten bolts in their torque sequence (the numbers stamped beside them): first snug each in
+   * order, then torque each with the gauge, stopping in the green.
+   */
+  | { k: 'torque'; at: TorqueAt }
+  /** Memory: open the slot latches, turn the stick so its notch matches, push it into A2 until it clicks. */
+  | { k: 'ram' }
+  /** Front-panel pins: power and reset switches, power and drive LEDs (LEDs have a + and a −). */
+  | { k: 'header' }
+  /** Serpentine belt: route it round the pulleys in the diagram's order, then let the tensioner go. */
+  | { k: 'belt' }
+  /** Centre a robot servo: turn the horn to exactly 90 degrees. */
+  | { k: 'servo' }
+  /** Pressure test the fuel lines: pressurise, find the bubbling fitting and tighten it. */
+  | { k: 'leak' };
+
+export type TorqueAt = 'cooler' | 'engine' | 'nozzle';
 
 export interface Rig {
   view: RepairView;
@@ -357,6 +379,7 @@ const FIX_RIGS: Record<string, Rig> = {
     aspect: 1.2,
     tasks: [
       { k: 'swap', part: 'servo', zone: 'tl' },
+      { k: 'servo' },
       { k: 'swap', part: 'chip' },
       { k: 'cables', set: 'harness' },
     ],
@@ -421,6 +444,7 @@ const FIX_RIGS: Record<string, Rig> = {
       { k: 'swap', part: 'pump', zone: 'c' },
       { k: 'bolts', n: 4, dir: 'in', at: 'engine' },
       { k: 'cables', set: 'fuel' },
+      { k: 'leak' },
       { k: 'pour', fluid: 'fuel' },
       { k: 'wires' },
     ],
@@ -451,6 +475,7 @@ const FIX_RIGS: Record<string, Rig> = {
       { k: 'drain', fluid: 'fuel' },
       { k: 'swap', part: 'pump', zone: 'c' },
       { k: 'cables', set: 'fuel' },
+      { k: 'leak' },
       { k: 'pour', fluid: 'fuel' },
     ],
   }),
@@ -515,6 +540,7 @@ export function pcRebuildRig(): Rig {
     tasks: [
       { k: 'dust', n: 5 },
       { k: 'swap', part: 'cooler', zone: 'tl', paste: true },
+      { k: 'torque', at: 'cooler' },
       { k: 'swap', part: 'ram' },
       { k: 'swap', part: 'gpu', zone: 'c' },
       { k: 'bolts', n: 2, dir: 'in', at: 'card' },
@@ -542,6 +568,7 @@ export function engineSwapRig(): Rig {
       { k: 'hoist', dir: 'out' },
       { k: 'hoist', dir: 'in' },
       { k: 'bolts', n: 4, dir: 'in', at: 'engine' },
+      { k: 'belt' },
       { k: 'cables', set: 'hoses' },
       { k: 'pour', fluid: 'oil' },
       { k: 'pour', fluid: 'coolant' },
@@ -565,12 +592,15 @@ const BUILD_RIGS: Partial<Record<CategoryId, Rig>> = {
     aspect: 1.05,
     build: true,
     tasks: [
+      { k: 'socket', chip: 'cpu' },
       { k: 'swap', part: 'cooler', zone: 'tl', paste: true, fit: true },
-      { k: 'swap', part: 'ram', fit: true },
+      { k: 'torque', at: 'cooler' },
+      { k: 'ram' },
       { k: 'swap', part: 'gpu', zone: 'c', fit: true },
       { k: 'bolts', n: 2, dir: 'in', at: 'card' },
       { k: 'swap', part: 'drive', zone: 'bl', fit: true },
       { k: 'cables', set: 'pc' },
+      { k: 'header' },
     ],
   }),
   vehicles: rig({
@@ -584,7 +614,8 @@ const BUILD_RIGS: Partial<Record<CategoryId, Rig>> = {
     build: true,
     tasks: [
       { k: 'hoist', dir: 'in' },
-      { k: 'bolts', n: 4, dir: 'in', at: 'engine' },
+      { k: 'torque', at: 'engine' },
+      { k: 'belt' },
       { k: 'cables', set: 'hoses' },
       { k: 'pour', fluid: 'oil' },
       { k: 'pour', fluid: 'coolant' },
@@ -601,8 +632,9 @@ const BUILD_RIGS: Partial<Record<CategoryId, Rig>> = {
     build: true,
     tasks: [
       { k: 'swap', part: 'servo', zone: 'tl', fit: true },
+      { k: 'servo' },
+      { k: 'socket', chip: 'mcu' },
       { k: 'swap', part: 'battery', fit: true },
-      { k: 'swap', part: 'chip', zone: 'c', fit: true },
       { k: 'swap', part: 'camera', zone: 'bl', fit: true },
       { k: 'cables', set: 'harness' },
     ],
@@ -617,9 +649,10 @@ const BUILD_RIGS: Partial<Record<CategoryId, Rig>> = {
     build: true,
     tasks: [
       { k: 'swap', part: 'pump', zone: 'c', fit: true },
-      { k: 'bolts', n: 4, dir: 'in', at: 'engine' },
+      { k: 'torque', at: 'nozzle' },
       { k: 'swap', part: 'chip', zone: 'tl', fit: true },
       { k: 'cables', set: 'fuel' },
+      { k: 'leak' },
       { k: 'pour', fluid: 'fuel' },
       { k: 'wires' },
     ],

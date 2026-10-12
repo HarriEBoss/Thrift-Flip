@@ -724,5 +724,20 @@
   "store.gold_medium": "Crate of Gold Bars",
   "store.gold_medium.d": "120 Gold Bars for time skips and early tools.",
   "store.gold_large": "Vault of Gold Bars",
-  "store.gold_large.d": "280 Gold Bars for time skips and early tools."
+  "store.gold_large.d": "280 Gold Bars for time skips and early tools.",
+  "mg.asm.socketOpen": "Lift the socket's lever to open it.",
+  "mg.asm.socketPlace": "Tap the chip to turn it until its gold mark matches the socket's corner, then drop it in. Never force it: the pins bend!",
+  "mg.asm.socketClose": "Push the lever back down to lock the chip in.",
+  "mg.asm.torqueSnug": "Snug each bolt in the order of the numbers (hold the wrench on it).",
+  "mg.asm.torqueFinal": "Now torque each bolt in order: hold and let go in the green. Too far strips it!",
+  "mg.asm.ramLatch": "Open both latches of slot A2 (tap them).",
+  "mg.asm.ramInsert": "Tap the memory stick to turn it so its notch matches the slot, then drag it into A2.",
+  "mg.asm.ramPress": "Press the stick down firmly until the latches click shut.",
+  "mg.asm.header": "Fit each little plug onto its pins. LED plugs have a + side: tap to turn them round.",
+  "mg.asm.beltRoute": "Loop the belt round the pulleys in the order on the routing sticker.",
+  "mg.asm.beltTension": "Hold the tensioner back so the belt slips onto the last pulley.",
+  "mg.asm.servo": "Hold + or − to turn the servo horn. Let go right on 90°.",
+  "mg.asm.leakPump": "Hold the test valve to pressurise the fuel lines up to the line.",
+  "mg.asm.leakFind": "One fitting is leaking: find the bubbles and hold the wrench on it.",
+  "mg.asm.leakHold": "Holding steady: no leaks!"
 }

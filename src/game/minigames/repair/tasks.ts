@@ -38,6 +38,7 @@ import {
   drawScrew,
 } from '../../art/repairArt';
 import { makeText } from '../../ui/widgets';
+import { BeltTask, HeaderTask, LeakTask, RamTask, ServoTask, SocketTask, TorqueTask } from './assembly';
 import { cableLook, cableThickness, drawCableBody, drawPlug, drawSocket, strokeWire } from './cableArt';
 import { C, FS } from '../../theme';
 import { STAGE } from '../MiniGame';
@@ -1389,5 +1390,19 @@ export function makeTask(
       return new CablesTask(h, spec.set);
     case 'dust':
       return new DustTask(h, spec.n);
+    case 'socket':
+      return new SocketTask(h, spec.chip);
+    case 'torque':
+      return new TorqueTask(h, spec.at);
+    case 'ram':
+      return new RamTask(h);
+    case 'header':
+      return new HeaderTask(h);
+    case 'belt':
+      return new BeltTask(h);
+    case 'servo':
+      return new ServoTask(h);
+    case 'leak':
+      return new LeakTask(h);
   }
 }

@@ -7,6 +7,7 @@
 import { Rng } from '../../core/prng';
 import {
   panelGeom,
+  hasTask,
   partSize,
   pourLayout,
   swapLayout,
@@ -352,14 +353,16 @@ export function drawCompartment(
       for (let i = 0; i < 12; i++)
         for (let j = 0; j < 12; j++)
           x.fillRect(cx0 - hs * 0.6 + i * hs * 0.1, cy0 - hs * 0.6 + j * hs * 0.1, s * 0.0035, s * 0.0035);
-      // The socket lever along the right side.
-      x.strokeStyle = '#d9dde4';
-      x.lineWidth = s * 0.006;
-      x.beginPath();
-      x.moveTo(cx0 + hs * 1.12, cy0 + hs);
-      x.lineTo(cx0 + hs * 1.12, cy0 - hs * 0.9);
-      x.lineTo(cx0 + hs * 0.9, cy0 - hs * 0.9);
-      x.stroke();
+      // The socket lever along the right side (the CPU-fitting task draws its own).
+      if (!hasTask(rig, 'socket')) {
+        x.strokeStyle = '#d9dde4';
+        x.lineWidth = s * 0.006;
+        x.beginPath();
+        x.moveTo(cx0 + hs * 1.12, cy0 + hs);
+        x.lineTo(cx0 + hs * 1.12, cy0 - hs * 0.9);
+        x.lineTo(cx0 + hs * 0.9, cy0 - hs * 0.9);
+        x.stroke();
+      }
       // Solid capacitors round the socket.
       for (let i = 0; i < 5; i++) {
         const ccx = cx0 + hs * 1.35;
