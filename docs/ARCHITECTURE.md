@@ -143,6 +143,13 @@ gasket step), `fuse` (seeded fuse box: legend, test light, matching amps) and `u
 battery connector first). Cables marked `last` only go in once everything else is connected, and
 glued phone backs get a `pry` phase in `RepairGame` after the heat.
 
+**Robot and rocket repairs** (`core/robotRepair.ts` rules, `repair/robotTasks.ts` and
+`repair/rocketTasks.ts`): `lockout` (on / off), `uart` (debug header wiring, fault from the rig via
+`robotFault`), `pack` (cell voltages, desolder, polarity, solder band), `props`, `vent`, `rbf`
+(in / out; the pins put in at the start are handed to the pull task through `TaskHost.shelf`),
+`gimbal` (the bot turns each jackscrew an exact number of turns: `circle` actions take `turns`) and
+`tiles`.
+
 A custom design contract is **built**, not repaired: its recipe is Design → **Build** → Polish, and the
 Build step uses a build rig (`buildRigFor`, `rig.build`). The frame starts open and empty (no screws to
 undo), every `swap` is a `fit` (an empty mount, just put the new part in), then bolts, cables and fluids,

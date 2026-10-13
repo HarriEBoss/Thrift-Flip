@@ -626,3 +626,48 @@ test('Gold Bars on YouTube: no store, unlock a tool early and skip days with bar
   expect(s.day.n).toBe(33);
   expect(s.gold.bars).toBe(30 - 12 - 2 - 10);
 });
+
+test('robot and rocket repairs: lock out a factory arm and read its fault log; safe, vent and align a lander', async ({
+  page,
+}) => {
+  test.setTimeout(420_000);
+  await page.setViewportSize({ width: 405, height: 720 });
+  await setupPage(page);
+  await page.goto('/');
+  await waitForScene(page, 'MainMenu');
+  type Tf = {
+    setup(p: object): void;
+    goto(k: string): void;
+    addItems(i: number[], r: boolean): void;
+    state(): { coins: number; inv: Array<{ job?: object; d: number }> };
+  };
+  await page.evaluate(() => {
+    const t = (window as unknown as { __tf: Tf }).__tf;
+    t.setup({
+      tutorialDone: true,
+      tier: 4,
+      coins: 0,
+      day: 40,
+      phase: 'workshop',
+      named: true,
+      businesses: ['phone', 'computer', 'mechanic', 'robotics', 'rocket'],
+      business: 'robotics',
+    });
+    // The Factory Arm (lockout, fault log, servo...) and the Moon Lander (pins, vent, gimbal...).
+    t.addItems([165, 184], false);
+    for (const inst of t.state().inv) {
+      inst.job = { fee: 120, p: 'x', k: 'service', c: 'Acme' };
+      inst.d = 2;
+    }
+    t.goto('Workshop');
+  });
+  await waitForScene(page, 'Workshop');
+  const rigs = await page.evaluate(
+    () => (window as unknown as { __tf: { ws(): { steps: string[] } } }).__tf.ws().steps,
+  );
+  expect(rigs).toContain('fix');
+  await playWorkshop(page, 'mouse');
+  const after = await tf(page, (t) => ({ coins: t.state().coins, inv: t.state().inv.length }));
+  expect(after.inv).toBe(0);
+  expect(after.coins).toBeGreaterThan(0);
+});

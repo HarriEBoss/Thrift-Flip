@@ -428,6 +428,32 @@ Next: Phase 3, the playable core loop in Phaser.
 - **Phones and others**: phone repairs unplug the battery first, the back cover is pried off clip by
   clip after the heat, and power cables (phone battery, robot harness power) go in **last**.
 
+## Owner feedback: realistic robot and rocket repairs ✅
+
+- **Robots**
+  - **Lockout / tagout** on the factory arm: hit the E-stop, key to OFF, hang your own padlock and
+    DANGER tag. At the end: lock off, key to RUN, twist the E-stop out, press reset. Turning the key
+    too early or pressing reset before the E-stop is released is a mistake.
+  - **Serial fault log**: wire a USB-serial adapter to the controller's debug header (GND to GND, TX
+    to RX, RX to TX; never the 3V3 pin; the pin order differs per board), boot, and read the fault
+    (motor overcurrent, cell under-voltage, encoder lost...). It stays pinned like the OBD code.
+  - **Battery pack**: measure every cell with the multimeter, find the dead one (under 3.0 V),
+    desolder its tabs, put the new cell in the right way round (cells alternate in series), solder
+    each tab in the green (too long cooks the cell), re-measure.
+  - **Drone propellers**: each prop on a motor that spins its way (diagonal motors match).
+- **Rockets**
+  - **Remove-before-flight pins**: every rocket job starts by safing the pyros (a pin in each
+    safe-and-arm box) and ends by pulling every red flag and counting them on the board.
+  - **Vent and purge**: after draining, open the vent, wait for zero pressure, connect nitrogen,
+    purge until the fuel vapour is under the safe line, close the vent. Coupling the hose to a tank
+    still under pressure is a mistake.
+  - **Gimbal alignment** (landers and new rockets): turn the pitch and yaw jackscrews until the
+    engine's laser hits the bullseye, then lock each one. Locking it off-target is a mistake.
+  - **Heat shield tiles** (capsules): pull the cracked tiles, butter the adhesive to the green, bond
+    the new tile with the same part number (look-alike numbers are in the tray), hold it down.
+- Fixed in passing: level gauges no longer wipe what was drawn before them (the leak-test valve,
+  the torque bolt marks and the heat gun glow were disappearing).
+
 ## Definition of done: status
 
 | Item                                                                                   | Status                                                                                                                        |

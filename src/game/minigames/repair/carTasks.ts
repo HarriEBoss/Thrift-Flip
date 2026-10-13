@@ -34,7 +34,7 @@ import { RepairTask, at, drawGauge, drawRatchet, near, type BotAction, type Task
 import { inset, scoreFor, tapped } from './assembly';
 
 /** Follows a finger going round a centre; adds up the turning (clockwise is positive on screen). */
-class Twist {
+export class Twist {
   private last: number | null = null;
   total = 0;
   constructor(public c: Pt) {}
@@ -57,6 +57,24 @@ class Twist {
   get active(): boolean {
     return this.last !== null;
   }
+}
+
+/** A diagnosis stays pinned on a sticky note (top left) for the rest of the job. */
+export function pinNote(h: TaskHost, code: string, text: string): void {
+  const sc = h.scene;
+  const p = at({ u: 0.2, v: 0.075 });
+  const note = sc.add.container(p.x, p.y);
+  const bg = sc.add.graphics();
+  bg.fillStyle(0x000000, 0.25);
+  bg.fillRect(-96, -24, 196, 54);
+  bg.fillStyle(0xfff07a, 1);
+  bg.fillRect(-100, -28, 196, 54);
+  const desc = makeText(sc, -2, 12, text, FS.tiny, C.inkSoft, { bold: false }).setScale(0.75);
+  if (desc.displayWidth > 186) desc.setScale((0.75 * 186) / desc.displayWidth);
+  note.add([bg, makeText(sc, -2, -12, code, FS.small, C.ink), desc]);
+  note.setAngle(-3);
+  h.layer.add(note);
+  h.sfx('pop');
 }
 
 // ---------------------------------------------------------------- OBD-II diagnosis
@@ -139,23 +157,7 @@ export class ObdTask extends RepairTask {
 
   private done(): void {
     const tc = troubleCode(this.h.rig.tasks, this.h.inst.s);
-    // The code stays pinned on a sticky note for the rest of the job.
-    const sc = this.h.scene;
-    const p = at({ u: 0.2, v: 0.075 });
-    const note = sc.add.container(p.x, p.y);
-    const bg = sc.add.graphics();
-    bg.fillStyle(0x000000, 0.25);
-    bg.fillRect(-96, -24, 196, 54);
-    bg.fillStyle(0xfff07a, 1);
-    bg.fillRect(-100, -28, 196, 54);
-    note.add([
-      bg,
-      makeText(sc, -2, -12, tc.code, FS.small, C.ink),
-      makeText(sc, -2, 12, t(tc.key, { n: tc.n ?? 0 }), FS.tiny, C.inkSoft, { bold: false }).setScale(0.75),
-    ]);
-    note.setAngle(-3);
-    this.h.layer.add(note);
-    this.h.sfx('pop');
+    pinNote(this.h, tc.code, t(tc.key, { n: tc.n ?? 0 }));
     this.fadeOut();
     this.finish();
   }

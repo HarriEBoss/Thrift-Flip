@@ -23,6 +23,8 @@ export interface TaskHost {
   own(key: string, canvas: HTMLCanvasElement): string;
   /** A wrong move: buzz and a little shake. */
   shake(): void;
+  /** Pieces a task leaves for a later task of the same repair (safing pins pulled at the end). */
+  shelf: Map<string, Phaser.GameObjects.GameObject[]>;
 }
 
 /**
@@ -35,7 +37,8 @@ export type BotAction =
   | { a: 'hold'; p: Pt }
   | { a: 'holdLevel'; p: Pt; until: number; below?: boolean }
   | { a: 'drag'; from: Pt; to: Pt }
-  | { a: 'circle'; c: Pt; r: number; ccw?: boolean };
+  /** Go round `c` (3 turns, or exactly `turns`). */
+  | { a: 'circle'; c: Pt; r: number; ccw?: boolean; turns?: number };
 
 /** Unit coords to closeup-local pixels. */
 export function at(p: Pt): { x: number; y: number } {
@@ -117,7 +120,7 @@ export abstract class RepairTask {
   }
 }
 
-/** Dipstick-style level gauge with an optional green "just right" band. */
+/** Dipstick-style level gauge with an optional green "just right" band (draws on top: clear `g` first if needed). */
 export function drawGauge(
   g: Phaser.GameObjects.Graphics,
   p: Pt,
@@ -125,7 +128,6 @@ export function drawGauge(
   color: number,
   band: [number, number] | null,
 ): void {
-  g.clear();
   const { x, y } = at(p);
   const w = STAGE * 0.035;
   const h = STAGE * 0.13;

@@ -184,6 +184,7 @@ export class RepairGame extends MiniGame {
     this.closeup.add([inside, layer, this.glow]);
 
     const host: TaskHost = {
+      shelf: new Map(),
       scene: sc,
       layer,
       rig: this.rig,

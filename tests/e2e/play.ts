@@ -29,7 +29,7 @@ export type BotAction =
   | { a: 'hold'; p: U }
   | { a: 'holdLevel'; p: U; until: number; below?: boolean }
   | { a: 'drag'; from: U; to: U }
-  | { a: 'circle'; c: U; r: number; ccw?: boolean };
+  | { a: 'circle'; c: U; r: number; ccw?: boolean; turns?: number };
 
 export interface WsInfo {
   view: 'steps' | 'reveal';
@@ -242,7 +242,8 @@ export async function solveStep(page: Page, mode: Mode): Promise<void> {
         await page.waitForTimeout(250);
       } else if (act.a === 'circle') {
         const pts: Pt[] = [];
-        for (let i = 0; i <= 72; i++) {
+        const n = Math.max(1, Math.round((act.turns ?? 3) * 24));
+        for (let i = 0; i <= n; i++) {
           const ang = ((act.ccw ? -i : i) / 24) * Math.PI * 2;
           pts.push(unit(now, act.c.u + Math.cos(ang) * act.r, act.c.v + Math.sin(ang) * act.r));
         }

@@ -112,7 +112,26 @@ export type TaskSpec =
   /** Fuse box: find the circuit from the symptom, test, pull the blown fuse, fit the same rating. */
   | { k: 'fuse' }
   /** Phones: pop the battery connector off first, before touching anything else. */
-  | { k: 'unplug' };
+  | { k: 'unplug' }
+  /**
+   * Robot lockout / tagout. On: E-stop, key to OFF, hang your padlock and tag. Off: your lock off,
+   * key to RUN, twist the E-stop out, press reset.
+   */
+  | { k: 'lockout'; on: boolean }
+  /** Wire the USB-serial adapter to the controller's debug header (TX to RX!) and read the fault log. */
+  | { k: 'uart' }
+  /** Battery pack: measure each cell, find the dead one, desolder it, fit a new one the right way round, solder it. */
+  | { k: 'pack' }
+  /** Drone: each propeller on a motor that spins its way (diagonal motors spin the same way). */
+  | { k: 'props' }
+  /** Rocket tank safing: open the vent, let the pressure out, purge the fuel vapour with nitrogen, close. */
+  | { k: 'vent' }
+  /** Remove-before-flight pins: safe the pyros before work (in), pull every flag before closing (out). */
+  | { k: 'rbf'; dir: 'in' | 'out' }
+  /** Line up the engine with its two gimbal actuators (laser on the target), then lock them. */
+  | { k: 'gimbal' }
+  /** Heat shield: pull the cracked tiles, butter the adhesive, bond a new tile with the same part number. */
+  | { k: 'tiles' };
 
 export type TorqueAt = 'cooler' | 'engine' | 'nozzle';
 
@@ -384,7 +403,8 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'screen',
     tasks: [{ k: 'unplug' }, { k: 'dust', n: 2 }, { k: 'swap', part: 'pouch' }],
   }),
-  // Robots: motors (servos), controller chips, batteries and the wiring harness.
+  // Robots: motors (servos), controller chips, batteries and the wiring harness. Big robots are
+  // locked out first and the controller's fault log says what is wrong.
   'robots:0': rig({
     view: 'back',
     panel: 'rect',
@@ -392,10 +412,13 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'led',
     aspect: 1.2,
     tasks: [
+      { k: 'lockout', on: true },
+      { k: 'uart' },
       { k: 'swap', part: 'servo', zone: 'tl' },
       { k: 'servo' },
       { k: 'swap', part: 'chip' },
       { k: 'cables', set: 'harness' },
+      { k: 'lockout', on: false },
     ],
   }),
   'robots:1': rig({
@@ -404,7 +427,7 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'robot',
     glow: 'led',
     aspect: 1.0,
-    tasks: [{ k: 'dust', n: 3 }, { k: 'swap', part: 'battery' }, { k: 'wires' }],
+    tasks: [{ k: 'uart' }, { k: 'dust', n: 3 }, { k: 'pack' }, { k: 'wires' }],
   }),
   'robots:2': rig({
     view: 'base',
@@ -412,11 +435,7 @@ const FIX_RIGS: Record<string, Rig> = {
     screws: 4,
     inside: 'robot',
     glow: 'led',
-    tasks: [
-      { k: 'dust', n: 4 },
-      { k: 'swap', part: 'servo' },
-      { k: 'swap', part: 'cell', zone: 'tl' },
-    ],
+    tasks: [{ k: 'dust', n: 4 }, { k: 'swap', part: 'servo' }, { k: 'pack' }],
   }),
   'robots:3': rig({
     view: 'base',
@@ -425,8 +444,10 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'led',
     aspect: 1.2,
     tasks: [
+      { k: 'uart' },
       { k: 'swap', part: 'servo', zone: 'tl' },
-      { k: 'swap', part: 'cell' },
+      { k: 'props' },
+      { k: 'pack' },
       { k: 'cables', set: 'harness' },
     ],
   }),
@@ -438,13 +459,16 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'led',
     aspect: 1.3,
     tasks: [
+      { k: 'uart' },
       { k: 'swap', part: 'servo', zone: 'tl' },
+      { k: 'servo' },
       { k: 'swap', part: 'chip', zone: 'c' },
       { k: 'cables', set: 'harness' },
       { k: 'wires' },
     ],
   }),
-  // Rockets and spacecraft: fuel systems, pumps, avionics.
+  // Rockets and spacecraft: fuel systems, pumps, avionics, heat shields. The pyros are safed with
+  // remove-before-flight pins first, and every pin is pulled before the panel closes.
   'rockets:0': rig({
     view: 'back',
     panel: 'rect',
@@ -453,14 +477,16 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'engine',
     aspect: 1.05,
     tasks: [
+      { k: 'rbf', dir: 'in' },
       { k: 'drain', fluid: 'fuel' },
+      { k: 'vent' },
       { k: 'bolts', n: 4, dir: 'out', at: 'engine' },
       { k: 'swap', part: 'pump', zone: 'c' },
       { k: 'bolts', n: 4, dir: 'in', at: 'engine' },
       { k: 'cables', set: 'fuel' },
       { k: 'leak' },
       { k: 'pour', fluid: 'fuel' },
-      { k: 'wires' },
+      { k: 'rbf', dir: 'out' },
     ],
   }),
   'rockets:1': rig({
@@ -471,11 +497,12 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'screen',
     aspect: 1.1,
     tasks: [
-      { k: 'dust', n: 3 },
+      { k: 'rbf', dir: 'in' },
+      { k: 'uart' },
       { k: 'swap', part: 'chip', zone: 'tl' },
-      { k: 'swap', part: 'cell' },
+      { k: 'pack' },
       { k: 'cables', set: 'harness' },
-      { k: 'wires' },
+      { k: 'rbf', dir: 'out' },
     ],
   }),
   'rockets:2': rig({
@@ -486,11 +513,15 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'engine',
     aspect: 1.05,
     tasks: [
+      { k: 'rbf', dir: 'in' },
       { k: 'drain', fluid: 'fuel' },
+      { k: 'vent' },
       { k: 'swap', part: 'pump', zone: 'c' },
       { k: 'cables', set: 'fuel' },
       { k: 'leak' },
+      { k: 'gimbal' },
       { k: 'pour', fluid: 'fuel' },
+      { k: 'rbf', dir: 'out' },
     ],
   }),
   'rockets:3': rig({
@@ -501,10 +532,12 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'screen',
     aspect: 1.05,
     tasks: [
+      { k: 'rbf', dir: 'in' },
+      { k: 'tiles' },
       { k: 'swap', part: 'chip', zone: 'tl' },
       { k: 'cables', set: 'harness' },
       { k: 'pour', fluid: 'coolant' },
-      { k: 'wires' },
+      { k: 'rbf', dir: 'out' },
     ],
   }),
   'rockets:4': rig({
@@ -515,9 +548,10 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'led',
     aspect: 1.2,
     tasks: [
-      { k: 'dust', n: 4 },
+      { k: 'uart' },
       { k: 'swap', part: 'servo', zone: 'tl' },
-      { k: 'swap', part: 'cell' },
+      { k: 'servo' },
+      { k: 'pack' },
       { k: 'cables', set: 'harness' },
       { k: 'wires' },
     ],
@@ -664,11 +698,13 @@ const BUILD_RIGS: Partial<Record<CategoryId, Rig>> = {
     tasks: [
       { k: 'swap', part: 'pump', zone: 'c', fit: true },
       { k: 'torque', at: 'nozzle' },
+      { k: 'gimbal' },
       { k: 'swap', part: 'chip', zone: 'tl', fit: true },
       { k: 'cables', set: 'fuel' },
       { k: 'leak' },
       { k: 'pour', fluid: 'fuel' },
       { k: 'wires' },
+      { k: 'rbf', dir: 'out' },
     ],
   }),
 };

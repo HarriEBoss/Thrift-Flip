@@ -40,6 +40,8 @@ import {
 import { makeText } from '../../ui/widgets';
 import { BeltTask, HeaderTask, LeakTask, RamTask, ServoTask, SocketTask, TorqueTask } from './assembly';
 import { BatteryTask, FilterTask, FuseTask, ObdTask, PlugsTask, UnplugTask } from './carTasks';
+import { LockoutTask, PackTask, PropsTask, UartTask } from './robotTasks';
+import { GimbalTask, RbfTask, TilesTask, VentTask } from './rocketTasks';
 import { cableLook, cableThickness, drawCableBody, drawPlug, drawSocket, strokeWire } from './cableArt';
 import { C, FS } from '../../theme';
 import { STAGE } from '../MiniGame';
@@ -618,6 +620,7 @@ class PasteStage {
     g.fillCircle(x, y, r);
     g.fillStyle(0xe8ebf0, 0.8);
     g.fillCircle(x - r * 0.3, y - r * 0.3, r * 0.4);
+    this.gauge.clear();
     drawGauge(this.gauge, this.gp, this.level, 0xd0d4da, PASTE_BAND);
   }
 }
@@ -769,6 +772,7 @@ export class LevelTask extends RepairTask {
 
   private draw(): void {
     const col = this.mode === 'drain' ? 0x6a4a1c : this.mode === 'paste' ? 0xd0d4da : FLUID_COL[this.fluid];
+    this.gauge.clear();
     drawGauge(this.gauge, this.pl.gauge, this.lvl, col, this.band);
     if (this.dot) {
       const { x, y } = at(this.pl.cap);
@@ -1426,5 +1430,21 @@ export function makeTask(
       return new FuseTask(h);
     case 'unplug':
       return new UnplugTask(h);
+    case 'lockout':
+      return new LockoutTask(h, spec.on);
+    case 'uart':
+      return new UartTask(h);
+    case 'pack':
+      return new PackTask(h);
+    case 'props':
+      return new PropsTask(h);
+    case 'vent':
+      return new VentTask(h);
+    case 'rbf':
+      return new RbfTask(h, spec.dir);
+    case 'gimbal':
+      return new GimbalTask(h);
+    case 'tiles':
+      return new TilesTask(h);
   }
 }
