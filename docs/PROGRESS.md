@@ -412,6 +412,22 @@ Next: Phase 3, the playable core loop in Phaser.
   materials, a brand boost, new market stock, golden tools, and two golden decorations (Founder's
   Statue, Golden Register).
 
+## Owner feedback: realistic, harder car repairs ✅
+
+- **Diagnose first**: car repairs start with the **OBD scanner**. Plug it into the port under the
+  dash and read the trouble code (P0303 cylinder 3 misfire, P0562 low voltage, P0128 coolant
+  temperature...). The code stays on a sticky note for the rest of the job.
+- **Spark plug job**: unclip the right coil (the misfiring cylinder; a wrong one is a mistake), pull
+  it, unscrew the plug (counter-clockwise), set the gap with the feeler gauge, thread the new one in,
+  torque it to the band, refit the coil and clip it. A tune-up does all four cylinders.
+- **Battery** in the real order: negative off first, then positive, the hold-down, swap, hold-down,
+  positive on first, negative last. The wrong terminal sparks and costs a mistake.
+- **Oil filter**: unscrew the old one, oil the new gasket first (skipping it is a mistake), screw it
+  on hand tight. **Fuse box**: read the symptom and the legend, find the blown fuse with the test
+  light, pull it and fit a spare with the **same amps**.
+- **Phones and others**: phone repairs unplug the battery first, the back cover is pried off clip by
+  clip after the heat, and power cables (phone battery, robot harness power) go in **last**.
+
 ## Definition of done: status
 
 | Item                                                                                   | Status                                                                                                                        |

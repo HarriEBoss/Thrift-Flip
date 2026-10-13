@@ -35,7 +35,7 @@ export type BotAction =
   | { a: 'hold'; p: Pt }
   | { a: 'holdLevel'; p: Pt; until: number; below?: boolean }
   | { a: 'drag'; from: Pt; to: Pt }
-  | { a: 'circle'; c: Pt; r: number };
+  | { a: 'circle'; c: Pt; r: number; ccw?: boolean };
 
 /** Unit coords to closeup-local pixels. */
 export function at(p: Pt): { x: number; y: number } {

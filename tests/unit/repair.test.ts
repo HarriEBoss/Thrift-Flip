@@ -201,7 +201,9 @@ describe('building a custom design', () => {
       const r = repairRig('build', cat, 0, 'design');
       expect(r.build, cat).toBe(true);
       const swaps = r.tasks.filter((t) => t.k === 'swap');
-      expect(swaps.length, cat).toBeGreaterThan(0);
+      const fits = r.tasks.filter((t) => t.k === 'swap' || (t.k === 'battery' && t.fit) || t.k === 'hoist');
+      expect(fits.length, cat).toBeGreaterThan(0);
+      for (const t of r.tasks) if (t.k === 'battery') expect(t.fit, cat).toBe(true);
       for (const t of swaps) expect(t.k === 'swap' && t.fit, cat).toBe(true);
       for (const t of r.tasks) {
         expect(t.k === 'bolts' && t.dir === 'out', cat).toBe(false);

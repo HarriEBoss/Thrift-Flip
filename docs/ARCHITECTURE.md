@@ -136,6 +136,13 @@ serpentine `belt` (route it from the under-hood diagram, then the tensioner), `s
 the fuel line `leak` test (pressurise, find the bubbling fitting, tighten). Magnified panels fade
 away when their job is done.
 
+**Car repairs** (`core/carRepair.ts` rules, `repair/carTasks.ts` tasks): `obd` (scanner, trouble
+code from the rig via `troubleCode`), `plugs` (one misfiring cylinder or all four: coil, plug out,
+gap, in, torque), `battery` (terminal order, `fit` for a new build), `filter` (oil filter with the
+gasket step), `fuse` (seeded fuse box: legend, test light, matching amps) and `unplug` (phone
+battery connector first). Cables marked `last` only go in once everything else is connected, and
+glued phone backs get a `pry` phase in `RepairGame` after the heat.
+
 A custom design contract is **built**, not repaired: its recipe is Design → **Build** → Polish, and the
 Build step uses a build rig (`buildRigFor`, `rig.build`). The frame starts open and empty (no screws to
 undo), every `swap` is a `fit` (an empty mount, just put the new part in), then bolts, cables and fluids,

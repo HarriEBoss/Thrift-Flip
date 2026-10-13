@@ -97,7 +97,22 @@ export type TaskSpec =
   /** Centre a robot servo: turn the horn to exactly 90 degrees. */
   | { k: 'servo' }
   /** Pressure test the fuel lines: pressurise, find the bubbling fitting and tighten it. */
-  | { k: 'leak' };
+  | { k: 'leak' }
+  /** Plug the OBD-II scanner in under the dash and read the trouble code (it stays pinned). */
+  | { k: 'obd' }
+  /**
+   * Spark plug job on the misfiring cylinder (from the trouble code): unclip the coil, pull it,
+   * unscrew the old plug, gap the new one, thread it in, torque it, refit the coil and its clip.
+   */
+  | { k: 'plugs'; n: 1 | 4 }
+  /** Battery: negative off first, positive off, hold-down, swap; positive on first, negative last. */
+  | { k: 'battery'; fit?: boolean }
+  /** Oil filter: twist the old one off, oil the new one's seal, spin it on hand-tight. */
+  | { k: 'filter' }
+  /** Fuse box: find the circuit from the symptom, test, pull the blown fuse, fit the same rating. */
+  | { k: 'fuse' }
+  /** Phones: pop the battery connector off first, before touching anything else. */
+  | { k: 'unplug' };
 
 export type TorqueAt = 'cooler' | 'engine' | 'nozzle';
 
@@ -259,7 +274,7 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'engine',
     glow: 'engine',
     aspect: 1.5,
-    tasks: [{ k: 'swap', part: 'battery' }, { k: 'pour', fluid: 'oil' }, { k: 'wires' }],
+    tasks: [{ k: 'obd' }, { k: 'plugs', n: 4 }, { k: 'battery' }, { k: 'pour', fluid: 'oil' }],
   }),
   'vehicles:1': rig({
     view: 'hood',
@@ -270,9 +285,11 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'engine',
     aspect: 1.5,
     tasks: [
-      { k: 'swap', part: 'battery' },
-      { k: 'pour', fluid: 'coolant' },
+      { k: 'drain', fluid: 'oil' },
+      { k: 'filter' },
       { k: 'pour', fluid: 'oil' },
+      { k: 'battery' },
+      { k: 'pour', fluid: 'coolant' },
       { k: 'wires' },
     ],
   }),
@@ -283,10 +300,7 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'engine',
     glow: 'engine',
     aspect: 1.4,
-    tasks: [
-      { k: 'swap', part: 'plug' },
-      { k: 'pour', fluid: 'oil' },
-    ],
+    tasks: [{ k: 'obd' }, { k: 'plugs', n: 1 }, { k: 'pour', fluid: 'oil' }],
   }),
   'vehicles:3': rig({
     view: 'back',
@@ -295,7 +309,7 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'engine',
     glow: 'engine',
     aspect: 1.4,
-    tasks: [{ k: 'swap', part: 'plug' }, { k: 'pour', fluid: 'oil' }, { k: 'wires' }],
+    tasks: [{ k: 'obd' }, { k: 'plugs', n: 1 }, { k: 'drain', fluid: 'oil' }, { k: 'pour', fluid: 'oil' }],
   }),
   'vehicles:4': rig({
     view: 'hood',
@@ -305,7 +319,7 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'engine',
     glow: 'engine',
     aspect: 1.5,
-    tasks: [{ k: 'swap', part: 'battery' }, { k: 'pour', fluid: 'coolant' }, { k: 'wires' }],
+    tasks: [{ k: 'fuse' }, { k: 'battery' }, { k: 'pour', fluid: 'coolant' }, { k: 'wires' }],
   }),
   // Phones: open the back (a glued back needs the heat gun first), swap the worn part, reconnect.
   'phones:0': rig({
@@ -315,7 +329,7 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'phone',
     glow: 'screen',
     aspect: 0.9,
-    tasks: [{ k: 'swap', part: 'pouch' }, { k: 'cables', set: 'phone' }, { k: 'wires' }],
+    tasks: [{ k: 'unplug' }, { k: 'swap', part: 'pouch' }, { k: 'cables', set: 'phone' }, { k: 'wires' }],
   }),
   'phones:1': rig({
     view: 'back',
@@ -325,6 +339,7 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'screen',
     aspect: 0.9,
     tasks: [
+      { k: 'unplug' },
       { k: 'swap', part: 'screen', zone: 'c' },
       { k: 'swap', part: 'pouch' },
       { k: 'cables', set: 'phone' },
@@ -339,6 +354,7 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'screen',
     aspect: 0.9,
     tasks: [
+      { k: 'unplug' },
       { k: 'swap', part: 'pouch' },
       { k: 'swap', part: 'camera', zone: 'tl' },
       { k: 'cables', set: 'phone' },
@@ -353,6 +369,7 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'screen',
     aspect: 1.2,
     tasks: [
+      { k: 'unplug' },
       { k: 'dust', n: 3 },
       { k: 'swap', part: 'pouch' },
       { k: 'cables', set: 'phone' },
@@ -365,10 +382,7 @@ const FIX_RIGS: Record<string, Rig> = {
     screws: 0,
     inside: 'phone',
     glow: 'screen',
-    tasks: [
-      { k: 'dust', n: 2 },
-      { k: 'swap', part: 'pouch' },
-    ],
+    tasks: [{ k: 'unplug' }, { k: 'dust', n: 2 }, { k: 'swap', part: 'pouch' }],
   }),
   // Robots: motors (servos), controller chips, batteries and the wiring harness.
   'robots:0': rig({
@@ -572,7 +586,7 @@ export function engineSwapRig(): Rig {
       { k: 'cables', set: 'hoses' },
       { k: 'pour', fluid: 'oil' },
       { k: 'pour', fluid: 'coolant' },
-      { k: 'swap', part: 'battery' },
+      { k: 'battery' },
       { k: 'wires' },
     ],
   });
@@ -619,7 +633,7 @@ const BUILD_RIGS: Partial<Record<CategoryId, Rig>> = {
       { k: 'cables', set: 'hoses' },
       { k: 'pour', fluid: 'oil' },
       { k: 'pour', fluid: 'coolant' },
-      { k: 'swap', part: 'battery', fit: true },
+      { k: 'battery', fit: true },
       { k: 'wires' },
     ],
   }),
@@ -832,7 +846,7 @@ const CABLE_SETS: Record<CableSetId, (P: (fx: number, fy: number) => Pt) => Cabl
   ],
   phone: (P) => [
     { id: 'lcd', label: 'LCD', w: 0.09, h: 0.026, color: 0xd9861a, socket: P(0.0, -0.4) },
-    { id: 'bat', label: 'BAT', w: 0.065, h: 0.026, color: 0xd9861a, socket: P(-0.42, 0.05) },
+    { id: 'bat', label: 'BAT', w: 0.065, h: 0.026, color: 0xd9861a, socket: P(-0.42, 0.05), last: true },
     { id: 'cam', label: 'CAM', w: 0.05, h: 0.022, color: 0xd9861a, socket: P(0.4, 0.12) },
     { id: 'btn', label: 'BTN', w: 0.035, h: 0.02, color: 0xd9861a, socket: P(-0.1, 0.45) },
   ],
@@ -840,7 +854,7 @@ const CABLE_SETS: Record<CableSetId, (P: (fx: number, fy: number) => Pt) => Cabl
     { id: 'm1', label: 'M1', w: 0.06, h: 0.06, color: 0x2a2a2e, socket: P(-0.78, -0.12) },
     { id: 'm2', label: 'M2', w: 0.06, h: 0.06, color: 0x2a2a2e, socket: P(0.78, -0.12) },
     { id: 'ctrl', label: 'CTRL', w: 0.1, h: 0.04, color: 0x2a2a2e, socket: P(0.0, -0.78) },
-    { id: 'pwr', label: 'PWR', w: 0.07, h: 0.05, color: 0xe03c31, socket: P(0.45, 0.4) },
+    { id: 'pwr', label: 'PWR', w: 0.07, h: 0.05, color: 0xe03c31, socket: P(0.45, 0.4), last: true },
   ],
   hoses: (P) => [
     { id: 'rad', label: 'RAD', w: 0.075, h: 0.075, color: 0x2a2a2e, socket: P(0.8, -0.1) },
@@ -871,6 +885,8 @@ export interface CableDef {
   color: number;
   plug: Pt;
   socket: Pt;
+  /** The power (battery) lead: plugged in last, after everything else. */
+  last?: boolean;
 }
 
 export function cableSet(r: Rig, set: CableSetId, seed: number): CableDef[] {

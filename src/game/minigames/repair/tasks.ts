@@ -39,6 +39,7 @@ import {
 } from '../../art/repairArt';
 import { makeText } from '../../ui/widgets';
 import { BeltTask, HeaderTask, LeakTask, RamTask, ServoTask, SocketTask, TorqueTask } from './assembly';
+import { BatteryTask, FilterTask, FuseTask, ObdTask, PlugsTask, UnplugTask } from './carTasks';
 import { cableLook, cableThickness, drawCableBody, drawPlug, drawSocket, strokeWire } from './cableArt';
 import { C, FS } from '../../theme';
 import { STAGE } from '../MiniGame';
@@ -1107,6 +1108,7 @@ export class CablesTask extends RepairTask {
   private drag: { i: number; u: number; v: number } | null = null;
   private mistakes = 0;
   private bottom: number;
+  private lastWarn = false;
 
   constructor(
     h: TaskHost,
@@ -1151,6 +1153,7 @@ export class CablesTask extends RepairTask {
   }
 
   instruction(): string {
+    if (this.lastWarn) return 'mg.car.powerLast';
     return cableStyle(this.set) === 'pins' ? 'mg.rep.cables' : 'mg.rep.hoses';
   }
 
@@ -1163,8 +1166,9 @@ export class CablesTask extends RepairTask {
   }
 
   bot(): BotAction {
-    const i = this.done.findIndex((d) => !d);
-    if (i < 0) return { a: 'wait' };
+    const open = this.defs.map((_, k) => k).filter((k) => !this.done[k]);
+    const i = open.find((k) => !this.defs[k].last) ?? open[0];
+    if (i === undefined) return { a: 'wait' };
     return { a: 'drag', from: this.defs[i].plug, to: this.defs[i].socket };
   }
 
@@ -1202,7 +1206,13 @@ export class CablesTask extends RepairTask {
     const hit = this.defs.findIndex(
       (d, j) => !this.done[j] && near(d.socket, u, v, Math.max(0.07, d.w * 0.7)),
     );
-    if (hit === i) {
+    if (hit === i && this.defs[i].last && this.defs.some((d, k) => k !== i && !this.done[k])) {
+      // Power goes on last: anything plugged in live can short out.
+      this.mistakes++;
+      this.h.sfx('buzz');
+      this.h.shake();
+      this.lastWarn = true;
+    } else if (hit === i) {
       this.done[i] = true;
       const s = this.defs[i].socket;
       this.h.sfx('snap');
@@ -1404,5 +1414,17 @@ export function makeTask(
       return new ServoTask(h);
     case 'leak':
       return new LeakTask(h);
+    case 'obd':
+      return new ObdTask(h);
+    case 'plugs':
+      return new PlugsTask(h, spec.n);
+    case 'battery':
+      return new BatteryTask(h, !!spec.fit);
+    case 'filter':
+      return new FilterTask(h);
+    case 'fuse':
+      return new FuseTask(h);
+    case 'unplug':
+      return new UnplugTask(h);
   }
 }

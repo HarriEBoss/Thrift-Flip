@@ -31,7 +31,7 @@ import { session } from '../session';
 import { at, drawGauge, drawSlot, type BotAction, type RepairTask, type TaskHost } from './repair/host';
 import { makeTask } from './repair/tasks';
 
-type Phase = 'turn' | 'screws' | 'twist' | 'heat' | 'cover' | 'task' | 'test' | 'close' | 'done';
+type Phase = 'turn' | 'screws' | 'twist' | 'heat' | 'pry' | 'cover' | 'task' | 'test' | 'close' | 'done';
 
 const GLOW_TINT = {
   bulb: 0xffe08a,
@@ -404,6 +404,8 @@ export class RepairGame extends MiniGame {
         return 'mg.rep.twist';
       case 'heat':
         return 'mg.rep.heat';
+      case 'pry':
+        return 'mg.rep.pry';
       case 'cover':
         return this.rig.lid === 'hood'
           ? 'mg.rep.hood'
@@ -429,6 +431,8 @@ export class RepairGame extends MiniGame {
         return 0.25 * Math.min(1, this.twistTotal / TWIST_NEEDED);
       case 'heat':
         return 0.25 * Math.min(1, this.heatT / HEAT_SECONDS);
+      case 'pry':
+        return 0.25 + (0.03 * this.clips.filter((c) => c.out).length) / Math.max(1, this.clips.length);
       case 'cover':
         return 0.28;
       case 'task': {
@@ -485,6 +489,10 @@ export class RepairGame extends MiniGame {
         };
       case 'heat':
         return { a: 'hold', p: { u: this.geom.cx, v: this.geom.cy } };
+      case 'pry': {
+        const c = this.clips.find((x) => !x.out);
+        return c ? { a: 'tap', p: c.p } : { a: 'wait' };
+      }
       case 'cover':
         return { a: 'tap', p: { u: this.geom.cx, v: this.geom.cy } };
       case 'task':
@@ -531,6 +539,16 @@ export class RepairGame extends MiniGame {
       case 'heat':
         if (this.inPanel(u, v, 1.1)) this.heatAt = { u, v };
         break;
+      case 'pry': {
+        const c = this.clips.find((x) => !x.out && Math.hypot(x.p.u - u, x.p.v - v) < 0.07);
+        if (!c) break;
+        c.out = true;
+        this.sfx('snap');
+        session.haptic('light');
+        this.burst(c.p.u, c.p.v, 'p_dot', 4, [0xffffff, 0xd9d0c4], 60);
+        if (this.clips.every((x) => x.out)) this.phase = 'cover';
+        break;
+      }
       case 'cover':
         if (this.inPanel(u, v, 1.05)) this.coverDrag = { u, v, ox: this.cover.x, oy: this.cover.y };
         break;
@@ -628,9 +646,26 @@ export class RepairGame extends MiniGame {
       this.heatAt = null;
       this.sfx('pop');
       session.haptic('success');
-      this.phase = 'cover';
+      // Then prise the clips round the edge with a plastic pick.
+      this.startPry();
       g.clear();
     }
+  }
+
+  /** The clips round a glued back, prised one by one after heating. */
+  private clips: Array<{ p: Pt; out: boolean }> = [];
+
+  private startPry(): void {
+    const g = this.geom;
+    this.clips = [
+      [-0.85, -0.7],
+      [0.85, -0.7],
+      [-0.92, 0.05],
+      [0.92, 0.05],
+      [-0.85, 0.78],
+      [0.85, 0.78],
+    ].map(([fx, fy]) => ({ p: { u: g.cx + g.rx * fx, v: g.cy + g.ry * fy }, out: false }));
+    this.phase = 'pry';
   }
 
   private inPanel(u: number, v: number, k: number): boolean {
@@ -778,6 +813,17 @@ export class RepairGame extends MiniGame {
     if (!this.slots) return;
     const s = this.slots;
     s.clear();
+    if (this.phase === 'pry')
+      for (const c of this.clips) {
+        // A clip in the seam: white tab (popped ones open up), with a pulsing ring on the rest.
+        const q = at(c.p);
+        s.fillStyle(c.out ? 0x9aa0ab : 0xf4f1e8, 1);
+        s.fillRect(q.x - 9, q.y - 6 - (c.out ? 6 : 0), 18, 12);
+        if (!c.out) {
+          s.lineStyle(3, 0xffd34d, 0.5 + 0.3 * Math.sin(this.ctx.scene.time.now / 150));
+          s.strokeCircle(q.x, q.y, 18);
+        }
+      }
     this.screws.forEach((sc, i) => {
       const r = (sc.img.displayWidth / 2) * 0.66;
       drawSlot(s, sc.img.x, sc.img.y, r, this.screwAngles[i], sc.img.alpha);

@@ -46,12 +46,12 @@ import {
 } from './host';
 
 /** Mistakes cost a little each (a bent pin, a wrong slot, an over-tightened bolt). */
-function scoreFor(mistakes: number): number {
+export function scoreFor(mistakes: number): number {
   return Math.max(0.55, 1 - mistakes * 0.12);
 }
 
 /** A dark "magnified" panel for small parts (pin headers, the belt drive, a servo). */
-function inset(g: Phaser.GameObjects.Graphics, c: Pt, w: number, h: number): void {
+export function inset(g: Phaser.GameObjects.Graphics, c: Pt, w: number, h: number): void {
   const p = at(c);
   const pw = w * 2 * STAGE;
   const ph = h * 2 * STAGE;
@@ -63,7 +63,7 @@ function inset(g: Phaser.GameObjects.Graphics, c: Pt, w: number, h: number): voi
   g.strokeRoundedRect(p.x - pw / 2, p.y - ph / 2, pw, ph, 18);
 }
 
-function tapped(d: { u: number; v: number }, u: number, v: number): boolean {
+export function tapped(d: { u: number; v: number }, u: number, v: number): boolean {
   return Math.hypot(d.u - u, d.v - v) < 0.025;
 }
 
