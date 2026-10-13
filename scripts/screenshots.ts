@@ -82,7 +82,8 @@ async function empire(page: Page): Promise<void> {
       business: 'rocket',
     });
     const st = tf.state();
-    for (const r of ['namerica', 'samerica', 'europe', 'africa', 'asia', 'oceania']) st.regions[r] = 2;
+    for (const r of ['namerica', 'samerica', 'europe', 'africa', 'asia', 'oceania', 'antarctica'])
+      st.regions[r] = 2;
     st.space.techs.push('rockets', 'lifesupport', 'habitats');
     if (!st.space.colonies.includes('mars')) st.space.colonies.push('mars');
   });
