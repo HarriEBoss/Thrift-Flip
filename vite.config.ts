@@ -2,14 +2,16 @@ import { defineConfig, type Plugin } from 'vite';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 
-type PlatformId = 'youtube' | 'ios' | 'web' | 'playtest';
+type PlatformId = 'youtube' | 'ios' | 'android' | 'web' | 'site' | 'playtest';
 
 const YT_SDK = 'https://www.youtube.com/game_api/v1';
 
 const platformFiles: Record<PlatformId, string> = {
   youtube: 'src/platform/youtube/YouTubePlatform.ts',
   ios: 'src/platform/ios/IOSPlatform.ts',
+  android: 'src/platform/android/AndroidPlatform.ts',
   web: 'src/platform/web/WebDevPlatform.ts',
+  site: 'src/platform/site/SitePlatform.ts',
   playtest: 'src/platform/playtest/PlaytestPlatform.ts',
 };
 
@@ -63,7 +65,11 @@ function platformHtml(platform: PlatformId): Plugin {
 }
 
 export default defineConfig(({ mode }) => {
-  const platform: PlatformId = mode === 'youtube' || mode === 'ios' || mode === 'playtest' ? mode : 'web';
+  const platform: PlatformId = (['youtube', 'ios', 'android', 'site', 'playtest'] as const).includes(
+    mode as never,
+  )
+    ? (mode as PlatformId)
+    : 'web';
   // Playtest: one self-contained bundle (fonts inlined, no code splitting) for an artifact page.
   const single = platform === 'playtest';
   const e2e = process.env.E2E === '1';
@@ -86,9 +92,13 @@ export default defineConfig(({ mode }) => {
           ? 'dist-youtube'
           : platform === 'ios'
             ? 'dist-ios'
-            : single
-              ? 'dist-playtest'
-              : 'dist-web',
+            : platform === 'android'
+              ? 'dist-android'
+              : platform === 'site'
+                ? 'dist-site'
+                : single
+                  ? 'dist-playtest'
+                  : 'dist-web',
       emptyOutDir: true,
       target: 'es2020',
       sourcemap: false,

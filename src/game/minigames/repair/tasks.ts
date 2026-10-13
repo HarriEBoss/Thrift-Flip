@@ -42,6 +42,17 @@ import { BeltTask, HeaderTask, LeakTask, RamTask, ServoTask, SocketTask, TorqueT
 import { BatteryTask, FilterTask, FuseTask, ObdTask, PlugsTask, UnplugTask } from './carTasks';
 import { LockoutTask, PackTask, PropsTask, UartTask } from './robotTasks';
 import { GimbalTask, RbfTask, TilesTask, VentTask } from './rocketTasks';
+import {
+  CmosTask,
+  ContactsTask,
+  CrtTask,
+  EsdTask,
+  LintTask,
+  PostTask,
+  SealTask,
+  StripsTask,
+  ZifTask,
+} from './deviceTasks';
 import { cableLook, cableThickness, drawCableBody, drawPlug, drawSocket, strokeWire } from './cableArt';
 import { C, FS } from '../../theme';
 import { STAGE } from '../MiniGame';
@@ -1446,5 +1457,23 @@ export function makeTask(
       return new GimbalTask(h);
     case 'tiles':
       return new TilesTask(h);
+    case 'lint':
+      return new LintTask(h);
+    case 'strips':
+      return new StripsTask(h);
+    case 'zif':
+      return new ZifTask(h, spec.n);
+    case 'seal':
+      return new SealTask(h);
+    case 'esd':
+      return new EsdTask(h, !!spec.strapOnly);
+    case 'post':
+      return new PostTask(h);
+    case 'cmos':
+      return new CmosTask(h);
+    case 'crt':
+      return new CrtTask(h);
+    case 'contacts':
+      return new ContactsTask(h);
   }
 }

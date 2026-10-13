@@ -9,6 +9,8 @@ Everything that code cannot do. Items are grouped by platform and listed roughly
 - [ ] **Legal review of `docs/PRIVACY_POLICY.md`**: fill in placeholders, confirm legal bases, the under-16 approach in the EEA
       and the RevenueCat transfer basis, then host it at a stable URL.
 - [ ] **YouTube Playables Developer Portal** access (apply / contact your Partner Manager) and accept the terms.
+- [ ] **Google Play Console** developer account (one-time fee; organisation accounts need a D-U-N-S number) and
+      identity verification.
 - [ ] Decide the final name and bundle id after checking availability (STORE_LISTING.md lists options).
 
 ## iOS build & release
@@ -36,6 +38,23 @@ Everything that code cannot do. Items are grouped by platform and listed roughly
 - [ ] Fill in the age rating questionnaire (expected answers in SUBMISSION_IOS.md §5) and the review contact info.
 - [ ] Final screenshots: `npm run build:e2e && npm run screenshots`, then add captions. Verify the current required
       sizes in App Store Connect.
+
+## Android (Google Play): full checklist in SUBMISSION_ANDROID.md
+- [ ] Build on any computer with **Android Studio** (SDK 36). This container could not download the Android SDK,
+      so the Gradle build was **not** run here. `npm run build:android` (web build + `cap sync`) does pass.
+- [ ] Create the **upload keystore** and keep it (and its passwords) safe; enrol in Play App Signing.
+- [ ] **AdMob:** add an Android app and its rewarded + interstitial units; put the ids in
+      `src/platform/android/config.ts` (`adsTesting: false`) and the app id in `scripts/android-configure.py`, run it.
+- [ ] **RevenueCat:** add the Play Store app, upload the service-account JSON, import the 12 products, put the
+      `goog_` key in `src/platform/android/config.ts`.
+- [ ] Create the **12 in-app products** in Play Console (same ids as iOS) and a payments profile.
+- [ ] App content: privacy policy, ads = yes, target audience **13+**, IARC rating, **Data safety** form.
+- [ ] Internal testing first; new personal accounts need a closed test (12 testers, 14 days) before production.
+
+## Web (optional, free): the game as a web page
+- [ ] `npm run build:web` writes `dist-web/` (no ads, no purchases). Host it anywhere static (GitHub Pages
+      via `.github/workflows/pages.yml` once the repo is public and Pages → GitHub Actions is enabled,
+      itch.io as an HTML5 game zip, Netlify, …).
 
 ## YouTube Playables
 - [ ] Upload `thrift-flip-youtube.zip` (from `npm run build:youtube`) to the Developer Portal.

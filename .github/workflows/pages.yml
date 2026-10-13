@@ -29,11 +29,11 @@ jobs:
       - run: npm ci
         env:
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
-      # The playtest build: the web game with a mock store and no ads.
-      - run: npx vite build --mode playtest
+      # The public web release: the full game, no ads and no purchases.
+      - run: npx vite build --mode site
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist-playtest
+          path: dist-site
 
   deploy:
     needs: build

@@ -28,7 +28,7 @@ export type BotAction =
   | { a: 'tap'; p: U }
   | { a: 'hold'; p: U }
   | { a: 'holdLevel'; p: U; until: number; below?: boolean }
-  | { a: 'drag'; from: U; to: U }
+  | { a: 'drag'; from: U; to: U; ms?: number }
   | { a: 'circle'; c: U; r: number; ccw?: boolean; turns?: number };
 
 export interface WsInfo {
@@ -238,7 +238,8 @@ export async function solveStep(page: Page, mode: Mode): Promise<void> {
       } else if (act.a === 'drag') {
         const a = unit(now, act.from.u, act.from.v);
         const b = unit(now, act.to.u, act.to.v);
-        await drag(page, mode, lerpPath(a, b, 12), 12);
+        if (act.ms) await drag(page, mode, lerpPath(a, b, 30), act.ms / 30);
+        else await drag(page, mode, lerpPath(a, b, 12), 12);
         await page.waitForTimeout(250);
       } else if (act.a === 'circle') {
         const pts: Pt[] = [];

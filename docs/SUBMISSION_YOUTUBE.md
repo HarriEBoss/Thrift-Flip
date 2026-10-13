@@ -107,8 +107,11 @@ Buy dusty junk, scrub it, fix it and make it sparkle, then sell it in your own l
 Hunt for treasure at flea markets, car boot sales and auctions. Back in your workshop, scrub off the
 grime, brush away rust, peel stickers, glue cracks, sand, paint, polish and fix wires with quick,
 satisfying touch mini-games. Drag the slider for the big before-and-after reveal, then set your
-price and sell to quirky customers. Grow from a flea stall into a grand emporium, fill your sticker
-book with 120 collectibles, spot hidden gems, and take on the Daily Fix.
+price and sell to quirky customers. Grow from a flea stall into a grand emporium, then build a repair
+company: fix phones, computers, cars, robots and rockets with realistic step-by-step repairs, run
+marketing and contracts, hire managers, expand around the world, colonise the solar system and prestige
+for a permanent skill tree. Fill your sticker book with 195 collectibles, spot hidden gems, and take on
+the Daily Fix.
 
 ### Genre
 Casual / Simulation (pick the closest portal categories, e.g. "Casual" + "Simulation" or "Puzzle").

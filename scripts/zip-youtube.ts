@@ -1,10 +1,14 @@
-/** Packages dist-youtube/ into thrift-flip-youtube.zip (relative paths, index.html at root). */
+/**
+ * Packages a build folder into a zip with index.html at the root (relative paths): by default
+ * dist-youtube/ into thrift-flip-youtube.zip; `tsx scripts/zip-youtube.ts dist-site thrift-flip-web.zip`
+ * for the web release (itch.io and other HTML5 portals take this zip as is).
+ */
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { zipSync, type Zippable } from 'fflate';
 
-const DIR = 'dist-youtube';
-const OUT = 'thrift-flip-youtube.zip';
+const DIR = process.argv[2] ?? 'dist-youtube';
+const OUT = process.argv[3] ?? 'thrift-flip-youtube.zip';
 const tree: Zippable = {};
 const walk = (d: string) => {
   for (const f of readdirSync(d)) {

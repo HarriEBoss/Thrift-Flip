@@ -7,8 +7,10 @@
   "scripts": {
     "dev": "vite",
     "build:web": "vite build --mode web",
+    "build:site": "vite build --mode site && tsx scripts/zip-youtube.ts dist-site thrift-flip-web.zip",
     "build:youtube": "vite build --mode youtube && tsx scripts/check-youtube-bundle.ts && tsx scripts/zip-youtube.ts",
     "build:ios": "vite build --mode ios && tsx scripts/check-ios-bundle.ts && npx cap sync ios",
+    "build:android": "vite build --mode android && tsx scripts/check-ios-bundle.ts dist-android && CAP_WEBDIR=dist-android npx cap sync android",
     "build:playtest": "vite build --mode playtest && tsx scripts/make-playtest-page.ts",
     "build:e2e": "E2E=1 vite build --mode youtube --outDir dist-e2e",
     "typecheck": "tsc --noEmit -p tsconfig.json",
@@ -42,6 +44,7 @@
   },
   "dependencies": {
     "@capacitor-community/admob": "^8.1.0",
+    "@capacitor/android": "^8.5.3",
     "@capacitor/app": "^8.1.1",
     "@capacitor/browser": "^8.0.5",
     "@capacitor/core": "^8.5.2",

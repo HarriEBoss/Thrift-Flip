@@ -1,8 +1,8 @@
 # Store listing copy
 
 > All copy positions the game as **friendly for all ages** but **not "made for kids"**. Never use "for kids",
-> "children's game" or similar in metadata (YouTube Playables requires 13+, and the iOS app is not in the Kids
-> Category). No real brand names.
+> "children's game" or similar in metadata (YouTube Playables requires 13+, the iOS app is not in the Kids
+> Category, and the Google Play target audience is 13+). No real brand names.
 
 ## Name (check availability in App Store Connect before committing)
 1. **Thrift Flip** (preferred)
@@ -20,15 +20,15 @@
 (96 characters)
 
 ## Promotional text (≤ 170 chars)
-Scrub off the grime, peel stickers, polish until it sparkles, then drag the slider for the big
-before-and-after reveal. New: the Daily Fix challenge!
+Start with a flea-market stall and build a repair empire: fix phones, PCs, cars, robots and rockets,
+conquer the world and colonise the solar system!
 
 ## Description
-Find dusty junk. Make it shine. Sell it for a fortune!
+Find dusty junk. Make it shine. Build an empire!
 
-Thrift Flip is a cozy, super-satisfying restoration game. Hunt for treasure at flea markets, car boot
-sales, estate sales, auctions and even the junkyard. Haggle for a bargain, then head to your workshop
-and bring every find back to life.
+Thrift Flip is a cozy, super-satisfying restoration game that grows into a huge business tycoon. Hunt for
+treasure at 12 markets around the world, bring every find back to life in your workshop, sell it in your
+own shop, then grow a company that repairs everything from phones to rockets.
 
 SATISFYING RESTORATION
 • Scrub away grime, brush off rust, sand rough wood and polish until it sparkles
@@ -36,30 +36,52 @@ SATISFYING RESTORATION
 • Glue cracks, fix wobbly wires and repaint in this week's trendy colour
 • Drag the before-and-after slider for the big reveal
 
-RUN YOUR OWN SHOP
-• Price your treasures and watch quirky customers react
-• Take special requests and earn extra
-• Grow from a tiny flea stall into the Grand Emporium
+REAL REPAIRS, DONE PROPERLY
+• Phones: unplug the battery first, pull the adhesive strips slowly, clean the charge port, fit a new water seal
+• Computers: power down safely, read the beep codes, seat the CPU, torque the cooler, click in the RAM
+• Cars: plug in the scanner, read the trouble code, change the spark plugs, the battery and the oil filter
+• Robots and rockets: lock out the machine, read the fault log, solder battery packs, purge fuel tanks
+  and align the engine
+
+BUILD YOUR EMPIRE
+• Name your company and climb the ladder: Reselling Shop, Phone Repair, Computer Repair, Mechanic,
+  Robotics and Rocket Repair
+• Run marketing campaigns, take on contracts and design custom machines for top clients
+• Hire managers and open branches that earn while you work elsewhere
+• Expand into every region of the world, then research space travel
+• Found colonies on the Moon, Mars, Europa, Titan and beyond, and build a Dyson swarm around the Sun
+• Prestige for legacy tokens and unlock a permanent skill tree on your tablet
 
 COLLECT THEM ALL
-• 120 charming items to find in your Sticker Book
+• 195 charming items across 13 categories in your Sticker Book
 • Spot rare finds and hidden gems worth a fortune
 • Complete sets for permanent bonuses
 • A new Daily Fix challenge every day
 
 Bright, friendly and relaxing. No timers that punish you, and every perk is exactly what it says. No random
-paid prizes, ever. Optional ads give you small bonuses; purchases are completely optional.
+paid prizes, ever. Optional ads give you small bonuses; purchases are completely optional, and Gold Bars
+are also earned by playing.
 
 ## What's New (1.0.0)
-Welcome to Thrift Flip! Find, fix and flip 120 vintage treasures. Have fun!
+Welcome to Thrift Flip! Find, fix and flip 195 treasures, then build a repair empire that reaches the stars.
 
-## Screenshot captions (match the 6 generated screenshots)
+## Screenshot captions (match the 9 generated screenshots)
 1. Menu: "Find junk. Make it shine. Sell it!"
 2. Before/after: "From grimy to gorgeous!"
-3. Market: "Hunt bargains at 5 markets"
+3. Market: "Hunt bargains at 12 markets"
 4. Workshop: "Scrub, sand, paint & polish"
 5. Shop: "Price it right for happy customers"
-6. Sticker Book: "Collect all 120 treasures"
+6. Sticker Book: "Collect all 195 treasures"
+7. Business empire: "From flea stall to rocket repair"
+8. World: "Open offices around the world"
+9. Solar system: "Colonise the solar system"
+
+## Google Play
+- **App name** (≤ 30): Thrift Flip
+- **Short description** (≤ 80): "Restore junk, sell it, then grow a repair empire that reaches the stars!" (73)
+- **Full description:** the Description above (≤ 4,000 characters).
+- **Category:** Games → Simulation. **Tags:** Simulation, Casual, Tycoon.
+- **Feature graphic:** `dist-store/google-play/feature-graphic.png`; **icon:** `dist-store/google-play/icon-512.png`.
 
 ## YouTube Playables
 - **Title:** Thrift Flip

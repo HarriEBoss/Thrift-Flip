@@ -3,6 +3,7 @@ dist
 dist-*
 coverage
 ios
+android
 test-results
 playwright-report
 package-lock.json

@@ -131,7 +131,25 @@ export type TaskSpec =
   /** Line up the engine with its two gimbal actuators (laser on the target), then lock them. */
   | { k: 'gimbal' }
   /** Heat shield: pull the cracked tiles, butter the adhesive, bond a new tile with the same part number. */
-  | { k: 'tiles' };
+  | { k: 'tiles' }
+  /** Charge port: pick the wooden toothpick (never metal), scrape the lint out, test with a USB meter. */
+  | { k: 'lint' }
+  /** Battery adhesive: pull each stretch-release strip out slowly (too fast snaps it: alcohol, then pry). */
+  | { k: 'strips' }
+  /** Ribbon cables in ZIF connectors: flip the latch up, contacts the right way, push fully in, latch. */
+  | { k: 'zif'; n: 1 | 2 }
+  /** A new water seal: scrape the old adhesive, peel the liner, lay the seal on the frame, clamp it. */
+  | { k: 'seal' }
+  /** PC power-down: PSU switch off, mains out, hold power to drain; then clip the wrist strap to bare metal. */
+  | { k: 'esd'; strapOnly?: boolean }
+  /** POST: power on, listen to the beep code, find it in the board's manual. */
+  | { k: 'post' }
+  /** CMOS coin cell: press the clip, pop the old cell, the new one in + side up. */
+  | { k: 'cmos' }
+  /** Arcade CRT: clip the discharge tool to ground FIRST, slide it under the anode cap, drain, unclip the cap. */
+  | { k: 'crt' }
+  /** Leaked battery contacts: white vinegar (not water) on a swab, scrub each terminal clean. */
+  | { k: 'contacts' };
 
 export type TorqueAt = 'cooler' | 'engine' | 'nozzle';
 
@@ -245,8 +263,11 @@ const FIX_RIGS: Record<string, Rig> = {
     mains: true,
     aspect: 1.2,
     tasks: [
+      { k: 'esd' },
+      { k: 'post' },
       { k: 'dust', n: 4 },
       { k: 'swap', part: 'fan' },
+      { k: 'cmos' },
       { k: 'cables', set: 'pc' },
     ],
   }),
@@ -257,7 +278,13 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'pc',
     glow: 'screen',
     aspect: 1.5,
-    tasks: [{ k: 'swap', part: 'ram' }, { k: 'swap', part: 'drive', zone: 'tl' }, { k: 'wires' }],
+    tasks: [
+      { k: 'unplug' },
+      { k: 'swap', part: 'ram' },
+      { k: 'swap', part: 'drive', zone: 'tl' },
+      { k: 'cmos' },
+      { k: 'zif', n: 2 },
+    ],
   }),
   'tech:2': rig({
     view: 'back',
@@ -265,7 +292,7 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'pc',
     glow: 'led',
     aspect: 1.6,
-    tasks: [{ k: 'dust', n: 3 }, { k: 'swap', part: 'fan' }, { k: 'wires' }],
+    tasks: [{ k: 'esd' }, { k: 'dust', n: 3 }, { k: 'swap', part: 'fan' }, { k: 'paste' }, { k: 'wires' }],
   }),
   'tech:3': rig({
     view: 'back',
@@ -274,7 +301,7 @@ const FIX_RIGS: Record<string, Rig> = {
     glow: 'screen',
     mains: true,
     aspect: 1.05,
-    tasks: [{ k: 'swap', part: 'drive' }, { k: 'dust', n: 3 }, { k: 'wires' }],
+    tasks: [{ k: 'crt' }, { k: 'swap', part: 'drive' }, { k: 'dust', n: 3 }, { k: 'wires' }],
   }),
   'tech:4': rig({
     view: 'back',
@@ -283,7 +310,7 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'battery',
     glow: 'screen',
     aspect: 1.1,
-    tasks: [{ k: 'swap', part: 'cell' }, { k: 'wires' }],
+    tasks: [{ k: 'contacts' }, { k: 'swap', part: 'cell' }, { k: 'wires' }],
   }),
   'vehicles:0': rig({
     view: 'hood',
@@ -348,7 +375,7 @@ const FIX_RIGS: Record<string, Rig> = {
     inside: 'phone',
     glow: 'screen',
     aspect: 0.9,
-    tasks: [{ k: 'unplug' }, { k: 'swap', part: 'pouch' }, { k: 'cables', set: 'phone' }, { k: 'wires' }],
+    tasks: [{ k: 'unplug' }, { k: 'swap', part: 'pouch' }, { k: 'zif', n: 1 }, { k: 'wires' }],
   }),
   'phones:1': rig({
     view: 'back',
@@ -360,6 +387,7 @@ const FIX_RIGS: Record<string, Rig> = {
     tasks: [
       { k: 'unplug' },
       { k: 'swap', part: 'screen', zone: 'c' },
+      { k: 'zif', n: 1 },
       { k: 'swap', part: 'pouch' },
       { k: 'cables', set: 'phone' },
     ],
@@ -374,9 +402,12 @@ const FIX_RIGS: Record<string, Rig> = {
     aspect: 0.9,
     tasks: [
       { k: 'unplug' },
+      { k: 'strips' },
       { k: 'swap', part: 'pouch' },
       { k: 'swap', part: 'camera', zone: 'tl' },
       { k: 'cables', set: 'phone' },
+      { k: 'lint' },
+      { k: 'seal' },
     ],
   }),
   'phones:3': rig({
@@ -390,8 +421,10 @@ const FIX_RIGS: Record<string, Rig> = {
     tasks: [
       { k: 'unplug' },
       { k: 'dust', n: 3 },
+      { k: 'strips' },
       { k: 'swap', part: 'pouch' },
       { k: 'cables', set: 'phone' },
+      { k: 'seal' },
     ],
   }),
   'phones:4': rig({
@@ -401,7 +434,7 @@ const FIX_RIGS: Record<string, Rig> = {
     screws: 0,
     inside: 'phone',
     glow: 'screen',
-    tasks: [{ k: 'unplug' }, { k: 'dust', n: 2 }, { k: 'swap', part: 'pouch' }],
+    tasks: [{ k: 'unplug' }, { k: 'dust', n: 2 }, { k: 'swap', part: 'pouch' }, { k: 'seal' }],
   }),
   // Robots: motors (servos), controller chips, batteries and the wiring harness. Big robots are
   // locked out first and the controller's fault log says what is wrong.
@@ -586,6 +619,8 @@ export function pcRebuildRig(): Rig {
     mains: true,
     aspect: 1.05,
     tasks: [
+      { k: 'esd' },
+      { k: 'post' },
       { k: 'dust', n: 5 },
       { k: 'swap', part: 'cooler', zone: 'tl', paste: true },
       { k: 'torque', at: 'cooler' },
@@ -640,6 +675,7 @@ const BUILD_RIGS: Partial<Record<CategoryId, Rig>> = {
     aspect: 1.05,
     build: true,
     tasks: [
+      { k: 'esd', strapOnly: true },
       { k: 'socket', chip: 'cpu' },
       { k: 'swap', part: 'cooler', zone: 'tl', paste: true, fit: true },
       { k: 'torque', at: 'cooler' },

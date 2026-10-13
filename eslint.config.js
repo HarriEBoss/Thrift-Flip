@@ -59,6 +59,7 @@ export default tseslint.config(
       'dist-*',
       'coverage',
       'ios',
+      'android',
       'test-results',
       'playwright-report',
       '**/*.json',

@@ -3,7 +3,7 @@
  * Game code (src/core, src/game) must never touch ytgame, Capacitor, storage, locale,
  * visibility, ad or IAP APIs directly. ESLint enforces this outside src/platform.
  */
-export type PlatformId = 'youtube' | 'ios' | 'web';
+export type PlatformId = 'youtube' | 'ios' | 'android' | 'web';
 
 export interface Product {
   id: string;

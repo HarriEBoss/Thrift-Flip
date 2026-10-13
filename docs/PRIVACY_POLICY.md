@@ -2,13 +2,14 @@
 
 > **DRAFT: needs legal review before publication.** The developer is based in the EU, so the GDPR applies.
 > Fill in every `[placeholder]`, check it against the SDK versions you ship, and publish at a stable URL
-> (used in the iOS app and App Store Connect).
+> (used in the iOS and Android apps, App Store Connect and Google Play Console).
 
 _Last updated: [date]_
 
 **Who we are.** Thrift Flip is made by [developer / company name], [address], [email] ("we").
 
-Thrift Flip is available in two versions, and they handle data differently:
+Thrift Flip is available on YouTube Playables and as an app for iPhone, iPad and Android, and they handle
+data differently:
 
 ## 1. Thrift Flip on YouTube Playables
 
@@ -18,28 +19,31 @@ Thrift Flip is available in two versions, and they handle data differently:
 - Any ads in this version are served by YouTube; we receive no personal data from them.
 - Your language setting is provided by YouTube and is not stored by the game.
 
-## 2. Thrift Flip for iPhone and iPad (iOS app)
+## 2. Thrift Flip apps for iPhone, iPad and Android
 
 **Data the game itself handles**
-- **Game progress** (coins, items, settings) is stored **only on your device** (iOS app storage / UserDefaults).
+- **Game progress** (coins, items, settings) is stored **only on your device** (iOS app storage / UserDefaults, or Android app storage).
+  Uninstalling the app deletes it.
   It is not sent to us.
 - We do not run analytics and we have no user accounts. The game never asks for your name, age, email or
   location.
 
 **Advertising: Google AdMob** (Google Ireland Ltd. for users in the EEA/UK)
-- To show ads, the Google Mobile Ads SDK may process: device identifiers (the IDFA only if you allow tracking
-  in the iOS "Allow Tracking" prompt), IP address and coarse location derived from it, device and app information,
+- To show ads, the Google Mobile Ads SDK may process: device identifiers (on iOS the IDFA only if you allow
+  tracking in the "Allow Tracking" prompt; on Android the advertising ID, which you can reset or delete in
+  Android settings), IP address and coarse location derived from it, device and app information,
   ad interaction data, and diagnostics.
 - **Consent:** in the EEA, the UK and Switzerland we ask for your consent through Google's consent form (UMP) before
   any ads are requested. You can change your choice at any time in Settings → "Ad privacy choices".
-- **Tracking:** iOS asks whether you allow tracking. If you decline, only non-personalised ads are shown.
+- **Tracking:** iOS asks whether you allow tracking. If you decline, only non-personalised ads are shown. On
+  Android the game requests non-personalised ads only.
 - Ads are limited to content suitable for general audiences.
 - Legal basis: consent (Art. 6(1)(a) GDPR) for personalised ads and the related storage/access on your device;
   [legitimate interest / contract: to be confirmed in legal review] for non-personalised ads where permitted.
 - More: [How Google uses information from sites or apps that use its services](https://policies.google.com/technologies/partner-sites).
 
-**In-app purchases: Apple and RevenueCat**
-- Purchases are processed by **Apple**. We never see your payment details.
+**In-app purchases: Apple / Google Play and RevenueCat**
+- Purchases are processed by **Apple** (iOS) or **Google Play** (Android). We never see your payment details.
 - We use **RevenueCat** (RevenueCat, Inc., USA) to validate purchases and restore them on your devices. RevenueCat
   processes an anonymous app user ID, purchase history and receipts, and device information needed for this.
   Legal basis: performance of a contract (Art. 6(1)(b) GDPR). Transfers to the USA rely on [EU-US Data Privacy

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Thrift Flip</string>
+    <string name="title_activity_main">Thrift Flip</string>
+    <string name="package_name">com.thriftflip.game</string>
+    <string name="custom_url_scheme">com.thriftflip.game</string>
+</resources>

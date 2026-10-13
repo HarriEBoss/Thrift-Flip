@@ -75,6 +75,8 @@ vi.mock('@revenuecat/purchases-capacitor', () => ({
 }));
 
 const { createPlatform } = await import('../../src/platform/ios/IOSPlatform');
+const android = await import('../../src/platform/android/AndroidPlatform');
+const { App } = await import('@capacitor/app');
 
 describe('IOSPlatform (mocked Capacitor plugins)', () => {
   beforeEach(() => {
@@ -139,5 +141,52 @@ describe('IOSPlatform (mocked Capacitor plugins)', () => {
     await p.showInterstitialAd();
     await p.showPrivacyOptions();
     p.openPrivacyPolicy();
+  });
+});
+
+describe('AndroidPlatform (same native adapter, Google Play ids)', () => {
+  beforeEach(() => listeners.clear());
+
+  it('reports android, uses the Android ad units and never shows the iOS tracking prompt', async () => {
+    const p = android.createPlatform();
+    expect(p.id).toBe('android');
+    await p.init();
+    admob.trackingAuthorizationStatus.mockClear();
+    admob.prepareRewardVideoAd.mockClear();
+    p.notifyGameReady();
+    expect(await p.showRewardedAd('free-gift')).toBe(true);
+    expect(admob.trackingAuthorizationStatus).not.toHaveBeenCalled();
+    expect(admob.prepareRewardVideoAd).toHaveBeenCalledWith(
+      expect.objectContaining({ adId: 'ca-app-pub-3940256099942544/5224354917', npa: true }),
+    );
+    expect(purchases.configure).toHaveBeenCalledWith({ apiKey: expect.stringMatching(/^goog_/) });
+  });
+
+  it('the system Back button acts like Esc', async () => {
+    const add = vi.mocked(App.addListener);
+    add.mockClear();
+    const p = android.createPlatform();
+    await p.init();
+    const back = add.mock.calls.find((c) => c[0] === 'backButton');
+    expect(back).toBeDefined();
+    const keys: string[] = [];
+    const onKey = (e: Event) => keys.push(`${e.type}:${(e as Event & { key: string }).key}`);
+    const target = new EventTarget();
+    vi.stubGlobal('window', target);
+    vi.stubGlobal(
+      'KeyboardEvent',
+      class extends Event {
+        key: string;
+        constructor(type: string, init: { key: string }) {
+          super(type);
+          this.key = init.key;
+        }
+      },
+    );
+    target.addEventListener('keydown', onKey);
+    target.addEventListener('keyup', onKey);
+    (back![1] as () => void)();
+    vi.unstubAllGlobals();
+    expect(keys).toEqual(['keydown:Escape', 'keyup:Escape']);
   });
 });

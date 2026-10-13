@@ -103,7 +103,17 @@ describe('big repairs (computers, cars, workshop jobs)', () => {
 
   it('workshop jobs: a full PC rebuild and an engine swap with lots to do', () => {
     const pc = repairRig('fix', 'tech', 0, 'pc');
-    expect(pc.tasks.map((t) => t.k)).toEqual(['dust', 'swap', 'torque', 'swap', 'swap', 'bolts', 'cables']);
+    expect(pc.tasks.map((t) => t.k)).toEqual([
+      'esd',
+      'post',
+      'dust',
+      'swap',
+      'torque',
+      'swap',
+      'swap',
+      'bolts',
+      'cables',
+    ]);
     expect(pc.tasks.some((t) => t.k === 'swap' && t.paste)).toBe(true);
     const eng = repairRig('fix', 'vehicles', 0, 'engine');
     expect(eng.inside).toBe('bay');

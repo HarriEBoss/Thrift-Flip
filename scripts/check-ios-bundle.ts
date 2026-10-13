@@ -1,8 +1,8 @@
-/** iOS bundle checks: assets bundled locally, no YouTube SDK, no remote game URL. */
+/** Native app bundle checks (iOS, or Android with `dist-android`): assets bundled locally, no YouTube SDK, no remote game URL. */
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-const DIR = 'dist-ios';
+const DIR = process.argv[2] ?? 'dist-ios';
 const errors: string[] = [];
 const walk = (d: string): string[] =>
   readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
@@ -18,4 +18,4 @@ if (errors.length) {
   errors.forEach((e) => console.error('  ERROR:', e));
   process.exit(1);
 }
-console.log('iOS bundle checks passed');
+console.log(`${DIR === 'dist-ios' ? 'iOS' : 'Android'} bundle checks passed`);

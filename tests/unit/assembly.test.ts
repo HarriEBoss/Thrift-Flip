@@ -23,8 +23,8 @@ describe('realistic assembly', () => {
     const ks = (cat: Parameters<typeof repairRig>[1]) =>
       repairRig('build', cat, 0, 'design').tasks.map((t) => t.k);
     const pc = ks('tech');
-    // CPU in the socket, then paste and the cooler, then the cooler screws in their cross pattern.
-    expect(pc.slice(0, 3)).toEqual(['socket', 'swap', 'torque']);
+    // Grounded first, then the CPU in the socket, paste and the cooler, the cooler screws in a cross.
+    expect(pc.slice(0, 4)).toEqual(['esd', 'socket', 'swap', 'torque']);
     expect(pc).toContain('ram');
     expect(pc[pc.length - 1]).toBe('header');
     const car = ks('vehicles');

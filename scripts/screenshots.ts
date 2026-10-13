@@ -6,6 +6,9 @@
  * Output: dist-store/
  *   ios-iphone-6.9/*.png   1320 x 2868  (App Store Connect: 6.9" iPhone class; verify current sizes)
  *   ios-ipad-13/*.png      2064 x 2752  (App Store Connect: 13" iPad class)
+ *   android-phone/*.png    1080 x 1920  (Google Play phone screenshots, 9:16)
+ *   android-tablet/*.png   1600 x 2560  (Google Play 10" tablet screenshots)
+ *   google-play/feature-graphic.png 1024 x 500, google-play/icon-512.png 512 x 512
  *   youtube/*.png          16:9 1920x1080, 1:1 1080x1080, 9:16 1080x1920 key art (no text/logos)
  *
  * Re-check required sizes in App Store Connect help and the Playables Developer Portal before upload.
@@ -31,6 +34,8 @@ interface Target {
 const DEVICES: Target[] = [
   { dir: 'ios-iphone-6.9', width: 440, height: 956, dpr: 3 },
   { dir: 'ios-ipad-13', width: 1032, height: 1376, dpr: 2 },
+  { dir: 'android-phone', width: 360, height: 640, dpr: 3 },
+  { dir: 'android-tablet', width: 800, height: 1280, dpr: 2 },
 ];
 const THUMBS: Target[] = [
   { dir: 'youtube', width: 1920, height: 1080, dpr: 1 },
@@ -44,8 +49,44 @@ type Tf = {
   setup(p: object): void;
   addItems(a: number[], restored?: boolean): void;
   ws(): { stage: { x: number; y: number; size: number } } | null;
-  state(): { catalog: string };
+  state(): {
+    catalog: string;
+    regions: Record<string, number>;
+    space: { techs: string[]; colonies: string[] };
+  };
+  where(id: string): { x: number; y: number } | null;
 };
+
+/** Click a marked UI element (waits for it to exist). */
+async function press(page: Page, id: string): Promise<void> {
+  await page.waitForFunction((i) => !!(window as unknown as { __tf: Tf }).__tf.where(i), id);
+  await page.waitForTimeout(400);
+  const p = await page.evaluate((i) => (window as unknown as { __tf: Tf }).__tf.where(i), id);
+  await page.mouse.click(p!.x, p!.y);
+  await page.waitForTimeout(900);
+}
+
+/** A late-game company: every business, most of the world, a colony on Mars. */
+async function empire(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const tf = (window as unknown as { __tf: Tf }).__tf;
+    tf.setup({
+      tutorialDone: true,
+      tier: 4,
+      coins: 48_500_000,
+      day: 240,
+      phase: 'market',
+      named: true,
+      company: 'Sunny Fix Co',
+      businesses: ['phone', 'computer', 'mechanic', 'robotics', 'rocket'],
+      business: 'rocket',
+    });
+    const st = tf.state();
+    for (const r of ['namerica', 'samerica', 'europe', 'africa', 'asia', 'oceania']) st.regions[r] = 2;
+    st.space.techs.push('rockets', 'lifesupport', 'habitats');
+    if (!st.space.colonies.includes('mars')) st.space.colonies.push('mars');
+  });
+}
 
 async function open(t: Target): Promise<Page> {
   const browser = await chromium.launch();
@@ -131,6 +172,20 @@ async function main(): Promise<void> {
       await page.screenshot({ path: `${OUT}/${d.dir}/05-shop.png` });
       await goto(page, 'Catalog');
       await page.screenshot({ path: `${OUT}/${d.dir}/06-sticker-book.png` });
+      // The business empire: the ladder, the world map and the solar system on the tablet.
+      await empire(page);
+      await goto(page, 'Market');
+      await press(page, 'upgrades');
+      await press(page, 'hub_empire');
+      await page.screenshot({ path: `${OUT}/${d.dir}/07-business-empire.png` });
+      await goto(page, 'Market');
+      await press(page, 'upgrades');
+      await press(page, 'hub_world');
+      await page.screenshot({ path: `${OUT}/${d.dir}/08-world.png` });
+      await goto(page, 'Market');
+      await press(page, 'tablet');
+      await press(page, 'app_space');
+      await page.screenshot({ path: `${OUT}/${d.dir}/09-solar-system.png` });
       await page.context().browser()?.close();
       console.log(`wrote ${OUT}/${d.dir}`);
     }
@@ -142,6 +197,21 @@ async function main(): Promise<void> {
       await page.context().browser()?.close();
     }
     console.log(`wrote ${OUT}/youtube`);
+    // Google Play: the feature graphic (key art, no text) and the 512 px store icon.
+    mkdirSync(`${OUT}/google-play`, { recursive: true });
+    const fg = await open({ dir: 'google-play', width: 1024, height: 500, dpr: 1 });
+    await goto(fg, 'Promo');
+    await fg.screenshot({ path: `${OUT}/google-play/feature-graphic.png` });
+    await fg.context().browser()?.close();
+    const icon = await chromium.launch();
+    const ip = await icon.newPage({ viewport: { width: 512, height: 512 } });
+    const svg = readFileSync('resources/icon.svg', 'utf8');
+    await ip.setContent(
+      `<html><body style="margin:0">${svg.replace('<svg ', '<svg width="512" height="512" ')}</body></html>`,
+    );
+    await ip.screenshot({ path: `${OUT}/google-play/icon-512.png` });
+    await icon.close();
+    console.log(`wrote ${OUT}/google-play`);
   } finally {
     server.kill();
   }

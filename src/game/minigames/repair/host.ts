@@ -36,7 +36,8 @@ export type BotAction =
   | { a: 'tap'; p: Pt }
   | { a: 'hold'; p: Pt }
   | { a: 'holdLevel'; p: Pt; until: number; below?: boolean }
-  | { a: 'drag'; from: Pt; to: Pt }
+  /** With `ms`, a slow, steady drag taking that long. */
+  | { a: 'drag'; from: Pt; to: Pt; ms?: number }
   /** Go round `c` (3 turns, or exactly `turns`). */
   | { a: 'circle'; c: Pt; r: number; ccw?: boolean; turns?: number };
 
