@@ -22,6 +22,7 @@
     "test:e2e": "npm run build:e2e && playwright test",
     "simulate": "tsx scripts/simulate.ts",
     "screenshots": "tsx scripts/screenshots.ts",
+    "release:kit": "npm run build:youtube && npm run build:site && npm run build:e2e && npm run screenshots && tsx scripts/release-kit.ts",
     "check": "npm run lint && npm run typecheck && npm run test:coverage && npm run build:youtube && npm run test:e2e"
   },
   "devDependencies": {

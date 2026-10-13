@@ -952,7 +952,13 @@ export class PostTask extends StepTask {
     this.g = this.put(this.h.scene.add.graphics());
     this.put(label(this.h, { u: this.L.power.u, v: this.L.power.v - 0.07 }, 'POWER', 0xffffff, 0.55));
     this.put(
-      label(this.h, { u: this.L.rowAt[0].u, v: this.L.rowAt[0].v - 0.06 }, t('dev.manual'), 0x15121b, 0.6),
+      label(
+        this.h,
+        { u: this.L.rowAt[0].u + 0.11, v: this.L.rowAt[0].v - 0.058 },
+        t('dev.manual'),
+        0x15121b,
+        0.5,
+      ),
     );
     this.rowText = this.L.rows.map((r, i) =>
       this.put(
@@ -972,6 +978,9 @@ export class PostTask extends StepTask {
           .setScale(0.55),
       ),
     );
+    // Keep every row inside the card.
+    for (const tx of this.rowText)
+      if (tx.displayWidth > STAGE * 0.27) tx.setScale((0.55 * STAGE * 0.27) / tx.displayWidth);
     this.draw();
   }
 
@@ -1069,9 +1078,9 @@ export class PostTask extends StepTask {
       else g.fillCircle(x, s.y + 50, 6);
     }
     // The manual: a paper card with the beep table.
-    const top = at({ u: L.rowAt[0].u - 0.09, v: L.rowAt[0].v - 0.09 });
+    const top = at({ u: L.rowAt[0].u - 0.1, v: L.rowAt[0].v - 0.09 });
     g.fillStyle(0xf4f1e8, 1);
-    g.fillRoundedRect(top.x, top.y, STAGE * 0.38, STAGE * 0.5, 10);
+    g.fillRoundedRect(top.x, top.y, STAGE * 0.42, STAGE * 0.49, 10);
     L.rows.forEach((r, i) => {
       const q = at(L.rowAt[i]);
       for (let k = 0; k < r.beeps.length; k++) {
@@ -1082,7 +1091,7 @@ export class PostTask extends StepTask {
       }
       if (i > 0) {
         g.lineStyle(1, 0x15121b, 0.25);
-        g.lineBetween(top.x + 10, q.y - STAGE * 0.042, top.x + STAGE * 0.38 - 10, q.y - STAGE * 0.042);
+        g.lineBetween(top.x + 10, q.y - STAGE * 0.04, top.x + STAGE * 0.42 - 10, q.y - STAGE * 0.04);
       }
     });
   }
@@ -1186,8 +1195,6 @@ export class CmosTask extends StepTask {
       g.lineStyle(4, 0x3a3640, 1);
       g.lineBetween(q.x - 9, q.y - 8, q.x + 9, q.y - 8);
       g.lineBetween(q.x, q.y - 17, q.x, q.y + 1);
-      g.fillStyle(0x3a3640, 1);
-      g.fillRect(q.x - 16, q.y + 10, 32, 4);
     }
   }
 

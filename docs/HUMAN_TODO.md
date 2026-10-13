@@ -3,6 +3,7 @@
 Everything that code cannot do. Items are grouped by platform and listed roughly in order.
 
 ## Accounts & legal
+
 - [ ] **Apple Developer Program** enrollment (organisation or individual).
 - [ ] **EU Digital Services Act trader status**: declare it in App Store Connect (Business → Compliance) and verify
       the address, phone and email. Needed for EU distribution.
@@ -14,6 +15,7 @@ Everything that code cannot do. Items are grouped by platform and listed roughly
 - [ ] Decide the final name and bundle id after checking availability (STORE_LISTING.md lists options).
 
 ## iOS build & release
+
 - [ ] Build on a Mac with **Xcode 26+ (iOS 26 SDK)**. Required for App Store uploads since Apr 28, 2026.
       This container is Linux, so the simulator build was **not** run here. `npm run build:ios` (web build + `cap sync`) does pass.
 - [ ] **Signing:** team, distribution certificate, App Store provisioning profile (or automatic signing).
@@ -40,6 +42,7 @@ Everything that code cannot do. Items are grouped by platform and listed roughly
       sizes in App Store Connect.
 
 ## Android (Google Play): full checklist in SUBMISSION_ANDROID.md
+
 - [ ] Build on any computer with **Android Studio** (SDK 36). This container could not download the Android SDK,
       so the Gradle build was **not** run here. `npm run build:android` (web build + `cap sync`) does pass.
 - [ ] Create the **upload keystore** and keep it (and its passwords) safe; enrol in Play App Signing.
@@ -52,11 +55,13 @@ Everything that code cannot do. Items are grouped by platform and listed roughly
 - [ ] Internal testing first; new personal accounts need a closed test (12 testers, 14 days) before production.
 
 ## Web (optional, free): the game as a web page
+
 - [ ] `npm run build:web` writes `dist-web/` (no ads, no purchases). Host it anywhere static (GitHub Pages
       via `.github/workflows/pages.yml` once the repo is public and Pages → GitHub Actions is enabled,
       itch.io as an HTML5 game zip, Netlify, …).
 
 ## YouTube Playables
+
 - [ ] Upload `thrift-flip-youtube.zip` (from `npm run build:youtube`) to the Developer Portal.
 - [ ] **Enable monetization (YouTube ads)** for the game in the Playables Developer Portal; rewarded and
       interstitial ads only work once this is on.
@@ -68,6 +73,7 @@ Everything that code cannot do. Items are grouped by platform and listed roughly
       whose official criteria are met.
 
 ## Content & assets
+
 - [ ] **Music/art rights:** all current art and audio are generated in code by this project (original). If you
       replace them with licensed or commissioned work (`src/assets/manifest.json`), keep written proof of rights.
 - [ ] Font: Nunito is SIL OFL 1.1; the license text is in `src/assets/fonts/OFL-LICENSE.txt` (keep it with the font).

@@ -5,25 +5,30 @@
 > Category, and the Google Play target audience is 13+). No real brand names.
 
 ## Name (check availability in App Store Connect before committing)
+
 1. **Thrift Flip** (preferred)
 2. Thrift Flip: Junk to Gems
 3. Thrift Flip – Restore & Sell
 4. Flip Shop: Thrift Restore
 
 ## Subtitle (≤ 30 chars)
+
 - "Find junk. Make it shine!" (25)
 - "Restore treasures, sell big" (27)
 - "Scrub, fix & flip vintage" (25)
 
 ## Keywords (≤ 100 chars, comma-separated, no spaces after commas, no words already in the name)
+
 `restore,cleaning,satisfying,vintage,shop,tycoon,flea market,makeover,cozy,collect,repair,antique`
 (96 characters)
 
 ## Promotional text (≤ 170 chars)
+
 Start with a flea-market stall and build a repair empire: fix phones, PCs, cars, robots and rockets,
 conquer the world and colonise the solar system!
 
 ## Description
+
 Find dusty junk. Make it shine. Build an empire!
 
 Thrift Flip is a cozy, super-satisfying restoration game that grows into a huge business tycoon. Hunt for
@@ -41,11 +46,11 @@ REAL REPAIRS, DONE PROPERLY
 • Computers: power down safely, read the beep codes, seat the CPU, torque the cooler, click in the RAM
 • Cars: plug in the scanner, read the trouble code, change the spark plugs, the battery and the oil filter
 • Robots and rockets: lock out the machine, read the fault log, solder battery packs, purge fuel tanks
-  and align the engine
+and align the engine
 
 BUILD YOUR EMPIRE
 • Name your company and climb the ladder: Reselling Shop, Phone Repair, Computer Repair, Mechanic,
-  Robotics and Rocket Repair
+Robotics and Rocket Repair
 • Run marketing campaigns, take on contracts and design custom machines for top clients
 • Hire managers and open branches that earn while you work elsewhere
 • Expand into every region of the world, then research space travel
@@ -63,9 +68,11 @@ paid prizes, ever. Optional ads give you small bonuses; purchases are completely
 are also earned by playing.
 
 ## What's New (1.0.0)
+
 Welcome to Thrift Flip! Find, fix and flip 195 treasures, then build a repair empire that reaches the stars.
 
 ## Screenshot captions (match the 9 generated screenshots)
+
 1. Menu: "Find junk. Make it shine. Sell it!"
 2. Before/after: "From grimy to gorgeous!"
 3. Market: "Hunt bargains at 12 markets"
@@ -77,6 +84,7 @@ Welcome to Thrift Flip! Find, fix and flip 195 treasures, then build a repair em
 9. Solar system: "Colonise the solar system"
 
 ## Google Play
+
 - **App name** (≤ 30): Thrift Flip
 - **Short description** (≤ 80): "Restore junk, sell it, then grow a repair empire that reaches the stars!" (73)
 - **Full description:** the Description above (≤ 4,000 characters).
@@ -84,6 +92,7 @@ Welcome to Thrift Flip! Find, fix and flip 195 treasures, then build a repair em
 - **Feature graphic:** `dist-store/google-play/feature-graphic.png`; **icon:** `dist-store/google-play/icon-512.png`.
 
 ## YouTube Playables
+
 - **Title:** Thrift Flip
 - **Short description:** Buy dusty junk, scrub it, fix it and make it sparkle, then sell it in your own little shop!
 - **Description:** see docs/SUBMISSION_YOUTUBE.md → "Description" (no mention of purchases: there are none on YouTube).

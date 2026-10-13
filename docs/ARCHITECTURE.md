@@ -1,8 +1,8 @@
 # Thrift Flip — Architecture
 
-One TypeScript codebase produces three bundles: the **YouTube Playables** HTML5 zip, the
-**iOS** app (Capacitor), and a local **web** dev build. Platform differences live only behind
-the platform adapter.
+One TypeScript codebase produces these bundles: the **YouTube Playables** HTML5 zip, the **iOS** and
+**Android** apps (Capacitor), the public **web** release (`site`: no ads, no purchases), the self-contained
+**playtest** page and a local **web** dev build. Platform differences live only behind the platform adapter.
 
 ```
 src/
@@ -30,8 +30,9 @@ src/
     art/               pixel pipeline, itemArt (vector parts → pixel sprites), damage layers, characters, texture LRU
     audio/             procedural Web Audio SFX + generative music
     ui/                layout frame, widgets (Button/Slider/ProgressBar), icons, modals, menus, coach
-  platform/          Platform interface + YouTube / iOS / web adapters (the ONLY place for
-                     ytgame, Capacitor, storage, locale and ad/IAP SDKs)
+  platform/          Platform interface + adapters (the ONLY place for ytgame, Capacitor, storage,
+                     locale and ad/IAP SDKs): youtube/, native/ (iOS + Android, with ios/ and
+                     android/ holding each store's ids), site/ (public web), playtest/, web/ (dev)
   i18n/              string tables (en.json) + loader with fallback
   data/              items, categories (vector shapes), recipes, customers, markets, requests, balance
   assets/            fonts (Nunito, OFL), manifest.json (art swap-in points), items/ (optional art)
@@ -42,8 +43,10 @@ src/
 `src/platform/Platform.ts` defines the interface from the brief, plus a few additions:
 `capabilities.masterMute`, `externalLinks` and `privacyOptions`, `showPrivacyOptions()` and `openExternal()`.
 The build picks one implementation through the Vite alias `@platform-impl`
-(`vite build --mode youtube|ios|web`). The YouTube bundle therefore contains no Capacitor, AdMob or IAP
-code, and the iOS bundle never references the YouTube SDK.
+(`vite build --mode youtube|ios|android|site|playtest|web`). The YouTube bundle therefore contains no
+Capacitor, AdMob or IAP code, and the app bundles never reference the YouTube SDK. iOS and Android share
+`native/NativePlatform.ts`; the differences are the store ids and keys, the ATT prompt (iOS only) and the
+Android Back button, which is turned into an Esc key press so it closes panels like Esc does.
 
 Game code asks `capabilities` before showing anything platform-specific:
 

@@ -56,16 +56,16 @@ Verify every item against current Google Play Console help at submission time; r
       position as iOS and YouTube, which requires 13+). Answer "No" to "Could your store listing
       unintentionally appeal to children?" only if the listing follows STORE_LISTING.md (no "for kids").
       If Google decides it appeals to children, the **Families** policy applies; contact the team first.
-- [ ] **Content rating (IARC questionnaire):** category *Game*. Violence, fear, sexuality, language,
+- [ ] **Content rating (IARC questionnaire):** category _Game_. Violence, fear, sexuality, language,
       controlled substances, crude humour: **none**. Gambling: **none** (no real-money stakes; the auction
       is a coin-only bidding game; no paid random rewards). Users interact / share info / location:
       **no**. Digital purchases: **yes**. Expected result: **PEGI 3 / ESRB Everyone** with "In-App
       Purchases".
 - [ ] **Data safety form** (derived from the linked SDKs; check each vendor's current Data safety guidance):
-  - Data collected: **Device or other IDs** (advertising ID, by AdMob) → *Advertising or marketing*,
-    *Analytics*; shared with Google. **App interactions** and **diagnostics** (AdMob) → *Advertising*,
-    *Analytics*. **Purchase history** (RevenueCat, anonymous app user id) → *App functionality*.
-    **Approximate location** (from IP, AdMob) → *Advertising*.
+  - Data collected: **Device or other IDs** (advertising ID, by AdMob) → _Advertising or marketing_,
+    _Analytics_; shared with Google. **App interactions** and **diagnostics** (AdMob) → _Advertising_,
+    _Analytics_. **Purchase history** (RevenueCat, anonymous app user id) → _App functionality_.
+    **Approximate location** (from IP, AdMob) → _Advertising_.
   - Data is **encrypted in transit**: yes. Users can request deletion: game progress is only on the
     device (uninstalling deletes it); the anonymous RevenueCat id can be deleted on request (privacy policy).
   - The game itself has no accounts, no analytics and no server.
@@ -77,16 +77,16 @@ Verify every item against current Google Play Console help at submission time; r
 
 Create the same ids as the App Store (they are shared in `src/platform/ios/config.ts`):
 
-| Product id | Type in RevenueCat | Price | Content |
-|---|---|---|---|
-| `starter_pack` | Non-consumable | €2.99 | 1,000 coins + Golden Sponge (permanent) |
-| `remove_ads` | Non-consumable | €4.99 | No interstitials (rewarded ads stay optional) |
-| `golden_toolkit` | Non-consumable | €6.99 | All golden tools permanently |
-| `shop_expansion` | Non-consumable | €3.99 | +4 shelves, +1 customer per day |
-| `appraiser_pass` | Non-consumable | €2.99 | Hidden gems visible at markets |
-| `mega_bundle` | Non-consumable | €14.99 | All perks above + 5,000 coins |
-| `coins_small` / `coins_medium` / `coins_large` | Consumable | €0.99 / €4.99 / €9.99 | 500 / 3,000 / 8,000 coins |
-| `gold_small` / `gold_medium` / `gold_large` | Consumable | €0.99 / €4.99 / €9.99 | 20 / 120 / 280 Gold Bars |
+| Product id                                     | Type in RevenueCat | Price                 | Content                                       |
+| ---------------------------------------------- | ------------------ | --------------------- | --------------------------------------------- |
+| `starter_pack`                                 | Non-consumable     | €2.99                 | 1,000 coins + Golden Sponge (permanent)       |
+| `remove_ads`                                   | Non-consumable     | €4.99                 | No interstitials (rewarded ads stay optional) |
+| `golden_toolkit`                               | Non-consumable     | €6.99                 | All golden tools permanently                  |
+| `shop_expansion`                               | Non-consumable     | €3.99                 | +4 shelves, +1 customer per day               |
+| `appraiser_pass`                               | Non-consumable     | €2.99                 | Hidden gems visible at markets                |
+| `mega_bundle`                                  | Non-consumable     | €14.99                | All perks above + 5,000 coins                 |
+| `coins_small` / `coins_medium` / `coins_large` | Consumable         | €0.99 / €4.99 / €9.99 | 500 / 3,000 / 8,000 coins                     |
+| `gold_small` / `gold_medium` / `gold_large`    | Consumable         | €0.99 / €4.99 / €9.99 | 20 / 120 / 280 Gold Bars                      |
 
 - [ ] Google Play has one "in-app product" type; consumable vs non-consumable is decided in RevenueCat
       (set each product's type there to match the table).

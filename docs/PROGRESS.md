@@ -454,6 +454,37 @@ Next: Phase 3, the playable core loop in Phaser.
 - Fixed in passing: level gauges no longer wipe what was drawn before them (the leak-test valve,
   the torque bolt marks and the heat gun glow were disappearing).
 
+## Owner feedback: realistic phone and computer repairs ✅
+
+- **Phones**
+  - **Battery adhesive strips** (smartphones, tablets): pull each stretch-release strip out slowly; a
+    flick snaps it (a speed bar shows the pull), and then the glue has to be softened with alcohol.
+  - **Charge port**: pick the wooden toothpick (a metal pin is a mistake: it can short the pins), scrape
+    each clump of lint out, plug in a USB meter to see it charge.
+  - **ZIF ribbon connectors** (flip phones, brick phones, laptops): latch up, turn the ribbon gold contacts
+    up, slide it fully in, latch down. Latching it half in or backwards is a mistake.
+  - **Water seal** (smartphones, tablets, watches): scrape the old adhesive, peel the liner, lay the new
+    seal exactly on the frame (crooked is a mistake), clamp it.
+- **Computers**
+  - **Safe power-down**: PSU switch off, mains plug out, hold power to drain, then the anti-static wrist
+    strap on bare metal (painted metal doesn't ground you). New PC builds start with the strap.
+  - **POST beep codes**: power on, listen (dots and dashes appear as it beeps), find the pattern in the
+    board's manual. The code matches the fault (memory, graphics, CPU fan, boot drive, CMOS).
+  - **CMOS coin cell**: press the clip, bin the old cell, new one + side up.
+  - **CRT discharge** (arcades): ground the tool first (touching the anode first is a big mistake), drain
+    to zero, unclip the anode cap. **Battery contacts** (handhelds): white vinegar, not water, then scrub.
+- The PC rebuild job now starts with the power-down and the beep code too.
+
+## Release: Android, public web build, store assets ✅
+
+- **Android (Google Play)**: Capacitor Android project (`android/`), `npm run build:android`,
+  `scripts/android-configure.py` (AdMob app id, every orientation, version from package.json), icons and
+  splash screens, and docs/SUBMISSION_ANDROID.md. iOS and Android share one native adapter.
+- **Public web release** (`npm run build:site` → `thrift-flip-web.zip`): no ads and no purchases. GitHub
+  Pages now deploys this build instead of the playtest.
+- **Store assets**: screenshots add the business empire, world and solar system screens, Android phone
+  and tablet sizes, the Google Play feature graphic and 512 px icon. Store copy updated for the full game.
+
 ## Definition of done: status
 
 | Item                                                                                   | Status                                                                                                                        |

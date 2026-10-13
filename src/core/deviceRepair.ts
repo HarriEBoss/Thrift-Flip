@@ -133,7 +133,7 @@ export function sealLayout(round: boolean): SealLayout {
     residue: [
       { u: frame.c.u - frame.w, v: frame.c.v - 0.04 },
       { u: frame.c.u + frame.w, v: frame.c.v + 0.05 },
-      { u: frame.c.u + 0.02, v: frame.c.v + frame.h },
+      { u: frame.c.u + 0.02, v: frame.c.v + (round ? frame.w : frame.h) },
     ],
     seal: { u: C0.u + 0.24, v: C0.v + 0.02 },
     tab: { u: C0.u + 0.24, v: C0.v + 0.19 },
@@ -233,7 +233,7 @@ export function postLayout(seed: number, code: BeepCode): PostLayout {
     power: { u: C0.u - 0.25, v: C0.v - 0.1 },
     speaker: { u: C0.u - 0.25, v: C0.v + 0.1 },
     rows,
-    rowAt: rows.map((_, i) => ({ u: C0.u + 0.1, v: C0.v - 0.17 + i * 0.085 })),
+    rowAt: rows.map((_, i) => ({ u: C0.u + 0.05, v: C0.v - 0.15 + i * 0.08 })),
   };
 }
 
